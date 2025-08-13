@@ -1,0 +1,931 @@
+* {
+    padding: 0;
+    margin: 0;
+    font-family: "Mitr", sans-serif;
+}
+
+.hero-img {
+    height: 80%;
+}
+
+:root {
+    --primary: #3563bf;
+    --secondary: #2A4FA8;
+    --accent: #5B7FD9;
+    --background-start: #0d2035;
+    --background-end: #18243A;
+}
+
+body.login-page {
+    background: white;
+    color: var(--secondary)
+}
+
+.navbar {
+    padding: 0;
+    padding-top: 1.5rem;
+}
+
+
+.rightSec {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+.txtBtn {
+    color: #0d2035;
+}
+
+/* Update card styles to handle the new layout */
+.card {
+    width: 90%;
+    min-height: 71vh;
+    max-height: 90vh;
+    border-radius: 1rem;
+    background-color: white;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    transition: transform 0.6s linear;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    position: relative;
+    overflow: hidden;
+    /* Change from overflow-y: auto to overflow: hidden */
+}
+
+/* Add scrollable area for form fields */
+.form-fields-container {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Prevent horizontal scrolling */
+    /* padding-right: 5px; */
+    max-height: calc(100% - 150px);
+    width: 100%;
+    /* Ensure container takes full width */
+    /* Adjust based on the height of your buttons section */
+}
+
+.firstname {
+    padding: 0px;
+}
+
+.alert {
+    z-index: 2;
+}
+
+/* Style for the fixed bottom buttons */
+.below-btns {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    z-index: 2;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 10px;
+    width: 100%;
+}
+
+#myTabContent {
+    width: 90%;
+    padding-top: 0.5rem;
+    height: calc(100% - 50px);
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.tab-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-pane form {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* Ensure it doesn't exceed container width */
+    overflow-x: hidden;
+    /* Extra safety measure */
+}
+
+/* Style the scrollbar */
+.form-fields-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.form-fields-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.form-fields-container::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 10px;
+}
+
+.form-fields-container::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+}
+
+.card.flipped {
+    min-height: 65vh;
+    /* Change from fixed height to min-height */
+    transform: rotateY(180deg);
+}
+
+.card .front,
+.card .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 1rem;
+}
+
+.card .back {
+    transform: rotateY(180deg);
+}
+
+#OTPPage {
+    padding: 10% 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+#otpModal {
+    position: absolute;
+    z-index: 9;
+}
+
+/* OTP Verification Styles */
+.otp-verification-container {
+    padding: 2rem 1rem;
+}
+
+.otp-inputs {
+    gap: 0.5rem;
+}
+
+.otp-box {
+    width: 3rem;
+    height: 3rem;
+    border: 2px solid var(--primary) !important;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    background: white;
+    color: var(--secondary) !important;
+    transition: all 0.3s ease;
+}
+
+.otp-box:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(53, 99, 191, 0.3);
+    transform: scale(1.05);
+}
+
+.otp-box:valid {
+    border-color: var(--accent);
+    background: rgba(91, 127, 217, 0.1);
+}
+
+@media (max-width: 768px) {
+    .otp-box {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.2rem;
+    }
+
+    .otp-inputs {
+        gap: 0.3rem;
+    }
+}
+
+.otpContent {
+    color: rgb(82, 81, 81);
+}
+
+#resetPassModal {
+    width: 100%;
+    padding: 5rem 2.5rem;
+}
+
+#resetPass {
+    width: 100%;
+}
+
+.resendDisabled {
+    all: unset;
+    color: gray;
+    pointer-events: none;
+}
+
+.resendEnabled {
+    all: unset;
+    background: linear-gradient(100deg, rgba(64, 77, 141, 1) 15%,
+            rgba(89, 109, 181, 1) 50%,
+            rgba(22, 155, 223, 1) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+
+.OuterCircle {
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    background: linear-gradient(120deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+}
+
+.InnerCircle {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background-color: white;
+}
+
+.OuterCircle1 {
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    background: linear-gradient(120deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+}
+
+.CustomerOuter {
+    width: 25%;
+    height: 10%;
+    background: linear-gradient(120deg, rgba(92, 127, 255, 0.15) 10%, rgba(103, 79, 255, 0.5) 100%);
+    border: 3px #97B8FF solid;
+    backdrop-filter: blur(1rem);
+    font-size: 1.3rem;
+    /* color: rgba(0, 0, 0, 0.533); */
+}
+
+.CustomerOuter p {
+    margin: 0;
+}
+
+.BusinessesOuter {
+    width: 25%;
+    height: 10%;
+    background: linear-gradient(120deg, rgba(92, 127, 255, 0.15) 10%, rgba(103, 79, 255, 0.5) 100%);
+    border: 3px #97B8FF solid;
+    backdrop-filter: blur(1rem);
+    font-size: 1.3rem;
+}
+
+.BusinessesOuter p {
+    margin: 0;
+}
+
+.InnerCircle1 {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background-color: white;
+}
+
+.OuterCircle.signup {
+    position: absolute;
+    z-index: 0;
+    left: 0;
+    top: 8%;
+    transform: translateX(-40%);
+    transition: all 0.3s linear;
+}
+
+.OuterCircle1.signup {
+    position: absolute;
+    z-index: 0;
+    right: 0;
+    bottom: 8%;
+    transform: translateX(40%);
+    transition: all 0.3s linear;
+}
+
+.OuterCircle.signin {
+    position: absolute;
+    z-index: 0;
+    left: 80%;
+    top: 8%;
+    transform: translateX(40%);
+    transition: all 0.3s linear;
+}
+
+.OuterCircle1.signin {
+    position: absolute;
+    z-index: 0;
+    right: 80%;
+    bottom: 8%;
+    transform: translateX(-40%);
+    transition: all 0.3s linear;
+}
+
+.CustomerOuter.signup {
+    border-top-left-radius: 2rem;
+    border-bottom-left-radius: 2rem;
+    border-bottom-right-radius: 2rem;
+    position: absolute;
+    z-index: 2;
+    left: -4rem;
+    bottom: 8%;
+    transform: translateY(-40%);
+    transition: all 0.3s linear;
+}
+
+.BusinessesOuter.signup {
+    border-top-left-radius: 2rem;
+    border-top-right-radius: 2rem;
+    border-bottom-right-radius: 2rem;
+    position: absolute;
+    z-index: 2;
+    right: -4rem;
+    top: 8%;
+    transform: translateY(40%);
+    transition: all 0.3s linear;
+}
+
+.CustomerOuter.signin {
+    border-top-right-radius: 2rem;
+    border-bottom-right-radius: 0;
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    bottom: 80%;
+    transform: translateX(-40%);
+    transition: all 0.3s linear;
+}
+
+.BusinessesOuter.signin {
+    /* border-bottom-right-radius: 2rem;
+    border-top-right-radius: 2rem;*/
+
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 2rem;
+    position: absolute;
+    z-index: 2;
+    right: 0;
+    top: 80%;
+    transform: translateX(40%);
+    transition: all 0.3s linear;
+}
+
+#myTab {
+    background-color: #F9F9F9;
+    border: 2px solid #d4d4d4;
+    border-radius: 10px;
+}
+
+.nav-tabs .nav-link {
+    color: gray;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-weight: 400;
+    letter-spacing: 0.05rem;
+}
+
+.nav-tabs .nav-link.active {
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    background: linear-gradient(120deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+    border-radius: 10px;
+    font-weight: 400;
+    letter-spacing: 0.05rem;
+}
+
+.form-label {
+    color: #696984;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Make form inputs more compact */
+.form-control {
+    background-color: #F2F2F2 !important;
+    border: 2px solid #C8C8C8 !important;
+    color: rgba(64, 77, 141, 1) !important;
+    width: 100%;
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.10);
+    border-radius: 10px;
+    height: 2.75rem;
+    letter-spacing: 0.6px;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border: double 2px transparent;
+    border-radius: 10px;
+    background-image: linear-gradient(white, white),
+        linear-gradient(120deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}
+
+.form-control span {
+    color: #696984;
+    cursor: pointer;
+}
+
+#signinPassword {
+    all: unset;
+}
+
+#signupPassword {
+    all: unset;
+}
+
+.below-btns {
+    position: sticky;
+    z-index: 2;
+    bottom: 1;
+}
+
+.regBtn {
+    color: white;
+    border: none;
+    width: 100%;
+    background: linear-gradient(400deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+    border-radius: 30px;
+    font-weight: 400;
+    height: 2.75rem;
+    /* Reduce button height */
+    letter-spacing: 0.05rem;
+    transition: background 1s ease;
+    margin-top: 0.75rem;
+    /* Add some space between buttons */
+}
+
+.regBtn:hover {
+    background: linear-gradient(240deg, rgba(64, 77, 141, 1) 15%,
+            rgba(89, 109, 181, 1) 50%,
+            rgba(22, 155, 223, 1) 100%);
+    color: white;
+}
+
+.anc-link {
+    background: linear-gradient(100deg, rgba(64, 77, 141, 1) 15%,
+            rgba(89, 109, 181, 1) 50%,
+            rgba(22, 155, 223, 1) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.custom-radio {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.custom-radio input[type="radio"] {
+    display: none;
+}
+
+.radio-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgb(216, 216, 216);
+    border: 1px solid black;
+    margin-right: 10px;
+}
+
+.custom-radio input[type="radio"]:checked+.radio-btn {
+    background: linear-gradient(100deg, rgba(64, 77, 141, 1) 15%,
+            rgba(89, 109, 181, 1) 50%,
+            rgba(22, 155, 223, 1) 100%);
+    border: none;
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: #757575;
+    border: 1px solid #dcdcdc;
+    width: 100%;
+    border-radius: 30px;
+    font-weight: 400;
+    height: 2.75rem;
+    /* Reduce button height */
+    letter-spacing: 0.05rem;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    margin-top: 0.75rem;
+    /* Add some space between buttons */
+}
+
+.google-btn:hover {
+    box-shadow: 0 0 30px rgba(70, 118, 215, 0.5);
+}
+
+.google-btn img {
+    margin-right: 0.5rem;
+    height: 1.5rem;
+}
+
+/* Reduce vertical spacing between form elements */
+.mb-3 {
+    margin-bottom: 0.75rem !important;
+    /* Reduce from default 1rem */
+}
+
+@media screen and (max-width: 1024px) {
+    .hero-img {
+        width: 70%;
+    }
+
+    #forgetHead {
+        font-size: 1.5rem;
+    }
+
+    #OTPPage h1 {
+        font-size: 1.3rem;
+    }
+
+    #OTPPage p {
+        font-size: 0.7rem;
+    }
+
+    .otp-box {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.2rem;
+    }
+
+    #timer {
+        font-size: 1rem;
+    }
+
+    .card {
+        height: 80vh;
+    }
+
+    .OuterCircle {
+        width: 7rem;
+        height: 7rem;
+    }
+
+    .OuterCircle1 {
+        width: 7rem;
+        height: 7rem;
+    }
+
+    .InnerCircle {
+        width: 5.5rem;
+        height: 5.5rem;
+    }
+
+    .InnerCircle1 {
+        width: 5.5rem;
+        height: 5.5rem;
+    }
+
+    .CustomerOuter {
+        width: 23%;
+    }
+
+    .CustomerOuter p {
+        font-size: 1rem;
+    }
+
+    .BusinessesOuter {
+        width: 23%;
+    }
+
+    .BusinessesOuter p {
+        font-size: 1rem;
+    }
+
+    .OuterCircle.signup {
+        transform: translateX(-38%);
+    }
+
+    .OuterCircle.signin {
+        left: 75%;
+    }
+
+    .OuterCircle1.signup {
+        transform: translateX(33%);
+    }
+
+    .OuterCircle1.signin {
+        right: 75%;
+    }
+
+    .BusinessesOuter.signup {
+        right: -2rem;
+    }
+
+    .CustomerOuter.signup {
+        left: -2rem;
+    }
+
+    .BusinessesOuter.signin {
+        transform: translateX(35%);
+    }
+
+    .CustomerOuter.signin {
+        transform: translateX(-35%);
+    }
+}
+
+/* Add these media queries for better responsive behavior */
+@media screen and (max-height: 800px) {
+    .card {
+        max-height: 85vh;
+        /* Adjust on smaller height screens */
+    }
+
+    .form-control {
+        height: 2.5rem;
+        /* Make inputs smaller */
+    }
+
+    .mb-3 {
+        margin-bottom: 0.5rem !important;
+        /* Further reduce spacing */
+    }
+}
+
+@media screen and (max-width: 769px) {
+    header {
+        padding: 5% 0 0 0;
+    }
+
+    .hero-img {
+        display: none;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #forgetHead {
+        font-size: 2rem;
+    }
+
+    #OTPPage h1 {
+        font-size: 1.7rem;
+    }
+
+    #OTPPage p {
+        font-size: 0.9rem;
+    }
+
+    .otp-box {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.3rem;
+    }
+
+    #timer {
+        font-size: 1rem;
+    }
+
+    #showPassSignup {
+        right: 5%;
+        bottom: 10%;
+        font-size: 1.1rem;
+    }
+
+    .card {
+        height: 75vh;
+    }
+
+    .card.flipped {
+        height: 60vh;
+    }
+
+    .logo img {
+        width: 38%;
+    }
+
+    nav .nav-link {
+        display: none;
+    }
+
+    .navbar .navbar-toggler,
+    .collapse {
+        display: none;
+    }
+
+    .navbar .container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .nav-tabs .nav-link.active {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .OuterCircle {
+        height: 5.5rem;
+        width: 5.5rem;
+    }
+
+    .InnerCircle {
+        height: 4.2rem;
+        width: 4.2rem;
+    }
+
+    .OuterCircle.signup {
+        top: -7%;
+        transform: translateX(-5%);
+    }
+
+    .OuterCircle.signin {
+        top: -7%;
+        left: 83%;
+        transform: translateX(-5%);
+    }
+
+    .OuterCircle1 {
+        height: 5.5rem;
+        width: 5.5rem;
+    }
+
+    .InnerCircle1 {
+        height: 4.2rem;
+        width: 4.2rem;
+    }
+
+    .OuterCircle1.signup {
+        bottom: -8%;
+        transform: translateX(5%);
+    }
+
+    .OuterCircle1.signin {
+        right: 78%;
+        bottom: -8%;
+        transform: translateX(-35%);
+    }
+
+    .CustomerOuter {
+        width: 25%;
+    }
+
+    .CustomerOuter.signup {
+        bottom: -11%;
+        left: -1%;
+    }
+
+    .CustomerOuter.signin {
+        bottom: 95%;
+        left: 7%;
+    }
+
+    .BusinessesOuter {
+        width: 25%;
+    }
+
+    .BusinessesOuter.signup {
+        top: -8%;
+        right: -1%;
+    }
+
+    .BusinessesOuter.signin {
+        top: 95%;
+        right: 7%;
+    }
+
+    .form-control {
+        height: 2.5rem;
+    }
+
+    .card {
+        padding: 0 1rem;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    #myTabContent {
+        width: 90%;
+    }
+
+    .regBtn {
+        font-size: 1rem;
+        height: 2.5rem;
+    }
+
+    .radio-btn {
+        width: 12px;
+        height: 12px;
+    }
+
+    .selectUser {
+        font-size: 0.9rem;
+    }
+}
+
+/* For mobile devices */
+@media screen and (max-width: 768px) {
+    .card {
+        width: 95%;
+        /* Take up more width on mobile */
+        padding: 0 1rem;
+        max-height: 80vh;
+    }
+
+    #myTabContent {
+        width: 95%;
+        /* Make form take up more space */
+    }
+}
+
+@media screen and (max-width: 426px) {
+    #forgetHead {
+        font-size: 1.8rem;
+    }
+
+    #OTPPage h1 {
+        font-size: 1.5rem;
+    }
+
+    #OTPPage p {
+        font-size: 0.9rem;
+    }
+
+    .otp-box {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.3rem;
+    }
+
+    #timer {
+        font-size: 1rem;
+    }
+
+    .form-control span {
+        margin-right: 4rem;
+    }
+
+    .OuterCircle.signin {
+        top: -7%;
+        left: 80%;
+        transform: translateX(-5%);
+    }
+
+    .OuterCircle1.signin {
+        right: 72%;
+        bottom: -8%;
+        transform: translateX(-35%);
+    }
+}
+
+/* Fix for potential overflow in the form row layout */
+.row {
+    margin-right: 0;
+    margin-left: 0;
+    width: 100%;
+}
+
+/* Custom styling for Google Sign-up flow */
+.form-control:disabled {
+    background-color: rgba(248, 249, 250, 0.8) !important;
+    color: #6c757d !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #055160;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}

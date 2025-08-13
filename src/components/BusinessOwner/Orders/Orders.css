@@ -1,0 +1,139 @@
+.orders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px
+}
+
+.orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+}
+
+.orders-table {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 60px 220px 160px 180px 140px 320px;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06)
+}
+
+.table-head {
+    background: rgba(255, 255, 255, 0.04);
+    font-weight: 600
+}
+
+.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
+}
+
+.small {
+    font-size: 12px;
+    opacity: .9
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap
+}
+
+.btn.btn-sm {
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: transparent;
+    color: inherit
+}
+
+.btn.btn-sm.btn-danger {
+    border-color: rgba(244, 67, 54, 0.5);
+    color: #f44336
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15)
+}
+
+.status-badge.pending {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.35)
+}
+
+.status-badge.paid {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.35)
+}
+
+.status-badge.confirmed {
+    background: rgba(33, 150, 243, 0.15);
+    border-color: rgba(33, 150, 243, 0.35)
+}
+
+.status-badge.ready-for-pickup {
+    background: rgba(156, 39, 176, 0.15);
+    border-color: rgba(156, 39, 176, 0.35)
+}
+
+.status-badge.picked-up {
+    background: rgba(0, 150, 136, 0.15);
+    border-color: rgba(0, 150, 136, 0.35)
+}
+
+.status-badge.cancelled {
+    background: rgba(244, 67, 54, 0.15);
+    border-color: rgba(244, 67, 54, 0.35)
+}
+
+.no-orders {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px;
+    opacity: .8
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    padding: 24px
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+.text-success {
+    color: #4caf50
+}
+
+.text-warning {
+    color: #ffc107
+}

@@ -1,0 +1,247 @@
+/* Services Styles - Inherits from Products.css */
+/* Additional styles specific to services can be added here */
+
+.service-time-slots {
+    margin-top: 1.5rem;
+}
+
+.time-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.time-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.time-slot-card {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.time-slot-card:hover {
+    border-color: var(--dark-accent);
+    transform: translateY(-3px);
+    box-shadow: var(--dark-shadow);
+}
+
+.time-slot-day {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.time-slot-times {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.time-badge {
+    background-color: rgba(53, 99, 191, 0.15);
+    color: var(--dark-text);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.capacity-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    color: var(--dark-text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Booking calendar styles */
+.booking-calendar-container {
+    background-color: var(--dark-card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border: 1px solid var(--dark-border);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calendar-nav-btn {
+    background-color: rgba(53, 99, 191, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-accent);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+    background-color: rgba(53, 99, 191, 0.2);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    color: var(--dark-text-secondary);
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.calendar-day:hover {
+    background-color: rgba(53, 99, 191, 0.1);
+}
+
+.calendar-day.active {
+    background-color: rgba(53, 99, 191, 0.2);
+    color: var(--dark-accent);
+    font-weight: 600;
+}
+
+.calendar-day.today {
+    border: 2px solid var(--dark-accent);
+}
+
+.calendar-day.has-bookings::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    width: 6px;
+    height: 6px;
+    background-color: var(--dark-accent);
+    border-radius: 50%;
+}
+
+.calendar-day-number {
+    font-size: 1rem;
+}
+
+.calendar-day-info {
+    font-size: 0.7rem;
+    color: var(--dark-text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* Additional Form Fields for Services */
+.time-slots-container {
+    margin-top: 1.5rem;
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.day-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.day-option {
+    padding: 0.5rem 1rem;
+    background-color: var(--dark-input-bg);
+    border: 1px solid var(--dark-border);
+    border-radius: 4px;
+    color: var(--dark-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.day-option.selected {
+    background-color: var(--dark-accent);
+    color: white;
+    border-color: var(--dark-accent);
+}
+
+.time-input-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
+}
+
+.time-input {
+    flex: 1;
+}
+
+.remove-time-btn {
+    background-color: rgba(244, 67, 54, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-danger);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.remove-time-btn:hover {
+    background-color: rgba(244, 67, 54, 0.2);
+}
+
+.add-time-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(53, 99, 191, 0.1);
+    border: 1px solid rgba(53, 99, 191, 0.2);
+    border-radius: 4px;
+    color: var(--dark-accent);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+}
+
+.add-time-btn:hover {
+    background-color: rgba(53, 99, 191, 0.2);
+}

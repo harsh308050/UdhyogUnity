@@ -1,0 +1,556 @@
+/* BusinessDashboard.css - Scoped to prevent conflicts */
+.business-dashboard-theme {
+    --primary: #3563bf;
+    --secondary: #2A4FA8;
+    --accent: #5B7FD9;
+    --background-start: #0d2035;
+    --background-end: #18243A;
+    --text-light: #e0e0e0;
+    --text-muted: #b0b0b0;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-width: 250px;
+    --header-height: 70px;
+    --success: #4CAF50;
+    --warning: #FFC107;
+    --danger: #F44336;
+    --info: #2196F3;
+}
+
+.business-dashboard-theme .dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, var(--background-start), var(--background-end));
+    color: white;
+}
+
+/* Sidebar Styles */
+.business-dashboard-theme .sidebar {
+    width: var(--sidebar-width);
+    background-color: rgba(0, 0, 0, 0.2);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.business-dashboard-theme .sidebar-header {
+    padding: 1.5rem 2rem 0.7rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.business-dashboard-theme .sidebar-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    background: linear-gradient(240deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.business-dashboard-theme .business-type {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.business-dashboard-theme .sidebar-nav {
+    flex: 1;
+    padding: 1.5rem 0;
+}
+
+.business-dashboard-theme .sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.business-dashboard-theme .sidebar-nav li {
+    margin-bottom: 0.5rem;
+}
+
+.business-dashboard-theme .sidebar-nav button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.business-dashboard-theme .sidebar-nav button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.business-dashboard-theme .sidebar-nav li.active button {
+    background-color: rgba(91, 127, 217, 0.2);
+    border-left: 4px solid var(--primary);
+}
+
+.business-dashboard-theme .sidebar-nav button span {
+    margin-left: 1rem;
+}
+
+.business-dashboard-theme .sidebar-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.business-dashboard-theme .logout-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 8px;
+    color: var(--user-text-light);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.business-dashboard-theme .logout-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.business-dashboard-theme .logout-button span {
+    margin-left: 1rem;
+}
+
+/* Main Content */
+.business-dashboard-theme .dashboard-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    overflow-x: auto;
+}
+
+.business-dashboard-theme .dashboard-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.business-dashboard-theme .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.business-dashboard-theme .header-content h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-light);
+}
+
+.business-dashboard-theme .business-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.business-dashboard-theme .business-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.business-dashboard-theme .business-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.business-dashboard-theme .business-logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.business-dashboard-theme .main-content {
+    padding: 1rem;
+    width: 82vw;
+    margin: 0 auto;
+}
+
+.business-dashboard-theme .dashboard-content {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dashboard Overview Cards */
+.business-dashboard-theme .dashboard-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.business-dashboard-theme .overview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.business-dashboard-theme .overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border-color: var(--accent);
+}
+
+.business-dashboard-theme .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.business-dashboard-theme .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.business-dashboard-theme .card-info {
+    flex: 1;
+}
+
+.business-dashboard-theme .card-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .products-icon {
+    background: linear-gradient(45deg, #8B5CF6, #A78BFA);
+}
+
+.business-dashboard-theme .orders-icon {
+    background: linear-gradient(45deg, #10B981, #34D399);
+}
+
+.business-dashboard-theme .revenue-icon {
+    background: linear-gradient(45deg, #F59E0B, #FBBF24);
+}
+
+.business-dashboard-theme .customers-icon {
+    background: linear-gradient(45deg, #EF4444, #F87171);
+}
+
+.business-dashboard-theme .card-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+
+.business-dashboard-theme .card-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.business-dashboard-theme .card-change {
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.business-dashboard-theme .card-change.positive {
+    color: var(--success);
+}
+
+.business-dashboard-theme .card-change.negative {
+    color: var(--danger);
+}
+
+/* Verification Badge Styles */
+.business-dashboard-theme .verification-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    width: fit-content;
+    font-weight: 600;
+}
+
+.business-dashboard-theme .verification-badge.verified {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.business-dashboard-theme .verification-badge.pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #FFC107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+/* Quick Actions */
+.business-dashboard-theme .quick-actions {
+    margin-bottom: 2rem;
+}
+
+.business-dashboard-theme .section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: var(--text-light);
+}
+
+.business-dashboard-theme .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.business-dashboard-theme .action-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.business-dashboard-theme .action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: var(--accent);
+    color: inherit;
+    text-decoration: none;
+}
+
+.business-dashboard-theme .action-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.business-dashboard-theme .action-card:nth-child(1) .action-icon {
+    background: linear-gradient(45deg, #8B5CF6, #A78BFA);
+}
+
+.business-dashboard-theme .action-card:nth-child(2) .action-icon {
+    background: linear-gradient(45deg, #10B981, #34D399);
+}
+
+.business-dashboard-theme .action-card:nth-child(3) .action-icon {
+    background: linear-gradient(45deg, #F59E0B, #FBBF24);
+}
+
+.business-dashboard-theme .action-card:nth-child(4) .action-icon {
+    background: linear-gradient(45deg, #EF4444, #F87171);
+}
+
+.business-dashboard-theme .action-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+
+.business-dashboard-theme .action-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* Recent Activity */
+.business-dashboard-theme .recent-activity {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.business-dashboard-theme .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.business-dashboard-theme .activity-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.business-dashboard-theme .activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1rem;
+    color: white;
+}
+
+.business-dashboard-theme .activity-item:nth-child(odd) .activity-icon {
+    background: linear-gradient(45deg, #8B5CF6, #A78BFA);
+}
+
+.business-dashboard-theme .activity-item:nth-child(even) .activity-icon {
+    background: linear-gradient(45deg, #10B981, #34D399);
+}
+
+.business-dashboard-theme .activity-details {
+    flex: 1;
+}
+
+.business-dashboard-theme .activity-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-light);
+}
+
+.business-dashboard-theme .activity-description {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .activity-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .business-dashboard-theme .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+    }
+
+    .business-dashboard-theme .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .business-dashboard-theme .dashboard-main {
+        margin-left: 0;
+    }
+
+    .business-dashboard-theme .main-content {
+        padding: 1rem;
+    }
+
+    .business-dashboard-theme .dashboard-header {
+        padding: 1rem;
+    }
+
+    .business-dashboard-theme .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .business-dashboard-theme .dashboard-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .business-dashboard-theme .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .business-dashboard-theme .main-content {
+        padding: 0.5rem;
+    }
+
+    .business-dashboard-theme .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .business-dashboard-theme .overview-card,
+    .business-dashboard-theme .action-card,
+    .business-dashboard-theme .recent-activity {
+        padding: 1rem;
+    }
+}
+
+/* Loading States */
+.business-dashboard-theme .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    color: var(--text-muted);
+}
+
+/* Error States */
+.business-dashboard-theme .error {
+    color: var(--danger);
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Success States */
+.business-dashboard-theme .success {
+    color: var(--success);
+}
+
+/* Info States */
+.business-dashboard-theme .info {
+    color: var(--info);
+}

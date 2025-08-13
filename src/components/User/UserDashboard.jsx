@@ -1,0 +1,333 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Home, Search, Calendar, MessageSquare, Settings, LogOut, Package, Heart, ShoppingBag, User } from 'react-feather';
+import './UserDashboard.css';
+import { useAuth } from '../../context/AuthContext';
+import { getUserFromFirestore } from '../../Firebase/db';
+import { auth } from '../../Firebase/auth';
+import { signOut } from 'firebase/auth';
+import UserBookings from './UserBookings';
+import UserFavorites from './UserFavorites';
+import UserProfileSettings from './UserProfileSettings';
+import UserExplore from './UserExplore';
+import UserMessages from './UserMessages';
+import UserOrders from './UserOrders';
+import { getCustomerBookings } from '../../Firebase/bookingDb';
+import { getCustomerOrders } from '../../Firebase/ordersDb';
+import { collection, query, where, getDocs, doc } from 'firebase/firestore';
+import { db } from '../../Firebase/config';
+
+function UserDashboard() {
+    const [userData, setUserData] = useState(null);
+    const [activeTab, setActiveTab] = useState('home');
+    const [stats, setStats] = useState({
+        upcomingBookings: 0,
+        pendingOrders: 0,
+        savedBusinesses: 0,
+        recentReviews: 0
+    });
+
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Get user data or fetch from Firestore
+        const loadData = async () => {
+            try {
+                if (currentUser && currentUser.email) {
+                    // Try to fetch from Firestore
+                    console.log("Fetching user data for email:", currentUser.email);
+                    const firestoreData = await getUserFromFirestore(currentUser.email);
+
+                    if (firestoreData) {
+                        console.log("Retrieved user data from Firestore:", firestoreData);
+                        setUserData(firestoreData);
+                    } else {
+                        // No data found, use demo data
+                        console.log("No user data found, using demo data");
+                        setDemoData();
+                    }
+
+                    // Load real stats from Firebase
+                    await loadUserStats(currentUser.email);
+                } else {
+                    // No user found, use demo data
+                    console.log("No current user, using demo data");
+                    setDemoData();
+                }
+            } catch (err) {
+                console.error("Error user-loading user data:", err);
+                setDemoData();
+            }
+        };
+
+        loadData();
+
+        // Check if we need to redirect to a specific tab from sessionStorage
+        const redirectToTab = sessionStorage.getItem('redirectToTab');
+        if (redirectToTab) {
+            setActiveTab(redirectToTab);
+            // Clear the sessionStorage after redirection
+            sessionStorage.removeItem('redirectToTab');
+        }
+    }, [currentUser]);
+
+    // Load real user statistics from Firebase
+    const loadUserStats = async (userEmail) => {
+        try {
+            // Get upcoming bookings
+            const bookings = await getCustomerBookings(userEmail);
+            const upcomingBookings = bookings.filter(booking => {
+                const bookingDate = booking.dateTime?.toDate ? booking.dateTime.toDate() : new Date(booking.dateTime);
+                return bookingDate > new Date() && booking.status !== 'cancelled';
+            });
+
+            // Get saved businesses and products using new schema
+            const userFavoritesRef = doc(db, "UserFavorites", userEmail);
+            const businessesCollectionRef = collection(userFavoritesRef, "Businesses");
+            const productsCollectionRef = collection(userFavoritesRef, "Products");
+
+            const [businessesSnapshot, productsSnapshot, orders] = await Promise.all([
+                getDocs(businessesCollectionRef),
+                getDocs(productsCollectionRef),
+                getCustomerOrders(userEmail)
+            ]);
+
+            // Get pending orders
+            const pendingOrders = orders.filter(order =>
+                !['Picked Up', 'Cancelled'].includes(order.status)
+            ).length;
+
+            // Set the stats
+            setStats({
+                upcomingBookings: upcomingBookings.length,
+                pendingOrders: pendingOrders,
+                savedBusinesses: businessesSnapshot.size,
+                savedProducts: productsSnapshot.size,
+                recentReviews: 0 // Placeholder until review system is implemented
+            });
+        } catch (error) {
+            console.error("Error user-loading user stats:", error);
+            // Use default stats if there's an error
+            setStats({
+                upcomingBookings: 0,
+                pendingOrders: 0,
+                savedBusinesses: 0,
+                savedProducts: 0,
+                recentReviews: 0
+            });
+        }
+    };
+
+    // Set demo data for development or when no user data exists
+    const setDemoData = () => {
+        const demoData = {
+            firstName: "John",
+            lastName: "Doe",
+            email: "john.doe@example.com",
+            phone: "+91 1234567890",
+            city: "Mumbai",
+            photoURL: ""
+        };
+
+        console.log("Setting demo data:", demoData);
+        setUserData(demoData);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/login');
+        } catch (error) {
+            console.error("Error signing out:", error);
+        }
+    };
+
+    // Render placeholder content for different tabs
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'home':
+                return (
+                    <div className="user-dashboard-content">
+                        <div className="user-welcome-section">
+                            <h1 className="user-welcome-header">Welcome back, {userData?.firstName || 'User'} 👋</h1>
+                            <p>Discover local businesses and services in your area</p>
+                            <button className="user-btn-primary user-explore-btn" onClick={() => setActiveTab('explore')}>
+                                <Search size={18} />
+                                <span>Explore Businesses</span>
+                            </button>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="user-stats-section">
+                            <h2>Quick Stats</h2>
+                            <div className="user-stats-grid">
+                                <div className="user-stat-card">
+                                    <div className="user-stat-icon">
+                                        <Calendar size={24} />
+                                    </div>
+                                    <div className="user-stat-info">
+                                        <h3>Upcoming Bookings</h3>
+                                        <p className="user-stat-value">{stats.upcomingBookings} Scheduled</p>
+                                    </div>
+                                </div>
+
+                                <div className="user-stat-card">
+                                    <div className="user-stat-icon">
+                                        <Package size={24} />
+                                    </div>
+                                    <div className="user-stat-info">
+                                        <h3>Pending Orders</h3>
+                                        <p className="user-stat-value">{stats.pendingOrders} Order{stats.pendingOrders !== 1 ? 's' : ''} to Pick Up</p>
+                                    </div>
+                                </div>
+
+                                <div className="user-stat-card">
+                                    <div className="user-stat-icon">
+                                        <Heart size={24} />
+                                    </div>
+                                    <div className="user-stat-info">
+                                        <h3>Saved Businesses</h3>
+                                        <p className="user-stat-value">{stats.savedBusinesses} Saved Profiles</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Activity */}
+                        <div className="user-recent-activity-section">
+                            <h2>Recent Activity</h2>
+                            <div className="user-activity-list">
+                                {/* Show a placeholder when no activities */}
+                                <div className="user-empty-activity">
+                                    <p>No recent activity to show.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            case 'explore':
+                return <UserExplore />;
+            case 'bookings':
+                return <UserBookings />;
+            case 'messages':
+                return <UserMessages />;
+            case 'favorites':
+                return <UserFavorites />;
+            case 'orders':
+                return <UserOrders />;
+            case 'profile':
+                return <UserProfileSettings />;
+            default:
+                return <div>Select a tab to view content</div>;
+        }
+    };
+
+    if (!userData) {
+        return (
+            <div className="user-dashboard-theme">
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading user data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="user-dashboard-theme">
+            <div className="user-dashboard-container">
+                <aside className="user-sidebar">
+                    <div className="user-sidebar-header">
+                        <h3>UdhyogUnity</h3>
+                    </div>
+
+                    <nav className="user-sidebar-nav">
+                        <ul>
+                            <li className={activeTab === 'home' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('home')}>
+                                    <Home size={20} />
+                                    <span>Home</span>
+                                </button>
+                            </li>
+                            <li className={activeTab === 'explore' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('explore')}>
+                                    <Search size={20} />
+                                    <span>Explore</span>
+                                </button>
+                            </li>
+                            <li className={activeTab === 'bookings' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('bookings')}>
+                                    <Calendar size={20} />
+                                    <span>My Bookings</span>
+                                </button>
+                            </li>
+                            <li className={activeTab === 'orders' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('orders')}>
+                                    <ShoppingBag size={20} />
+                                    <span>My Orders</span>
+                                </button>
+                            </li>
+                            <li className={activeTab === 'favorites' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('favorites')}>
+                                    <Heart size={20} />
+                                    <span>Favorites</span>
+                                </button>
+                            </li>
+                            <li className={activeTab === 'messages' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('messages')}>
+                                    <MessageSquare size={20} />
+                                    <span>Messages</span>
+                                </button>
+                            </li>
+                            <li className={activeTab === 'profile' ? 'active' : ''}>
+                                <button onClick={() => setActiveTab('profile')}>
+                                    <User size={20} />
+                                    <span>Profile</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <div className="user-sidebar-footer">
+                        <button className="user-logout-button" onClick={handleLogout}>
+                            <LogOut size={20} />
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </aside>
+
+                <main className="user-dashboard-main">
+                    <header className="user-dashboard-header">
+                        <div className="user-header-content">
+                            <h2>{userData.firstName} {userData.lastName}</h2>
+                            <div className="user-menu">
+                                <div className="user-user-avatar">
+                                    {userData.photoURL ? (
+                                        <img
+                                            src={userData.photoURL}
+                                            alt={`${userData.firstName} ${userData.lastName}`}
+                                            className="user-user-photo"
+                                            onError={(e) => {
+                                                console.log("Photo failed to load:", e);
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        userData.firstName?.charAt(0) || 'U'
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="user-main-content">
+                        {renderContent()}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+}
+
+export default UserDashboard;

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Empty Box</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#E9ECEF" offset="0%"></stop>
+            <stop stop-color="#CED4DA" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#ADB5BD" offset="0%"></stop>
+            <stop stop-color="#6C757D" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Empty-Box" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Box" transform="translate(25, 40)">
+            <!-- Box Bottom -->
+            <path d="M5,50 L75,80 L145,50 L75,20 L5,50 Z" id="Bottom" fill="url(#linearGradient-1)" fill-rule="nonzero"></path>
+            
+            <!-- Box Front -->
+            <path d="M5,50 L5,100 L75,130 L75,80 L5,50 Z" id="Front" fill="#F8F9FA" fill-rule="nonzero"></path>
+            
+            <!-- Box Right -->
+            <path d="M75,80 L75,130 L145,100 L145,50 L75,80 Z" id="Right" fill="#DEE2E6" fill-rule="nonzero"></path>
+            
+            <!-- Box Top Open -->
+            <path d="M5,30 L5,50 L75,80 L145,50 L145,30 L75,0 L5,30 Z" id="Top" fill="url(#linearGradient-2)" fill-rule="nonzero" opacity="0.7"></path>
+            
+            <!-- Box Flaps -->
+            <path d="M75,0 L75,20 L145,30 L145,50 L75,80 L75,60 L5,30 L5,50 L75,80" id="Flaps" stroke="#6C757D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5,5"></path>
+        </g>
+        
+        <!-- Question Mark -->
+        <text id="?" font-family="Arial-BoldMT, Arial" font-size="40" font-weight="bold" fill="#6C757D">
+            <tspan x="90" y="120">?</tspan>
+        </text>
+        
+        <!-- Small Box Elements -->
+        <g id="Small-Box-1" transform="translate(55, 65)">
+            <rect id="Box1" fill="#CED4DA" x="0" y="0" width="15" height="15" rx="2"></rect>
+            <path d="M3,7.5 L12,7.5 M7.5,3 L7.5,12" id="Plus" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"></path>
+        </g>
+        
+        <g id="Small-Box-2" transform="translate(130, 65)">
+            <rect id="Box2" fill="#CED4DA" x="0" y="0" width="15" height="15" rx="2"></rect>
+            <path d="M3,7.5 L12,7.5" id="Minus" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"></path>
+        </g>
+    </g>
+</svg>

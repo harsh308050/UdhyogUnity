@@ -1,0 +1,578 @@
+/* Business Messages - Exact User Module Style with Business Theme Scoping */
+.business-dashboard-theme .business-user-messages {
+    padding: 1rem 0;
+    height: calc(100vh - 140px);
+}
+
+.business-dashboard-theme .business-messages-container {
+    display: flex;
+    height: 100%;
+    /* background-color: var(--card-bg); */
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+/* Conversations Sidebar - Exact User Module Style */
+.business-dashboard-theme .business-conversations-sidebar {
+    width: 350px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.business-dashboard-theme .business-sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.business-dashboard-theme .business-sidebar-header h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.business-dashboard-theme .business-search-conversations {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.business-dashboard-theme .business-search-conversations svg {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-muted);
+    z-index: 1;
+}
+
+.business-dashboard-theme .business-search-conversations input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.business-dashboard-theme .business-search-conversations input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.business-dashboard-theme .business-search-conversations input::placeholder {
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .business-conversations-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Conversation Items - User Module Style */
+.business-dashboard-theme .business-conversation-item {
+    display: flex;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.business-dashboard-theme .business-conversation-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.business-dashboard-theme .business-conversation-item.active {
+    background-color: rgba(91, 127, 217, 0.1);
+    border-right: 3px solid var(--accent);
+}
+
+
+.business-dashboard-theme .business-conversation-avatar {
+
+    background: linear-gradient(45deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    width: 15%;
+    border-radius: 50%;
+    position: relative;
+    margin-right: 1rem;
+    padding-bottom: 0.1rem;
+    flex-shrink: 0;
+}
+
+.business-dashboard-theme .business-conversation-avatar img,
+.business-dashboard-theme .business-customer-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.business-dashboard-theme .business-conversation-avatar .default-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: 2px solid var(--border-color);
+}
+
+.business-dashboard-theme .business-online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: #4CAF50;
+    border: 2px solid var(--card-bg);
+    border-radius: 50%;
+}
+
+.business-dashboard-theme .business-conversation-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.business-dashboard-theme .business-conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.business-dashboard-theme .business-conversation-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.business-dashboard-theme .business-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .business-conversation-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.business-dashboard-theme .business-conversation-preview p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    margin-right: 0.5rem;
+}
+
+.business-dashboard-theme .business-unread-badge {
+    background-color: var(--accent);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.business-dashboard-theme .business-no-conversations {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .business-no-conversations svg {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+/* Chat Area - User Module Style */
+.business-dashboard-theme .business-chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.business-dashboard-theme .business-chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.02);
+    min-height: 80px;
+}
+
+.business-dashboard-theme .business-chat-business-info {
+    display: flex;
+    align-items: center;
+}
+
+.business-dashboard-theme .business-customer-avatar {
+    position: relative;
+    margin-right: 1rem;
+}
+
+.business-dashboard-theme .business-customer-avatar img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.business-dashboard-theme .business-customer-avatar .default-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    border: 2px solid var(--border-color);
+}
+
+.business-dashboard-theme .business-customer-details h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.business-dashboard-theme .business-customer-status {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .business-chat-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.business-dashboard-theme .business-action-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: all 0.3s ease;
+}
+
+.business-dashboard-theme .business-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Messages Area - User Module Style */
+.business-dashboard-theme .business-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* background: linear-gradient(135deg, rgba(53, 99, 191, 0.05), rgba(91, 127, 217, 0.05)); */
+}
+
+/* Message Bubbles - User Module Style */
+.business-dashboard-theme .business-message {
+    display: flex;
+    margin-bottom: 0.75rem;
+    align-items: flex-end;
+}
+
+.business-dashboard-theme .business-message.sent {
+    justify-content: flex-end;
+}
+
+.business-dashboard-theme .business-message.received {
+    justify-content: flex-start;
+}
+
+.business-dashboard-theme .business-message-content {
+    max-width: 65%;
+    padding: 0.875rem 1.125rem;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.business-dashboard-theme .business-message.sent .business-message-content {
+    background: #2196f3;
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.business-dashboard-theme .business-message.received .business-message-content {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-light);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom-left-radius: 6px;
+}
+
+.business-dashboard-theme .business-message-content p {
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.business-dashboard-theme .business-message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.business-dashboard-theme .business-no-messages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .business-no-messages svg {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+/* Message Input - User Module Style */
+.business-dashboard-theme .business-message-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.business-dashboard-theme .business-message-input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.business-dashboard-theme .business-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.business-dashboard-theme .business-input-wrapper:focus-within {
+    border-color: var(--accent);
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.business-dashboard-theme .business-input-wrapper textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.4;
+    padding: 0.25rem 0;
+    font-family: inherit;
+}
+
+.business-dashboard-theme .business-input-wrapper textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.business-dashboard-theme .business-emoji-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+    margin-left: 0.5rem;
+    border-radius: 50%;
+}
+
+.business-dashboard-theme .business-emoji-btn:hover {
+    color: var(--text-light);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.business-dashboard-theme .business-send-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), #7f9cf5);
+    border-radius: 50%;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(91, 127, 217, 0.3);
+}
+
+.business-dashboard-theme .business-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(91, 127, 217, 0.4);
+}
+
+.business-dashboard-theme .business-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.business-dashboard-theme .business-send-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #7f9cf5, var(--accent));
+    transform: scale(1.05);
+}
+
+.business-dashboard-theme .business-no-conversation-selected {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+.business-dashboard-theme .business-no-conversation-selected svg {
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+    width: 64px;
+    height: 64px;
+}
+
+.business-dashboard-theme .business-no-conversation-selected h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-light);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.business-dashboard-theme .business-no-conversation-selected p {
+    margin: 0;
+    font-size: 1rem;
+    max-width: 300px;
+    line-height: 1.5;
+}
+
+/* Loading States - User Module Style */
+.business-dashboard-theme .business-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.business-dashboard-theme .business-loading-spinner {
+    border: 3px solid rgba(91, 127, 217, 0.2);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .business-dashboard-theme .business-messages-container {
+        flex-direction: column;
+        height: calc(100vh - 120px);
+    }
+
+    .business-dashboard-theme .business-conversations-sidebar {
+        width: 100%;
+        height: 40%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .business-dashboard-theme .business-chat-area {
+        height: 60%;
+    }
+
+    .business-dashboard-theme .business-message-content {
+        max-width: 85%;
+    }
+
+    .business-dashboard-theme .business-chat-actions {
+        gap: 0.25rem;
+    }
+
+    .business-dashboard-theme .business-action-btn {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 576px) {
+    .business-dashboard-theme .business-conversations-sidebar {
+        height: 35%;
+    }
+
+    .business-dashboard-theme .business-message-content {
+        max-width: 90%;
+    }
+
+    .business-dashboard-theme .business-customer-details h3 {
+        font-size: 1rem;
+    }
+}
