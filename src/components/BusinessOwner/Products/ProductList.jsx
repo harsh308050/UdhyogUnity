@@ -4,6 +4,7 @@ import { Edit, Trash2, Eye, Search, Filter, Grid, List, Plus } from 'lucide-reac
 import { Link } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import ProductListItem from './ProductListItem';
+import emptyBoxImage from '../../../assets/empty-box.svg';
 import './Products.css';
 
 const ProductList = ({ products, onEdit, onDelete, onView, onAdd, onToggleAvailability }) => {
@@ -149,7 +150,7 @@ const ProductList = ({ products, onEdit, onDelete, onView, onAdd, onToggleAvaila
                 <div className="no-products">
                     <div className="no-products-content">
                         <img
-                            src="/src/assets/empty-box.svg"
+                            src={emptyBoxImage}
                             alt="No products"
                             className="no-products-image"
                             onError={(e) => {

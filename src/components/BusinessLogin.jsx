@@ -7,6 +7,7 @@ import {
     initializeRecaptcha
 } from "../Firebase/businessAuth";
 import { updateBusinessUserInFirestore } from "../Firebase/businessDb";
+import loginImage from "../assets/login.jpg";
 import "./styles/Login.css";
 
 function BusinessLogin() {
@@ -147,7 +148,7 @@ function BusinessLogin() {
                     <div className="container px-4">
                         <div className="row">
                             <div className="col-md-6 d-flex align-items-center justify-content-start">
-                                <img src="./src/assets/login.jpg" alt="login img" className="img-fluid hero-img" />
+                                <img src={loginImage} alt="login img" className="img-fluid hero-img" />
                             </div>
                             <div className="col-md-6 rightSec">
                                 <div id="card" className="card py-1 d-flex flex-column align-items-center gap-3">
@@ -180,7 +181,7 @@ function BusinessLogin() {
                 <div className="container px-4">
                     <div className="row">
                         <div className="col-md-6 d-flex align-items-center justify-content-start">
-                            <img src="./src/assets/login.jpg" alt="login img" className="img-fluid hero-img" />
+                            <img src={loginImage} alt="login img" className="img-fluid hero-img" />
                         </div>
                         <div className="col-md-6 rightSec">
                             <div id="card" className="card py-4 d-flex flex-column align-items-center gap-3">

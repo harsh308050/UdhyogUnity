@@ -10,6 +10,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./styles/LandingPage.css";
 import { useNavigate } from "react-router-dom";
+import aboutUsImage from "../assets/aboutus.png";
+import contactUsImage from "../assets/contactus.png";
 
 function LandingPage() {
   const [visibleSections, setVisibleSections] = useState({
@@ -224,7 +226,7 @@ function LandingPage() {
         <div className="row about-content">
           <div className="col-md-6">
             <img
-              src="./src/assets/aboutus.png"
+              src={aboutUsImage}
               alt="About Us"
               className="about-image"
             />
@@ -286,7 +288,7 @@ function LandingPage() {
 
         <div className="row contact-container">
           <div className="col-md-6">
-            <img src="./src/assets/contactus.png" alt="Contactus" className="contact-img" />
+            <img src={contactUsImage} alt="Contactus" className="contact-img" />
           </div>
           <div className="col-md-6">
             <div className="contact-form">
