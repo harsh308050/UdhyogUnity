@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, ChevronDown, ChevronUp, ShoppingBag, Clock, Check, X } from 'react-feather';
 import { getCustomerOrders } from '../../Firebase/ordersDb';
+import { runOrdersMigration } from '../../Firebase/migrateOrders';
 import { useAuth } from '../../context/AuthContext';
 import './UserOrders.css';
 
@@ -25,6 +26,21 @@ function UserOrders() {
                 // Add a small delay to ensure database is ready (helpful in development)
                 if (process.env.NODE_ENV === 'development') {
                     await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+                // Run migration if not already done
+                // This will move existing orders to the nested collection structure
+                const migrationNeeded = localStorage.getItem('ordersMigrationDone') !== 'true';
+                if (migrationNeeded) {
+                    try {
+                        console.log("Running orders migration...");
+                        await runOrdersMigration();
+                        localStorage.setItem('ordersMigrationDone', 'true');
+                        console.log("Orders migration completed successfully");
+                    } catch (migrationError) {
+                        console.error("Migration error:", migrationError);
+                        // Continue with fetching orders even if migration fails
+                    }
                 }
 
                 const fetchedOrders = await getCustomerOrders(currentUser.email);
@@ -118,10 +134,31 @@ function UserOrders() {
                 return <Package className="status-icon ready" />;
             case 'Picked Up':
                 return <Check className="status-icon completed" />;
+            case 'Completed':
+                return <Check className="status-icon completed" />;
             case 'Cancelled':
                 return <X className="status-icon cancelled" />;
             default:
                 return <Clock className="status-icon pending" />;
+        }
+    };
+
+    const getStatusDescription = (status) => {
+        switch (status) {
+            case 'Paid':
+                return 'Your order has been paid for and is being processed.';
+            case 'Confirmed':
+                return 'Your order has been confirmed by the business.';
+            case 'Ready for Pickup':
+                return 'Your order is ready for pickup at the business location.';
+            case 'Picked Up':
+                return 'You have picked up your order.';
+            case 'Completed':
+                return 'Your order has been completed.';
+            case 'Cancelled':
+                return 'This order has been cancelled.';
+            default:
+                return 'Your order is pending processing.';
         }
     };
 
@@ -131,9 +168,17 @@ function UserOrders() {
             case 'Confirmed': return 'status-confirmed';
             case 'Ready for Pickup': return 'status-ready';
             case 'Picked Up': return 'status-completed';
+            case 'Completed': return 'status-completed';
             case 'Cancelled': return 'status-cancelled';
             default: return 'status-pending';
         }
+    };
+
+    const filterCounts = {
+        all: orders.length,
+        active: orders.filter(order => order && !['Picked Up', 'Completed', 'Cancelled'].includes(order.status)).length,
+        completed: orders.filter(order => order && (order.status === 'Picked Up' || order.status === 'Completed')).length,
+        cancelled: orders.filter(order => order && order.status === 'Cancelled').length
     };
 
     const filteredOrders = activeFilter === 'all'
@@ -144,10 +189,13 @@ function UserOrders() {
             const status = order.status || 'Pending';
 
             if (activeFilter === 'active') {
-                return !['Picked Up', 'Cancelled'].includes(status);
+                // Active orders: Orders that are not completed or cancelled
+                return !['Picked Up', 'Completed', 'Cancelled'].includes(status);
             } else if (activeFilter === 'completed') {
-                return status === 'Picked Up';
+                // Completed orders: Orders that are picked up or explicitly marked as completed
+                return status === 'Picked Up' || status === 'Completed';
             } else if (activeFilter === 'cancelled') {
+                // Cancelled orders
                 return status === 'Cancelled';
             }
             return true;
@@ -185,24 +233,28 @@ function UserOrders() {
                         onClick={() => setActiveFilter('all')}
                     >
                         All
+                        {filterCounts.all > 0 && <span className="filter-count">{filterCounts.all}</span>}
                     </button>
                     <button
                         className={`filter-btn ${activeFilter === 'active' ? 'active' : ''}`}
                         onClick={() => setActiveFilter('active')}
                     >
                         Active
+                        {filterCounts.active > 0 && <span className="filter-count">{filterCounts.active}</span>}
                     </button>
                     <button
                         className={`filter-btn ${activeFilter === 'completed' ? 'active' : ''}`}
                         onClick={() => setActiveFilter('completed')}
                     >
                         Completed
+                        {filterCounts.completed > 0 && <span className="filter-count">{filterCounts.completed}</span>}
                     </button>
                     <button
                         className={`filter-btn ${activeFilter === 'cancelled' ? 'active' : ''}`}
                         onClick={() => setActiveFilter('cancelled')}
                     >
                         Cancelled
+                        {filterCounts.cancelled > 0 && <span className="filter-count">{filterCounts.cancelled}</span>}
                     </button>
                 </div>
             </div>
@@ -211,8 +263,19 @@ function UserOrders() {
             {filteredOrders.length === 0 ? (
                 <div className="empty-orders">
                     <Package size={48} />
-                    <h3>No orders found</h3>
-                    <p>You don't have any {activeFilter !== 'all' ? activeFilter : ''} orders yet.</p>
+                    <h3>No {activeFilter !== 'all' ? activeFilter : ''} orders found</h3>
+                    {activeFilter === 'all' && (
+                        <p>You haven't placed any orders yet. Start by exploring products from local businesses!</p>
+                    )}
+                    {activeFilter === 'active' && (
+                        <p>You don't have any active orders at the moment. Check the 'Completed' tab to see your order history.</p>
+                    )}
+                    {activeFilter === 'completed' && (
+                        <p>You don't have any completed orders yet. Orders will appear here once they're picked up or marked as completed.</p>
+                    )}
+                    {activeFilter === 'cancelled' && (
+                        <p>You don't have any cancelled orders. That's good news!</p>
+                    )}
                 </div>
             ) : (
                 <div className="orders-list">
@@ -243,7 +306,7 @@ function UserOrders() {
                                 <div className="order-meta">
                                     <div className={`order-status ${getStatusClass(order.status)}`}>
                                         {getStatusIcon(order.status)}
-                                        <span>{order.status}</span>
+                                        <span>{order.status || 'Pending'}</span>
                                     </div>
                                     <p className="order-date">Ordered on {formatDate(order.createdAt)}</p>
                                     <button className="expand-btn">
@@ -262,6 +325,9 @@ function UserOrders() {
                                                 <p><strong>Quantity:</strong> {order.quantity}</p>
                                                 <p><strong>Total Amount:</strong> ₹{(Number(order.totalAmount) || 0).toFixed(2)}</p>
                                                 <p><strong>Ordered At:</strong> {formatDate(order.createdAt)}</p>
+                                                <p className={`status-description ${getStatusClass(order.status)}`}>
+                                                    <strong>Status:</strong> {getStatusDescription(order.status)}
+                                                </p>
                                             </div>
                                         </div>
 
@@ -292,11 +358,16 @@ function UserOrders() {
                                     </div>
 
                                     {/* Actions section for active orders */}
-                                    {!['Picked Up', 'Cancelled'].includes(order.status) && (
+                                    {!['Picked Up', 'Completed', 'Cancelled'].includes(order.status) && (
                                         <div className="order-actions">
                                             <p>Need help with this order? Contact the business directly.</p>
                                         </div>
                                     )}
+                                    {order.status === 'Picked Up' || order.status === 'Completed' ? (
+                                        <div className="order-actions completed-actions">
+                                            <p>This order has been completed. Thank you for your purchase!</p>
+                                        </div>
+                                    ) : null}
                                 </div>
                             )}
                         </div>

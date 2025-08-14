@@ -143,8 +143,8 @@ function LandingPage() {
 
       <section className="hero-section container text-center">
         <h1>
-          Connecting{" "}
-          <span className="text-accent">Cities Through Local Business</span>
+          Connecting
+          <span className="text-accent"> Cities Through Local Business</span>
         </h1>
         <p className="hero-subtitle">
           Discover and connect with local businesses in your city. Build

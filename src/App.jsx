@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import LandingPage from "./components/LandingPage";
@@ -92,6 +92,21 @@ function AppRoutes() {
 }
 
 function App() {
+  // Add event listener for when the user closes the tab or navigates away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // This won't actually have time to run on page close, but we're using 
+      // session persistence anyway which will clear when the browser is closed
+      console.log("Page is being closed");
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   return (
     <Router>
       <AuthProvider>

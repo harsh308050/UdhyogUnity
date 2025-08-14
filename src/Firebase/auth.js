@@ -4,17 +4,26 @@ import {
     signInWithEmailAndPassword,
     signOut,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    browserSessionPersistence,
+    setPersistence
 } from "firebase/auth";
 import { app } from "./config";
 import { addUserToFirestore } from "./db";
 import { uploadProfilePhoto } from "./storage";
 
 const auth = getAuth(app);
+// Set auth to use session persistence - will be cleared when browser is closed
+setPersistence(auth, browserSessionPersistence).catch((error) => {
+    console.error("Error setting auth persistence:", error);
+});
+
 const googleProvider = new GoogleAuthProvider();
 
 export const signUp = async (email, password, userData = {}) => {
     try {
+        // Use session persistence for sign-up
+        await setPersistence(auth, browserSessionPersistence);
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
@@ -37,6 +46,8 @@ export const signUp = async (email, password, userData = {}) => {
 
 export const signIn = async (email, password) => {
     try {
+        // Use session persistence - user will need to sign in again after closing browser
+        await setPersistence(auth, browserSessionPersistence);
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         return userCredential.user;
     } catch (error) {
@@ -46,6 +57,8 @@ export const signIn = async (email, password) => {
 
 export const signInWithGoogle = async () => {
     try {
+        // Use session persistence for Google sign-in as well
+        await setPersistence(auth, browserSessionPersistence);
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
 
@@ -69,8 +82,12 @@ export const signInWithGoogle = async () => {
 export const logOut = async () => {
     try {
         await signOut(auth);
+        // Clear any session storage or local storage items related to auth
+        sessionStorage.removeItem('authUser');
+        console.log("User successfully logged out. You'll need to log in again next time.");
         return true;
     } catch (error) {
+        console.error("Logout error:", error);
         throw error;
     }
 };
