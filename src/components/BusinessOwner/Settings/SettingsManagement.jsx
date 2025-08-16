@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Star, FileText, Settings as SettingsIcon, Save, Edit, Check, X } from 'react-feather';
 import { getBusinessDataFromFirestore, updateBusinessDataInFirestore, getCurrentBusinessEmail } from '../../../Firebase/getBusinessData';
 import DocumentsSettings from './DocumentsSettings';
+import ReviewsSettings from './ReviewsSettings';
 import './SimpleSettings.css';
 
 const SettingsManagement = ({ businessData: propBusinessData }) => {
@@ -271,12 +272,10 @@ const SettingsManagement = ({ businessData: propBusinessData }) => {
 
     const renderReviewsTab = () => (
         <div className="settings-tab-content">
-            <h3>Reviews & Ratings</h3>
-            <div className="placeholder-content">
-                <Star size={48} />
-                <p>No reviews yet</p>
-                <small>Customer reviews will appear here when they start rating your business.</small>
-            </div>
+            <ReviewsSettings
+                businessData={businessData}
+                onUpdate={(updates) => setBusinessData(prev => ({ ...prev, ...updates }))}
+            />
         </div>
     );
 
@@ -285,7 +284,6 @@ const SettingsManagement = ({ businessData: propBusinessData }) => {
             businessData={businessData}
             onUpdate={(updates) => {
                 setBusinessData(prev => ({ ...prev, ...updates }));
-                // You could also save these updates to Firestore here if needed
             }}
         />
     );

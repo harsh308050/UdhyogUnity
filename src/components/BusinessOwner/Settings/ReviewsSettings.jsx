@@ -8,10 +8,15 @@ import {
     respondToReview,
     getRecentBusinessReviews
 } from '../../../Firebase/reviewDb_new';
+import { getCurrentBusinessEmail } from '../../../Firebase/getBusinessData';
+import { db } from '../../../Firebase/config';
+import { collection, getDocs } from 'firebase/firestore';
 import './ReviewsSettings.css';
 
-const ReviewsSettings = ({ onUpdate }) => {
-    const { currentUser, businessData } = useAuth();
+const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
+    const { currentUser, businessData: authBusinessData } = useAuth();
+    // Prioritize business data from props over context
+    const businessData = propBusinessData || authBusinessData || {};
     const [reviews, setReviews] = useState([]);
     const [filteredReviews, setFilteredReviews] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,20 +37,70 @@ const ReviewsSettings = ({ onUpdate }) => {
     }, [currentUser, businessData]);
 
     const loadReviews = async () => {
-        if (!businessData?.id) return;
+        console.log("BusinessData available:", businessData);
+
+        // Use the email as the identifier as seen in Firebase
+        // businessEmail is used as the document ID
+        const businessEmail = businessData?.email || getCurrentBusinessEmail();
+        console.log("Using business email:", businessEmail);
+
+        if (!businessEmail) {
+            console.error("No valid business email found in businessData:", businessData);
+            setLoading(false);
+            return;
+        }
 
         try {
             setLoading(true);
+            console.log("Loading reviews for business:", businessEmail);
 
-            // Get reviews from Firestore
-            const result = await getReviews('business', businessData.id, null, 10);
-            setReviews(result.reviews || []);
-            setFilteredReviews(result.reviews || []);
-            setLastVisible(result.lastVisible);
-            setHasMoreReviews(result.reviews.length === 10);
+            // Get business reviews from Firestore
+            const businessResult = await getReviews('business', businessEmail, null, 10);
+            console.log("Business reviews result:", businessResult);
+
+            const businessReviews = businessResult.reviews || [];
+            setLastVisible(businessResult.lastVisible);
+            setHasMoreReviews(businessResult.reviews?.length === 10);
+
+            // Fetch products for this business (Available + Unavailable)
+            const availCol = collection(db, 'Products', businessEmail, 'Available');
+            const unavailCol = collection(db, 'Products', businessEmail, 'Unavailable');
+            const [availSnap, unavailSnap] = await Promise.all([getDocs(availCol), getDocs(unavailCol)]);
+
+            const allProducts = [...availSnap.docs, ...unavailSnap.docs].map(d => ({ id: d.id, ...d.data() }));
+            console.log(`Found ${allProducts.length} products for business:`, businessEmail);
+
+            // For each product, fetch recent product reviews (limit 5 each) and tag with product info
+            const productReviewPromises = allProducts.map(async (p) => {
+                try {
+                    console.log(`Fetching reviews for product: ${p.id}, business: ${businessEmail}`);
+                    const pr = await getReviews('product', businessEmail, p.id, 5);
+                    console.log(`Reviews for product ${p.id}:`, pr.reviews?.length || 0);
+
+                    // Tag each review with product metadata
+                    return (pr.reviews || []).map(r => ({ ...r, itemId: p.id, productName: p.name || p.productName || '', _reviewType: 'product' }));
+                } catch (e) {
+                    console.error('Error fetching product reviews for', p.id, e);
+                    return [];
+                }
+            });
+
+            const productReviewsArrays = await Promise.all(productReviewPromises);
+            const productReviews = productReviewsArrays.flat();
+
+            // Tag business reviews and combine
+            const taggedBusinessReviews = businessReviews.map(r => ({ ...r, _reviewType: 'business' }));
+
+            const combined = [...taggedBusinessReviews, ...productReviews];
+
+            // Sort combined reviews by createdAt desc
+            combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setReviews(combined);
+            setFilteredReviews(combined);
 
             // Get review statistics
-            const stats = await getReviewStats('business', businessData.id);
+            const stats = await getReviewStats('business', businessEmail);
             setReviewStats(stats);
 
         } catch (error) {
@@ -56,13 +111,14 @@ const ReviewsSettings = ({ onUpdate }) => {
     };
 
     const loadMoreReviews = async () => {
-        if (!businessData?.id || !lastVisible) return;
+        const businessEmail = businessData?.email || getCurrentBusinessEmail();
+        if (!businessEmail || !lastVisible) return;
 
         try {
             setLoadingMore(true);
 
             // Get more reviews starting after the last visible document
-            const result = await getReviews('business', businessData.id, null, 10, lastVisible);
+            const result = await getReviews('business', businessEmail, null, 10, lastVisible);
 
             // Append new reviews to existing ones
             setReviews(prevReviews => [...prevReviews, ...result.reviews]);
@@ -76,87 +132,8 @@ const ReviewsSettings = ({ onUpdate }) => {
         }
     };
 
-    // Temporary reviews data for development until real reviews exist
-    const mockReviews = [
-        {
-            id: '1',
-            customerName: 'John Smith',
-            customerAvatar: null,
-            rating: 5,
-            title: 'Excellent service!',
-            comment: 'The product quality is outstanding and delivery was very fast. Highly recommend this business to everyone.',
-            date: '2024-01-15',
-            helpful: 12,
-            notHelpful: 1,
-            replied: true,
-            businessReply: 'Thank you so much for your kind words! We really appreciate your feedback.',
-            replyDate: '2024-01-16',
-            verified: true
-        },
-        {
-            id: '2',
-            customerName: 'Sarah Johnson',
-            customerAvatar: null,
-            rating: 4,
-            title: 'Good experience overall',
-            comment: 'Product was as described and shipping was reasonable. Minor packaging issue but nothing major.',
-            date: '2024-01-10',
-            helpful: 8,
-            notHelpful: 0,
-            replied: false,
-            verified: true
-        },
-        {
-            id: '3',
-            customerName: 'Mike Wilson',
-            customerAvatar: null,
-            rating: 3,
-            title: 'Average service',
-            comment: 'The product is okay but took longer than expected to arrive. Customer service was responsive though.',
-            date: '2024-01-08',
-            helpful: 5,
-            notHelpful: 2,
-            replied: true,
-            businessReply: 'We apologize for the delay and are working to improve our delivery times. Thank you for your patience.',
-            replyDate: '2024-01-09',
-            verified: false
-        },
-        {
-            id: '4',
-            customerName: 'Emily Davis',
-            customerAvatar: null,
-            rating: 5,
-            title: 'Amazing quality!',
-            comment: 'Exceeded my expectations in every way. Will definitely order again!',
-            date: '2024-01-05',
-            helpful: 15,
-            notHelpful: 0,
-            replied: false,
-            verified: true
-        },
-        {
-            id: '5',
-            customerName: 'Robert Brown',
-            customerAvatar: null,
-            rating: 2,
-            title: 'Not satisfied',
-            comment: 'Product did not match the description and quality was poor. Disappointed with this purchase.',
-            date: '2024-01-03',
-            helpful: 3,
-            notHelpful: 8,
-            replied: false,
-            verified: true
-        }
-    ];
-
     useEffect(() => {
-        // Use mock reviews only if no real reviews available
-        if (reviews.length === 0 && !loading) {
-            console.log('Using mock reviews for development');
-            setReviews(mockReviews);
-            setFilteredReviews(mockReviews);
-        }
-
+        // Removed mock reviews logic - use real data only
         filterAndSortReviews();
     }, [reviews, filterRating, searchTerm, sortBy, loading]);
 
@@ -240,17 +217,28 @@ const ReviewsSettings = ({ onUpdate }) => {
     };
 
     const submitReply = async () => {
-        if (!selectedReview || !replyText.trim() || !businessData?.id) return;
+        const businessEmail = businessData?.email || getCurrentBusinessEmail();
+        if (!selectedReview || !replyText.trim() || !businessEmail) return;
 
         try {
-            // Call Firebase to add or update reply
-            await respondToReview(
-                'business',
-                businessData.id,
-                null,
-                selectedReview.id,
-                replyText.trim()
-            );
+            // Call Firebase to add or update reply based on review type
+            if (selectedReview._reviewType === 'product') {
+                await respondToReview(
+                    'product',
+                    businessEmail,
+                    selectedReview.itemId,
+                    selectedReview.id,
+                    replyText.trim()
+                );
+            } else {
+                await respondToReview(
+                    'business',
+                    businessEmail,
+                    null,
+                    selectedReview.id,
+                    replyText.trim()
+                );
+            }
 
             // Update local state
             const updatedReviews = reviews.map(review => {
@@ -279,7 +267,8 @@ const ReviewsSettings = ({ onUpdate }) => {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        const d = dateString ? (dateString.toDate ? dateString.toDate() : new Date(dateString)) : new Date();
+        return d.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
@@ -356,17 +345,6 @@ const ReviewsSettings = ({ onUpdate }) => {
 
             {/* Filters and Search */}
             <div className="reviews-controls">
-                <div className="search-filter">
-                    <div className="search-box">
-                        <Search size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search reviews..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
 
                 <div className="filter-controls">
                     <select
@@ -450,18 +428,22 @@ const ReviewsSettings = ({ onUpdate }) => {
                                 <div className="review-rating">
                                     {renderStars(review.rating)}
                                 </div>
-                                <h4 className="review-title">{review.title}</h4>
-                                <p className="review-comment">{review.comment}</p>
+                                {/* Show product name for product reviews */}
+                                {review._reviewType === 'product' && (
+                                    <div className="product-context">Product: <strong>{review.productName || review.itemId}</strong></div>
+                                )}
+                                <h4 className="review-title">{review.title || ''}</h4>
+                                <p className="review-comment">{review.comment || review.text || ''}</p>
 
                                 <div className="review-meta">
                                     <div className="helpful-votes">
                                         <button className="helpful-btn">
                                             <ThumbsUp size={14} />
-                                            {review.helpful}
+                                            {review.helpful || 0}
                                         </button>
                                         <button className="not-helpful-btn">
                                             <ThumbsDown size={14} />
-                                            {review.notHelpful}
+                                            {review.notHelpful || 0}
                                         </button>
                                     </div>
 
@@ -474,13 +456,13 @@ const ReviewsSettings = ({ onUpdate }) => {
                                     </button>
                                 </div>
 
-                                {review.replied && (
+                                {review.businessResponse && (
                                     <div className="business-reply">
                                         <div className="reply-header">
                                             <strong>Your Reply</strong>
-                                            <span className="reply-date">{formatDate(review.replyDate)}</span>
+                                            <span className="reply-date">{formatDate(review.businessResponse.createdAt)}</span>
                                         </div>
-                                        <p className="reply-text">{review.businessReply}</p>
+                                        <p className="reply-text">{review.businessResponse.text}</p>
                                     </div>
                                 )}
                             </div>

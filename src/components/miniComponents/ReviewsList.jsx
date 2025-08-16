@@ -122,13 +122,14 @@ function ReviewsList({
 
             {/* Filters and sorting */}
             <div className="reviews-controls">
-                <div className="filter-options">
+                <div className="sort-options">
                     <label htmlFor="filter-select">
                         <Filter size={14} />
                         <span>Filter:</span>
                     </label>
                     <select
                         id="filter-select"
+                        className="sort-select"
                         value={filterOption}
                         onChange={handleFilterChange}
                     >

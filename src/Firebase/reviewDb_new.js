@@ -16,6 +16,101 @@ import {
     Timestamp
 } from 'firebase/firestore';
 
+// Helper: query alternate collections (Rating / Ratings) for reviews if the Reviews/ path is missing
+const queryAlternateRatingCollections = async (reviewType, businessId, itemId = null, pageSize = 10, lastDoc = null) => {
+    try {
+        // Since we know exactly where reviews should be, we'll only check the primary path
+        // This will greatly improve performance
+        const colName = 'Ratings'; // Primary alternate collection
+        console.log(`Checking primary alternate collection: ${colName} for ${reviewType} reviews`);
+
+        // Use the business ID directly without variations
+        const colRef = collection(db, colName);
+
+        try {
+            // Try a simpler query first (without orderBy) to avoid index requirements
+            // This is used as a fallback when indexes aren't set up
+            let simpleQuery;
+            if (reviewType === 'business') {
+                simpleQuery = query(colRef, where('businessId', '==', businessId));
+            } else if (reviewType === 'product' && itemId) {
+                simpleQuery = query(colRef, where('businessId', '==', businessId), where('itemId', '==', itemId));
+            } else if (reviewType === 'service' && itemId) {
+                simpleQuery = query(colRef, where('businessId', '==', businessId), where('itemId', '==', itemId));
+            } else {
+                return { reviews: [], lastVisible: null };
+            }
+
+            const simpleSnap = await getDocs(simpleQuery);
+
+            if (!simpleSnap.empty) {
+                console.log(`Found ${simpleSnap.docs.length} reviews in ${colName} collection (using simple query)`);
+                const reviews = [];
+
+                // Process results and sort manually since we're not using orderBy in the query
+                simpleSnap.forEach(d => {
+                    const rd = d.data();
+                    reviews.push({ id: d.id, ...rd });
+                });
+
+                // Manual sort by createdAt (newest first)
+                reviews.sort((a, b) => {
+                    const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
+                    const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+                    return dateB - dateA;
+                });
+
+                // Manual pagination
+                const paginatedReviews = reviews.slice(0, pageSize);
+                return {
+                    reviews: paginatedReviews,
+                    lastVisible: paginatedReviews.length > 0 ? simpleSnap.docs.find(d => d.id === paginatedReviews[paginatedReviews.length - 1].id) : null
+                };
+            }
+
+            // If no results from simple query, try with the more complex one that requires an index
+            let complexQuery;
+            if (reviewType === 'business') {
+                complexQuery = query(colRef, where('businessId', '==', businessId), orderBy('createdAt', 'desc'), limit(pageSize));
+            } else if (reviewType === 'product' && itemId) {
+                complexQuery = query(colRef, where('businessId', '==', businessId), where('itemId', '==', itemId), orderBy('createdAt', 'desc'), limit(pageSize));
+            } else if (reviewType === 'service' && itemId) {
+                complexQuery = query(colRef, where('businessId', '==', businessId), where('itemId', '==', itemId), orderBy('createdAt', 'desc'), limit(pageSize));
+            } else {
+                return { reviews: [], lastVisible: null };
+            }
+
+            const complexSnap = await getDocs(complexQuery);
+            if (!complexSnap.empty) {
+                console.log(`Found ${complexSnap.docs.length} reviews in ${colName} collection (using complex query)`);
+                const reviews = [];
+                complexSnap.forEach(d => {
+                    const rd = d.data();
+                    reviews.push({ id: d.id, ...rd });
+                });
+
+                const lastVisible = complexSnap.docs[complexSnap.docs.length - 1];
+                return { reviews, lastVisible };
+            }
+        } catch (queryError) {
+            // If we get an index error, log it with instructions
+            if (queryError.message && queryError.message.includes('index')) {
+                console.log(`Query in ${colName} requires an index. To fix this, you need to create the appropriate index in Firebase.`);
+                console.log(`Error details: ${queryError.message}`);
+            } else {
+                console.log(`Query failed in ${colName}:`, queryError);
+            }
+
+            // Return empty results but don't throw error to allow the app to continue
+            return { reviews: [], lastVisible: null };
+        }
+    } catch (error) {
+        console.error('Error querying alternate Rating collection:', error);
+    }
+
+    return { reviews: [], lastVisible: null };
+};
+
 /**
  * Try to resolve a business identifier (which may be an email/document id or a businessName slug)
  * to the actual Businesses collection document id (typically the business email). Returns null if not found.
@@ -209,8 +304,11 @@ export const getReviews = async (reviewType, businessId, itemId = null, pageSize
         // Determine the collection path based on review type
         let collectionPath;
         if (reviewType === 'business') {
+            // For business reviews, use Reviews/Businesses/businessId
             collectionPath = `Reviews/Businesses/${businessId}`;
         } else if (reviewType === 'product' && itemId) {
+            // For product reviews, use structure observed in Firebase:
+            // Reviews/Products/businessEmail_productId
             collectionPath = `Reviews/Products/${businessId}_${itemId}`;
         } else if (reviewType === 'service' && itemId) {
             collectionPath = `Reviews/Services/${businessId}_${itemId}`;
@@ -239,6 +337,24 @@ export const getReviews = async (reviewType, businessId, itemId = null, pageSize
         // Execute query
         const reviewsSnapshot = await getDocs(reviewsQuery);
 
+        // If no reviews under Reviews/... path, try alternate Rating collections
+        if (reviewsSnapshot.empty) {
+            console.log(`No reviews found in ${collectionPath}, checking alternate collection`);
+
+            // Check once with the direct business ID - no variations or multiple attempts
+            const alt = await queryAlternateRatingCollections(reviewType, businessId, itemId, pageSize, lastDoc);
+
+            if (alt.reviews && alt.reviews.length > 0) {
+                console.log(`Found ${alt.reviews.length} reviews in alternate collection`);
+                return {
+                    reviews: alt.reviews,
+                    lastVisible: alt.lastVisible
+                };
+            } else {
+                console.log(`No reviews found in any collection for business ${businessId}`);
+            }
+        }
+
         // Format the results
         const reviews = [];
         reviewsSnapshot.forEach(doc => {
@@ -246,17 +362,17 @@ export const getReviews = async (reviewType, businessId, itemId = null, pageSize
 
             // Convert Firestore Timestamps to JS Dates
             const createdAt = reviewData.createdAt ?
-                reviewData.createdAt.toDate() :
+                (reviewData.createdAt.toDate ? reviewData.createdAt.toDate() : new Date(reviewData.createdAt)) :
                 new Date();
 
             const updatedAt = reviewData.updatedAt ?
-                reviewData.updatedAt.toDate() :
+                (reviewData.updatedAt.toDate ? reviewData.updatedAt.toDate() : new Date(reviewData.updatedAt)) :
                 new Date();
 
             const businessResponse = reviewData.businessResponse ? {
                 ...reviewData.businessResponse,
                 createdAt: reviewData.businessResponse.createdAt ?
-                    reviewData.businessResponse.createdAt.toDate() :
+                    (reviewData.businessResponse.createdAt.toDate ? reviewData.businessResponse.createdAt.toDate() : new Date(reviewData.businessResponse.createdAt)) :
                     null
             } : null;
 
@@ -269,8 +385,8 @@ export const getReviews = async (reviewType, businessId, itemId = null, pageSize
             });
         });
 
-        // Return reviews and last document for pagination
-        const lastVisible = reviewsSnapshot.docs[reviewsSnapshot.docs.length - 1];
+        // Return reviews and last document for pagination (guard when empty)
+        const lastVisible = reviewsSnapshot.docs.length > 0 ? reviewsSnapshot.docs[reviewsSnapshot.docs.length - 1] : null;
 
         return {
             reviews,
@@ -623,6 +739,66 @@ export const updateAverageRating = async (reviewType, businessId, itemId = null)
                     console.error(`Product not found in either Available or Unavailable collections for resolved business id:`, resolvedBusinessId);
                     throw new Error(`Product with ID ${itemId} not found for business ${businessId}`);
                 }
+                // After updating the product rating, recompute the business-level rating
+                try {
+                    // Fetch all products (Available + Unavailable) for the resolved business
+                    const availableCol = collection(db, 'Products', resolvedBusinessId, 'Available');
+                    const unavailableCol = collection(db, 'Products', resolvedBusinessId, 'Unavailable');
+                    const [availSnap, unavailSnap] = await Promise.all([getDocs(availableCol), getDocs(unavailableCol)]);
+
+                    // Aggregate ratings. Prefer weighted average by product.reviewCount when available.
+                    let weightedSum = 0;
+                    let totalProductReviews = 0;
+                    let simpleSum = 0;
+                    let simpleCount = 0;
+
+                    const allProductDocs = [...availSnap.docs, ...unavailSnap.docs];
+                    for (const pd of allProductDocs) {
+                        const p = pd.data() || {};
+                        if (typeof p.rating === 'number' && !Number.isNaN(p.rating)) {
+                            const prCount = Number(p.reviewCount) || 0;
+                            if (prCount > 0) {
+                                weightedSum += p.rating * prCount;
+                                totalProductReviews += prCount;
+                            } else {
+                                // If no reviewCount, treat as a single review for simple averaging
+                                simpleSum += p.rating;
+                                simpleCount += 1;
+                            }
+                        }
+                    }
+
+                    let businessAverage = 0;
+                    if (totalProductReviews > 0) {
+                        // Weighted by review counts
+                        businessAverage = weightedSum / totalProductReviews;
+                        // If there are products without reviewCount but with rating, include them equally
+                        if (simpleCount > 0) {
+                            businessAverage = ((businessAverage * totalProductReviews) + simpleSum) / (totalProductReviews + simpleCount);
+                        }
+                    } else if (simpleCount > 0) {
+                        businessAverage = simpleSum / simpleCount;
+                        totalProductReviews = simpleCount; // treat as count
+                    } else {
+                        businessAverage = 0;
+                    }
+
+                    const roundedBusinessAvg = Math.round(businessAverage * 10) / 10;
+
+                    // Update the Businesses document with aggregated rating and total review count across products
+                    try {
+                        const businessRef = doc(db, 'Businesses', resolvedBusinessId);
+                        await updateDoc(businessRef, {
+                            rating: roundedBusinessAvg,
+                            reviewCount: totalProductReviews
+                        });
+                        console.log(`Updated business (${resolvedBusinessId}) aggregated rating:`, roundedBusinessAvg, 'from', totalProductReviews, 'product reviews');
+                    } catch (be) {
+                        console.error('Error updating business aggregated rating:', be);
+                    }
+                } catch (aggErr) {
+                    console.error('Error computing business aggregated rating:', aggErr);
+                }
             } catch (error) {
                 console.error('Error updating product rating:', error);
                 throw error;
@@ -811,31 +987,98 @@ export const getUserReviews = async (userId, pageSize = 10, lastDoc = null) => {
 /**
  * Get review summary statistics for a business, product, or service
  * @param {string} reviewType - "business", "product", or "service"
- * @param {string} businessId - ID of the business
+ * @param {string} businessId - ID of the business (usually the email)
  * @param {string} itemId - ID of the product or service (if applicable)
  * @returns {Promise<object>} Review statistics
  */
 export const getReviewStats = async (reviewType, businessId, itemId = null) => {
     try {
-        console.log(`📊 Getting review stats for ${reviewType} ${businessId}`);
+        console.log(`📊 Getting review stats for ${reviewType} ${businessId}${itemId ? ', itemId: ' + itemId : ''}`);
+
+        // Input validation
+        if (!businessId) {
+            console.error('❌ Missing businessId in getReviewStats');
+            return { averageRating: 0, reviewCount: 0, ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
+        }
 
         // Determine the collection path based on review type
         let collectionPath;
         if (reviewType === 'business') {
+            // For business reviews, use Reviews/Businesses/businessEmail
             collectionPath = `Reviews/Businesses/${businessId}`;
         } else if (reviewType === 'product' && itemId) {
+            // For product reviews, use Reviews/Products/businessEmail_productId
             collectionPath = `Reviews/Products/${businessId}_${itemId}`;
         } else if (reviewType === 'service' && itemId) {
             collectionPath = `Reviews/Services/${businessId}_${itemId}`;
         } else {
-            throw new Error('Invalid review type or missing item ID');
+            console.error(`❌ Invalid review type "${reviewType}" or missing item ID for non-business review`);
+            return { averageRating: 0, reviewCount: 0, ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
         }
 
         // Get all reviews for the entity
         const reviewsQuery = query(collection(db, collectionPath));
         const reviewsSnapshot = await getDocs(reviewsQuery);
 
-        // Calculate statistics
+        // If no reviews found in canonical path, try alternate collections
+        // if (reviewsSnapshot.empty) {
+        //     console.log(`⚠️ No reviews found in ${collectionPath}, checking alternate collection`);
+        //     const alternateResults = await queryAlternateRatingCollections(reviewType, businessId, itemId, 100); // Get more reviews for accurate stats
+
+        //     if (alternateResults.reviews && alternateResults.reviews.length > 0) {
+        //         console.log(`✅ Found ${alternateResults.reviews.length} reviews in alternate collection`);
+        //         // Calculate stats from alternate collection reviews
+        //         let totalRating = 0;
+        //         let reviewCount = alternateResults.reviews.length;
+        //         const ratingCounts = {
+        //             1: 0,
+        //             2: 0,
+        //             3: 0,
+        //             4: 0,
+        //             5: 0
+        //         };
+
+        //         alternateResults.reviews.forEach(review => {
+        //             if (review.rating) {
+        //                 totalRating += review.rating;
+        //                 // Count reviews by rating
+        //                 if (review.rating >= 1 && review.rating <= 5) {
+        //                     ratingCounts[Math.floor(review.rating)]++;
+        //                 }
+        //             }
+        //         });
+
+        //         const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+        //         const roundedAverage = Math.round(averageRating * 10) / 10;
+
+        //         // Calculate rating percentages
+        //         const ratingPercentages = {};
+        //         for (let i = 1; i <= 5; i++) {
+        //             ratingPercentages[i] = reviewCount > 0 ? (ratingCounts[i] / reviewCount) * 100 : 0;
+        //         }
+
+        //         const result = {
+        //             averageRating: roundedAverage,
+        //             reviewCount,
+        //             ratingCounts,
+        //             ratingPercentages
+        //         };
+
+        //         console.log(`📊 Review stats from alternate collections:`, result);
+        //         return result;
+        //     } else {
+        //         console.log(`⚠️ No reviews found in any collection for ${reviewType} ${businessId}`);
+        //         return {
+        //             averageRating: 0,
+        //             reviewCount: 0,
+        //             ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        //             ratingPercentages: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        //         };
+        //     }
+        // }
+
+        // Calculate statistics from canonical reviews
+        console.log(`📝 Processing ${reviewsSnapshot.size} reviews from ${collectionPath}`);
         let totalRating = 0;
         let reviewCount = 0;
         const ratingCounts = {
@@ -855,6 +1098,8 @@ export const getReviewStats = async (reviewType, businessId, itemId = null) => {
                 // Count reviews by rating
                 if (reviewData.rating >= 1 && reviewData.rating <= 5) {
                     ratingCounts[Math.floor(reviewData.rating)]++;
+                } else {
+                    console.warn(`⚠️ Invalid rating value: ${reviewData.rating} in review ${doc.id}`);
                 }
             }
         });
@@ -868,15 +1113,28 @@ export const getReviewStats = async (reviewType, businessId, itemId = null) => {
             ratingPercentages[i] = reviewCount > 0 ? (ratingCounts[i] / reviewCount) * 100 : 0;
         }
 
-        return {
+        const result = {
             averageRating: roundedAverage,
             reviewCount,
             ratingCounts,
             ratingPercentages
         };
+
+        console.log(`📊 Review stats calculated for ${reviewType} ${businessId}:`, result);
+        return result;
     } catch (error) {
-        console.error('Error getting review stats:', error);
-        throw error;
+        console.error('❌ Error getting review stats:', error, {
+            reviewType,
+            businessId,
+            itemId
+        });
+        // Return default empty stats on error
+        return {
+            averageRating: 0,
+            reviewCount: 0,
+            ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            ratingPercentages: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
     }
 };
 
@@ -902,23 +1160,38 @@ export const getRecentBusinessReviews = async (businessId, limit = 5) => {
 
         const businessReviewsSnapshot = await getDocs(businessReviewsQuery);
 
+        // If there are no reviews under the Reviews path, try alternate Rating/Ratings collections
+        if (businessReviewsSnapshot.empty) {
+            const alt = await queryAlternateRatingCollections('business', businessId, null, limit);
+            if (alt.reviews && alt.reviews.length > 0) {
+                // Normalize alternate reviews into recentReviews shape
+                for (const r of alt.reviews) {
+                    const createdAt = r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt)) : new Date();
+                    const updatedAt = r.updatedAt ? (r.updatedAt.toDate ? r.updatedAt.toDate() : new Date(r.updatedAt)) : new Date();
+                    recentReviews.push({
+                        id: r.id,
+                        ...r,
+                        type: 'business',
+                        businessId,
+                        createdAt,
+                        updatedAt,
+                        businessResponse: r.businessResponse || null
+                    });
+                }
+                return recentReviews;
+            }
+        }
+
         businessReviewsSnapshot.forEach(doc => {
             const reviewData = doc.data();
 
             // Convert Firestore Timestamps to JS Dates
-            const createdAt = reviewData.createdAt ?
-                reviewData.createdAt.toDate() :
-                new Date();
-
-            const updatedAt = reviewData.updatedAt ?
-                reviewData.updatedAt.toDate() :
-                new Date();
+            const createdAt = reviewData.createdAt ? (reviewData.createdAt.toDate ? reviewData.createdAt.toDate() : new Date(reviewData.createdAt)) : new Date();
+            const updatedAt = reviewData.updatedAt ? (reviewData.updatedAt.toDate ? reviewData.updatedAt.toDate() : new Date(reviewData.updatedAt)) : new Date();
 
             const businessResponse = reviewData.businessResponse ? {
                 ...reviewData.businessResponse,
-                createdAt: reviewData.businessResponse.createdAt ?
-                    reviewData.businessResponse.createdAt.toDate() :
-                    null
+                createdAt: reviewData.businessResponse.createdAt ? (reviewData.businessResponse.createdAt.toDate ? reviewData.businessResponse.createdAt.toDate() : new Date(reviewData.businessResponse.createdAt)) : null
             } : null;
 
             recentReviews.push({

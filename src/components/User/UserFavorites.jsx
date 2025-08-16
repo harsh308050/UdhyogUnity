@@ -383,6 +383,8 @@ function UserFavorites() {
                                     </p>
                                 )}
 
+                                <br />
+
                                 {/* Product category */}
                                 {(product.category || favorite.category) && (
                                     <p className="product-category">
@@ -444,11 +446,6 @@ function UserFavorites() {
                                         )}
                                     </div>
                                 )}
-
-                                <Link to={`/product/${favorite.itemId}`} className="view-link">
-                                    <span>View Product</span>
-                                    <ExternalLink size={16} />
-                                </Link>
                             </div>
                         </div>
                     );

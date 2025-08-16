@@ -9,24 +9,6 @@ import { db } from '../../../Firebase/config';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, getDoc, setDoc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
 import './Products.css';
-import './ProductOverrides.css';
-
-/**
- * Firebase Collection Structure:
- * 
- * Products Collection
- * └── businessEmail (document ID)
- *     ├── businessName, businessId, etc. (document fields)
- *     ├── Available (subcollection)
- *     │   └── productId1 (document)
- *     │       └── {...productData} (document fields)
- *     └── Unavailable (subcollection)
- *         └── productId2 (document)
- *             └── {...productData} (document fields)
- * 
- * Products are stored in either "Available" or "Unavailable" subcollection 
- * based on their inStock status.
- */
 
 const ProductManagement = ({ businessData }) => {
     const [products, setProducts] = useState([]);
