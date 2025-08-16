@@ -3,12 +3,18 @@ import { Calendar, Clock, MapPin, X, Check, AlertTriangle, MessageSquare } from 
 import { useAuth } from '../../context/AuthContext';
 import { getCustomerBookings, updateBookingStatus } from '../../Firebase/bookingDb';
 import { startConversationWithBusiness } from '../../Firebase/messageDb';
+import { addReview, hasUserReviewed } from '../../Firebase/reviewDb_new';
+import ReviewForm from '../miniComponents/ReviewForm';
 import './UserBookings.css';
 
 function UserBookings() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('upcoming');
+    const [expandedBooking, setExpandedBooking] = useState(null);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [reviewableBookings, setReviewableBookings] = useState({});
     const { currentUser } = useAuth();
 
     useEffect(() => {
@@ -18,6 +24,33 @@ function UserBookings() {
             try {
                 const userBookings = await getCustomerBookings(currentUser.email);
                 setBookings(userBookings);
+
+                // Check which completed bookings can be reviewed
+                const reviewableStatus = {};
+
+                if (userBookings && userBookings.length > 0) {
+                    const completedBookings = userBookings.filter(booking =>
+                        booking.status === 'completed'
+                    );
+
+                    for (const booking of completedBookings) {
+                        try {
+                            // Check if user has already reviewed this booking
+                            const hasReviewed = await hasUserReviewed(
+                                currentUser.email,
+                                'service',
+                                booking.serviceId
+                            );
+
+                            reviewableStatus[booking.id] = !hasReviewed;
+                        } catch (error) {
+                            console.error("Error checking review status:", error);
+                            reviewableStatus[booking.id] = true; // Assume reviewable on error
+                        }
+                    }
+                }
+
+                setReviewableBookings(reviewableStatus);
             } catch (error) {
                 console.error("Error fetching bookings:", error);
             } finally {
@@ -76,6 +109,46 @@ function UserBookings() {
         } catch (error) {
             console.error("Error cancelling booking:", error);
         }
+    };
+
+    const handleOpenReviewForm = (booking) => {
+        setSelectedBooking(booking);
+        setShowReviewForm(true);
+    };
+
+    const handleSubmitReview = async (reviewData) => {
+        if (!currentUser || !selectedBooking) return;
+
+        try {
+            // The addReview function expects separate parameters, not an object
+            await addReview(
+                'service',
+                (selectedBooking.businessEmail || selectedBooking.businessId),
+                selectedBooking.serviceId,
+                currentUser.uid,
+                currentUser.displayName || 'Anonymous User',
+                reviewData.rating,
+                reviewData.comment,
+                currentUser.photoURL || '',
+                selectedBooking.id
+            );
+
+            // Update the reviewable status for this booking
+            setReviewableBookings({
+                ...reviewableBookings,
+                [selectedBooking.id]: false
+            });
+
+            return true;
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            throw new Error("Failed to submit review. Please try again.");
+        }
+    };
+
+    const handleCloseReviewForm = () => {
+        setShowReviewForm(false);
+        setSelectedBooking(null);
     };
 
     const formatDate = (timestamp) => {
@@ -231,8 +304,11 @@ function UserBookings() {
                                             </button>
                                         ) : null}
 
-                                        {booking.status === 'completed' && (
-                                            <button className="btn-outline leave-review">
+                                        {booking.status === 'completed' && reviewableBookings[booking.id] && (
+                                            <button
+                                                className="btn-outline leave-review"
+                                                onClick={() => handleOpenReviewForm(booking)}
+                                            >
                                                 Leave a Review
                                             </button>
                                         )}
@@ -250,6 +326,17 @@ function UserBookings() {
                         </div>
                     )}
                 </>
+            )}
+
+            {showReviewForm && selectedBooking && (
+                <div className="modal-overlay">
+                    <ReviewForm
+                        entityName={selectedBooking.serviceName}
+                        entityType="service"
+                        onSubmit={handleSubmitReview}
+                        onCancel={handleCloseReviewForm}
+                    />
+                </div>
             )}
         </div>
     );

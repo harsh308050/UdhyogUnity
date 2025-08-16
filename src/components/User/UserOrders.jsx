@@ -3,6 +3,8 @@ import { Package, ChevronDown, ChevronUp, ShoppingBag, Clock, Check, X } from 'r
 import { getCustomerOrders } from '../../Firebase/ordersDb';
 import { runOrdersMigration } from '../../Firebase/migrateOrders';
 import { useAuth } from '../../context/AuthContext';
+import { addReview, hasUserReviewed } from '../../Firebase/reviewDb_new';
+import ReviewForm from '../miniComponents/ReviewForm';
 import './UserOrders.css';
 
 function UserOrders() {
@@ -11,6 +13,9 @@ function UserOrders() {
     const [error, setError] = useState(null);
     const [expandedOrder, setExpandedOrder] = useState(null);
     const [activeFilter, setActiveFilter] = useState('all');
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [reviewableOrders, setReviewableOrders] = useState({});
     const { currentUser } = useAuth();
 
     useEffect(() => {
@@ -49,6 +54,33 @@ function UserOrders() {
                 // Check if orders array is valid
                 if (Array.isArray(fetchedOrders)) {
                     setOrders(fetchedOrders);
+
+                    // Check which completed orders can be reviewed
+                    const reviewableStatus = {};
+
+                    if (fetchedOrders && fetchedOrders.length > 0) {
+                        const completedOrders = fetchedOrders.filter(order =>
+                            order.status === 'Completed' || order.status === 'Delivered'
+                        );
+
+                        for (const order of completedOrders) {
+                            try {
+                                // Check if user has already reviewed this product
+                                const hasReviewed = await hasUserReviewed(
+                                    currentUser.email,
+                                    'product',
+                                    order.productId
+                                );
+
+                                reviewableStatus[order.id] = !hasReviewed;
+                            } catch (error) {
+                                console.error("Error checking review status:", error);
+                                reviewableStatus[order.id] = true; // Assume reviewable on error
+                            }
+                        }
+                    }
+
+                    setReviewableOrders(reviewableStatus);
                 } else {
                     console.error("Invalid orders data:", fetchedOrders);
                     setOrders([]);
@@ -172,6 +204,59 @@ function UserOrders() {
             case 'Cancelled': return 'status-cancelled';
             default: return 'status-pending';
         }
+    };
+
+    const handleOpenReviewForm = (order) => {
+        setSelectedOrder(order);
+        setShowReviewForm(true);
+    };
+
+    const handleSubmitReview = async (reviewData) => {
+        if (!currentUser || !selectedOrder) return;
+
+        try {
+            console.log('Submitting review for product:', {
+                type: 'product',
+                businessId: selectedOrder.businessId,
+                productId: selectedOrder.productId,
+                userId: currentUser.uid
+            });
+
+            // The addReview function expects separate parameters, not an object
+            await addReview(
+                'product',
+                (selectedOrder.businessEmail || selectedOrder.businessId),
+                selectedOrder.productId,
+                currentUser.uid,
+                currentUser.displayName || 'Anonymous User',
+                reviewData.rating,
+                reviewData.comment,
+                currentUser.photoURL || '',
+                selectedOrder.id
+            );
+
+            // Update the reviewable status for this order
+            setReviewableOrders({
+                ...reviewableOrders,
+                [selectedOrder.id]: false
+            });
+
+            return true;
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            if (error.message && error.message.includes('No document to update')) {
+                throw new Error("Unable to update product. The product may have been removed or moved to a different collection.");
+            } else if (error.message && error.message.includes('not found for business')) {
+                throw new Error("This product no longer exists in the system and cannot be reviewed.");
+            } else {
+                throw new Error(`Failed to submit review: ${error.message || "Unknown error occurred"}`);
+            }
+        }
+    };
+
+    const handleCloseReviewForm = () => {
+        setShowReviewForm(false);
+        setSelectedOrder(null);
     };
 
     const filterCounts = {
@@ -363,15 +448,37 @@ function UserOrders() {
                                             <p>Need help with this order? Contact the business directly.</p>
                                         </div>
                                     )}
-                                    {order.status === 'Picked Up' || order.status === 'Completed' ? (
+                                    {(order.status === 'Picked Up' || order.status === 'Completed') && (
                                         <div className="order-actions completed-actions">
                                             <p>This order has been completed. Thank you for your purchase!</p>
+                                            {reviewableOrders[order.id] && (
+                                                <button
+                                                    className="btn-review"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleOpenReviewForm(order);
+                                                    }}
+                                                >
+                                                    Leave a Review
+                                                </button>
+                                            )}
                                         </div>
-                                    ) : null}
+                                    )}
                                 </div>
                             )}
                         </div>
                     ))}
+                </div>
+            )}
+
+            {showReviewForm && selectedOrder && (
+                <div className="modal-overlay">
+                    <ReviewForm
+                        entityName={selectedOrder.productName}
+                        entityType="product"
+                        onSubmit={handleSubmitReview}
+                        onCancel={handleCloseReviewForm}
+                    />
                 </div>
             )}
         </div>

@@ -1,0 +1,270 @@
+.review-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eaeaea;
+    transition: box-shadow 0.3s ease;
+}
+
+.review-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.review-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.author-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.author-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.review-date {
+    font-size: 12px;
+    color: #777;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+}
+
+.review-content {
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #444;
+}
+
+.review-options {
+    position: relative;
+}
+
+.options-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.options-button:hover {
+    background-color: #f5f5f5;
+}
+
+.options-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.options-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    color: #333;
+}
+
+.options-menu button:hover {
+    background-color: #f5f5f5;
+}
+
+.options-menu .delete-option {
+    color: #e53935;
+}
+
+.business-response {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid #4caf50;
+}
+
+.response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.business-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.business-verified-icon {
+    color: #4caf50;
+}
+
+.business-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: #4caf50;
+}
+
+.response-date {
+    font-size: 12px;
+    color: #777;
+}
+
+.response-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #555;
+}
+
+.reply-form {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.reply-form h5 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.reply-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.cancel-button,
+.submit-button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+}
+
+.cancel-button {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.submit-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+.submit-button:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
+.review-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #555;
+}
+
+.action-button:hover {
+    background-color: #f5f5f5;
+}
+
+.reply-button {
+    color: #2196f3;
+}
+
+.report-button {
+    color: #f44336;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .review-header {
+        flex-direction: column;
+    }
+
+    .review-rating {
+        margin-top: 8px;
+    }
+
+    .review-options {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+}

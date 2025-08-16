@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ThumbsUp, ThumbsDown, MessageCircle, Filter, Search, Calendar, User, MoreHorizontal, Eye, Flag, Trash2 } from 'react-feather';
+import { Star, ThumbsUp, ThumbsDown, MessageCircle, Filter, Search, Calendar, User, MoreHorizontal, Eye, Flag, Trash2, RefreshCw } from 'react-feather';
+import { useAuth } from '../../../context/AuthContext';
+import {
+    getReviews,
+    getReviewStats,
+    respondToReview,
+    getRecentBusinessReviews
+} from '../../../Firebase/reviewDb_new';
+import './ReviewsSettings.css';
 
-const ReviewsSettings = ({ businessData, onUpdate }) => {
+const ReviewsSettings = ({ onUpdate }) => {
+    const { currentUser, businessData } = useAuth();
     const [reviews, setReviews] = useState([]);
     const [filteredReviews, setFilteredReviews] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -12,8 +21,62 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
     const [selectedReview, setSelectedReview] = useState(null);
     const [showReplyModal, setShowReplyModal] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const [reviewStats, setReviewStats] = useState(null);
+    const [lastVisible, setLastVisible] = useState(null);
+    const [hasMoreReviews, setHasMoreReviews] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
 
-    // Mock reviews data - replace with actual Firebase data
+    // Load reviews from Firebase instead of using mock data
+    useEffect(() => {
+        loadReviews();
+    }, [currentUser, businessData]);
+
+    const loadReviews = async () => {
+        if (!businessData?.id) return;
+
+        try {
+            setLoading(true);
+
+            // Get reviews from Firestore
+            const result = await getReviews('business', businessData.id, null, 10);
+            setReviews(result.reviews || []);
+            setFilteredReviews(result.reviews || []);
+            setLastVisible(result.lastVisible);
+            setHasMoreReviews(result.reviews.length === 10);
+
+            // Get review statistics
+            const stats = await getReviewStats('business', businessData.id);
+            setReviewStats(stats);
+
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadMoreReviews = async () => {
+        if (!businessData?.id || !lastVisible) return;
+
+        try {
+            setLoadingMore(true);
+
+            // Get more reviews starting after the last visible document
+            const result = await getReviews('business', businessData.id, null, 10, lastVisible);
+
+            // Append new reviews to existing ones
+            setReviews(prevReviews => [...prevReviews, ...result.reviews]);
+            setLastVisible(result.lastVisible);
+            setHasMoreReviews(result.reviews.length === 10);
+
+        } catch (error) {
+            console.error('Error loading more reviews:', error);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
+
+    // Temporary reviews data for development until real reviews exist
     const mockReviews = [
         {
             id: '1',
@@ -87,17 +150,15 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
     ];
 
     useEffect(() => {
-        // Simulate loading reviews
-        setTimeout(() => {
+        // Use mock reviews only if no real reviews available
+        if (reviews.length === 0 && !loading) {
+            console.log('Using mock reviews for development');
             setReviews(mockReviews);
             setFilteredReviews(mockReviews);
-            setLoading(false);
-        }, 1000);
-    }, []);
+        }
 
-    useEffect(() => {
         filterAndSortReviews();
-    }, [reviews, filterRating, searchTerm, sortBy]);
+    }, [reviews, filterRating, searchTerm, sortBy, loading]);
 
     const filterAndSortReviews = () => {
         let filtered = [...reviews];
@@ -149,31 +210,72 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
     };
 
     const calculateAverageRating = () => {
+        if (reviewStats) {
+            return reviewStats.averageRating.toFixed(1);
+        }
+
         if (reviews.length === 0) return 0;
         const total = reviews.reduce((sum, review) => sum + review.rating, 0);
         return (total / reviews.length).toFixed(1);
     };
 
     const getRatingDistribution = () => {
+        if (reviewStats) {
+            return reviewStats.ratingCounts;
+        }
+
         const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
         reviews.forEach(review => {
-            distribution[review.rating]++;
+            if (review.rating >= 1 && review.rating <= 5) {
+                distribution[Math.floor(review.rating)]++;
+            }
         });
         return distribution;
     };
 
     const handleReply = (review) => {
         setSelectedReview(review);
-        setReplyText(review.businessReply || '');
+        setReplyText(review.businessResponse?.text || '');
         setShowReplyModal(true);
     };
 
-    const submitReply = () => {
-        // Handle reply submission
-        console.log('Submitting reply:', replyText);
-        setShowReplyModal(false);
-        setReplyText('');
-        setSelectedReview(null);
+    const submitReply = async () => {
+        if (!selectedReview || !replyText.trim() || !businessData?.id) return;
+
+        try {
+            // Call Firebase to add or update reply
+            await respondToReview(
+                'business',
+                businessData.id,
+                null,
+                selectedReview.id,
+                replyText.trim()
+            );
+
+            // Update local state
+            const updatedReviews = reviews.map(review => {
+                if (review.id === selectedReview.id) {
+                    return {
+                        ...review,
+                        businessResponse: {
+                            text: replyText.trim(),
+                            createdAt: new Date()
+                        },
+                        replied: true
+                    };
+                }
+                return review;
+            });
+
+            setReviews(updatedReviews);
+            setShowReplyModal(false);
+            setReplyText('');
+            setSelectedReview(null);
+
+        } catch (error) {
+            console.error('Error submitting reply:', error);
+            alert('Failed to submit reply. Please try again.');
+        }
     };
 
     const formatDate = (dateString) => {
@@ -238,16 +340,16 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
 
                 <div className="reviews-stats">
                     <div className="stat-item">
-                        <div className="stat-value">{reviews.filter(r => !r.replied).length}</div>
+                        <div className="stat-value">{reviews.filter(r => !r.businessResponse).length}</div>
                         <div className="stat-label">Pending Replies</div>
                     </div>
                     <div className="stat-item">
-                        <div className="stat-value">{reviews.filter(r => r.verified).length}</div>
-                        <div className="stat-label">Verified Reviews</div>
+                        <div className="stat-value">{reviews.filter(r => r.businessResponse).length}</div>
+                        <div className="stat-label">Replied Reviews</div>
                     </div>
                     <div className="stat-item">
-                        <div className="stat-value">{reviews.reduce((sum, r) => sum + r.helpful, 0)}</div>
-                        <div className="stat-label">Helpful Votes</div>
+                        <div className="stat-value">{calculateAverageRating() >= 4 ? 'Good' : (calculateAverageRating() >= 3 ? 'Fair' : 'Needs Work')}</div>
+                        <div className="stat-label">Overall Rating</div>
                     </div>
                 </div>
             </div>
@@ -289,8 +391,12 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
                         <option value="oldest">Oldest First</option>
                         <option value="highest">Highest Rating</option>
                         <option value="lowest">Lowest Rating</option>
-                        <option value="helpful">Most Helpful</option>
                     </select>
+
+                    <button className="refresh-button" onClick={loadReviews}>
+                        <RefreshCw size={16} />
+                        <span>Refresh</span>
+                    </button>
                 </div>
             </div>
 
@@ -308,29 +414,32 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
                             <div className="review-header">
                                 <div className="customer-info">
                                     <div className="customer-avatar">
-                                        {review.customerAvatar ? (
-                                            <img src={review.customerAvatar} alt={review.customerName} />
+                                        {review.userPhotoURL ? (
+                                            <img
+                                                src={review.userPhotoURL}
+                                                alt={review.userName}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = null;
+                                                    e.target.parentNode.innerHTML = review.userName.charAt(0);
+                                                }}
+                                            />
                                         ) : (
                                             <div className="avatar-placeholder">
-                                                {review.customerName.charAt(0)}
+                                                {review.userName.charAt(0)}
                                             </div>
                                         )}
                                     </div>
                                     <div className="customer-details">
                                         <div className="customer-name">
-                                            {review.customerName}
-                                            {review.verified && (
-                                                <span className="verified-badge">✓ Verified</span>
-                                            )}
+                                            {review.userName}
                                         </div>
                                         <div className="review-date">
                                             <Calendar size={12} />
-                                            {formatDate(review.date)}
+                                            {formatDate(review.createdAt)}
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="review-actions">
+                                </div>                                <div className="review-actions">
                                     <button className="action-btn">
                                         <MoreHorizontal size={16} />
                                     </button>
@@ -421,7 +530,7 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
                                         {renderStars(selectedReview?.rating || 0)}
                                     </div>
                                     <p>"{selectedReview?.comment}"</p>
-                                    <small>- {selectedReview?.customerName}</small>
+                                    <small>- {selectedReview?.userName}</small>
                                 </div>
 
                                 <div className="reply-form">
@@ -447,7 +556,7 @@ const ReviewsSettings = ({ businessData, onUpdate }) => {
                                     onClick={submitReply}
                                     disabled={!replyText.trim()}
                                 >
-                                    {selectedReview?.replied ? 'Update Reply' : 'Send Reply'}
+                                    {selectedReview?.businessResponse ? 'Update Reply' : 'Send Reply'}
                                 </button>
                             </div>
                         </motion.div>

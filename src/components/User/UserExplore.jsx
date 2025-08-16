@@ -327,14 +327,14 @@ function UserExplore() {
                     </div>
                 )}
 
-                <div className="rating">
+                {/* <div className="rating">
                     <div className="stars">
                         {renderStars(business.rating || 0)}
                     </div>
                     <span className="rating-text">
                         ({business.reviewCount || 0} reviews)
                     </span>
-                </div>
+                </div> */}
 
                 <div className="card-actions">
                     <Link to={`/business/${business.id}`} className="btn-view">

@@ -1,0 +1,150 @@
+/* Scoped overrides to restore product management styling and avoid conflicts.
+   This file intentionally prefixes selectors with .product-management-theme to scope
+   styles to the business products area only.
+*/
+.product-management-theme .product-card {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    border: 1px solid rgba(51, 56, 68, 0.6);
+}
+
+.product-management-theme .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    border-color: rgba(53, 99, 191, 0.9);
+}
+
+.product-management-theme .product-image-container {
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-management-theme .product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-management-theme .product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.product-management-theme .discount-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: fit-content;
+    background: linear-gradient(to right, #F44336, #FF5722);
+    color: white;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    z-index: 1;
+    box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);
+}
+
+.product-management-theme .inactive-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.product-management-theme .product-details {
+    padding: 1.25rem;
+    background: linear-gradient(to bottom, #0d2035, #18243A);
+}
+
+.product-management-theme .product-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #e0e0e0;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-management-theme .product-category {
+    display: flex;
+    align-items: center;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.product-management-theme .product-price {
+    margin-bottom: 0.75rem;
+}
+
+.product-management-theme .original-price {
+    text-decoration: line-through;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+}
+
+.product-management-theme .discounted-price {
+    font-weight: 600;
+    color: #3563bf;
+    font-size: 1.1rem;
+}
+
+.product-management-theme .product-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.product-management-theme .rating-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: #3563bf;
+    color: #fff;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.product-management-theme .rating-count {
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+
+/* Small list view tweaks */
+.product-management-theme .product-list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.02));
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure buttons are visually consistent */
+.product-management-theme .list-action-button {
+    background: none;
+    border: none;
+    color: #9fb0ff;
+    padding: 0.4rem;
+    cursor: pointer;
+}
+
+/* End of overrides */

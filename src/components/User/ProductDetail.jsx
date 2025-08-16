@@ -6,9 +6,11 @@ import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../../Firebase/config';
 import { addToFavorites, removeFromFavorites, checkIfFavorite } from '../../Firebase/favoriteDb';
 import { createOrder, updatePaymentStatus } from '../../Firebase/ordersDb';
+import { getReviews, getReviewStats } from '../../Firebase/reviewDb_new';
 import { openRazorpayCheckout } from '../../utils/razorpay';
 import { Timestamp } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import ReviewsList from '../miniComponents/ReviewsList';
 
 function ProductDetail() {
     const { productId } = useParams();
@@ -27,6 +29,11 @@ function ProductDetail() {
     const [pickupTime, setPickupTime] = useState('');
     const [placingOrder, setPlacingOrder] = useState(false);
     const [orderError, setOrderError] = useState('');
+    const [reviews, setReviews] = useState([]);
+    const [reviewStats, setReviewStats] = useState(null);
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [lastReviewDoc, setLastReviewDoc] = useState(null);
+    const [hasMoreReviews, setHasMoreReviews] = useState(false);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -85,6 +92,55 @@ function ProductDetail() {
             fetchProduct();
         }
     }, [productId, currentUser]);
+
+    // Fetch reviews for the product
+    useEffect(() => {
+        const fetchReviews = async () => {
+            if (!productId || !product?.businessId) return;
+
+            try {
+                setLoadingReviews(true);
+
+                // Get review stats
+                const stats = await getReviewStats('product', product.businessId, productId);
+                setReviewStats(stats);
+
+                // Get reviews with pagination
+                const reviewsData = await getReviews('product', product.businessId, productId, 5);
+                setReviews(reviewsData.reviews || []);
+                setLastReviewDoc(reviewsData.lastVisible);
+                setHasMoreReviews(reviewsData.reviews?.length === 5);
+
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+            } finally {
+                setLoadingReviews(false);
+            }
+        };
+
+        fetchReviews();
+    }, [productId, product]);
+
+    const handleLoadMoreReviews = async () => {
+        if (!productId || !product?.businessId || !lastReviewDoc) return;
+
+        try {
+            setLoadingReviews(true);
+
+            // Get more reviews with pagination
+            const reviewsData = await getReviews('product', product.businessId, productId, 5, lastReviewDoc);
+
+            // Append new reviews to existing ones
+            setReviews([...reviews, ...(reviewsData.reviews || [])]);
+            setLastReviewDoc(reviewsData.lastVisible);
+            setHasMoreReviews(reviewsData.reviews?.length === 5);
+
+        } catch (error) {
+            console.error("Error loading more reviews:", error);
+        } finally {
+            setLoadingReviews(false);
+        }
+    };
 
     const handleQuantityChange = (newQuantity) => {
         if (newQuantity >= 1) {
@@ -398,6 +454,20 @@ function ProductDetail() {
                             </button>
                         </div>
                     </div>
+                </div>
+
+                {/* Product Reviews Section */}
+                <div className="product-reviews-section">
+                    <h2 className="section-title">Reviews</h2>
+
+                    <ReviewsList
+                        reviews={reviews}
+                        loading={loadingReviews}
+                        onLoadMore={handleLoadMoreReviews}
+                        hasMoreReviews={hasMoreReviews}
+                        stats={reviewStats}
+                        checkIsReviewAuthor={(review) => review.userId === currentUser?.uid}
+                    />
                 </div>
             </div>
 

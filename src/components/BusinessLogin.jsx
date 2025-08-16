@@ -38,8 +38,25 @@ function BusinessLogin() {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
+        // Clear any existing reCAPTCHA on component mount
+        const cleanup = () => {
+            if (window.recaptchaVerifier) {
+                try {
+                    window.recaptchaVerifier.clear();
+                    window.recaptchaVerifier = null;
+                    console.log("Cleared reCAPTCHA on component unmount");
+                } catch (error) {
+                    console.error("Error clearing reCAPTCHA:", error);
+                }
+            }
+        };
+
+        // Make sure we clean up on mount as well (in case of previous incomplete render)
+        cleanup();
+
         return () => {
             document.body.classList.remove("login-page");
+            cleanup();
         };
     }, []);
 
@@ -93,21 +110,30 @@ function BusinessLogin() {
         try {
             // Verify OTP with Firebase
             const result = await confirmationResult.confirm(otp);
+            console.log("OTP verified successfully, user:", result.user?.uid);
 
             // Update last login time in business user document
             if (validatedBusinessData) {
+                console.log("Updating last login time for business:", validatedBusinessData.email);
                 await updateBusinessUserInFirestore(validatedBusinessData.email, {
                     lastLogin: new Date().toISOString()
                 });
-            }
 
-            // Successfully logged in - redirect to business dashboard
-            // Store business data in sessionStorage for dashboard access
-            if (validatedBusinessData) {
+                // Store business data in both sessionStorage and localStorage
                 sessionStorage.setItem('businessData', JSON.stringify(validatedBusinessData));
+                localStorage.setItem('businessEmail', validatedBusinessData.email);
+
+                // Additional flag to help AuthContext identify this as a business login
+                sessionStorage.setItem('businessAuthEmail', validatedBusinessData.email);
+                sessionStorage.setItem('userType', 'business');
+
+                console.log("Business data stored in session, redirecting to dashboard");
             }
 
-            navigate("/business-dashboard");
+            // Add a small delay to ensure Firebase auth state is updated
+            setTimeout(() => {
+                navigate("/business-dashboard");
+            }, 500);
         } catch (error) {
             console.error("OTP verification error:", error);
             setError("Invalid OTP. Please try again.");

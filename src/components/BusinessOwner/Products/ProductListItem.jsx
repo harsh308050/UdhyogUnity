@@ -20,6 +20,10 @@ const ProductListItem = ({ product, onEdit, onDelete, onView, onToggleAvailabili
 
             <div className="list-cell product-name-cell">
                 <div className="product-name">{product.name}</div>
+                <div className="product-meta-small">
+                    <span className="product-rating-small">{product.rating ? Number(product.rating).toFixed(1) : '—'}</span>
+                    <span className="product-reviewcount-small">({product.reviewCount || 0})</span>
+                </div>
                 <div className="product-tags-small">
                     {product.tags.slice(0, 2).map(tag => (
                         <span key={tag} className="product-tag-small">{tag}</span>

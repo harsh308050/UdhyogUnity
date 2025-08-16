@@ -108,10 +108,10 @@ const ProductView = ({ product, onBack, onEdit, onDelete }) => {
 
                             <div className="product-rating">
                                 <div className="rating-badge">
-                                    <span>4.5</span>
+                                    <span>{product.rating ? Number(product.rating).toFixed(1) : '—'}</span>
                                     <Star size={12} fill="#ffffff" />
                                 </div>
-                                <span className="rating-count">({product.quantity} Reviews)</span>
+                                <span className="rating-count">({product.reviewCount || 0} Reviews)</span>
                             </div>
 
                             {product.isActive && (

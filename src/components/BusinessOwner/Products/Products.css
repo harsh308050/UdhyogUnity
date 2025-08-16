@@ -950,3 +950,24 @@ label {
     color: var(--dark-text-secondary) !important;
     border-radius: 8px 0 0 8px !important;
 }
+
+.product-meta-small {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    color: var(--dark-text-secondary);
+    font-size: 0.85rem;
+}
+
+.product-rating-small {
+    background: var(--dark-accent);
+    color: #fff;
+    padding: 0.1rem 0.45rem;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.product-reviewcount-small {
+    color: var(--dark-text-secondary);
+}

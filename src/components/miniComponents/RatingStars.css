@@ -1,0 +1,47 @@
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.star-container {
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.star-container.read-only {
+    cursor: default;
+}
+
+.star-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.star-outline {
+    position: relative;
+}
+
+.rating-value {
+    margin-left: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+}
+
+/* Animation for star hover */
+.star-container:hover .star-fill:not(.read-only) {
+    transform: scale(1.1);
+    transition: transform 0.1s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .rating-stars {
+        gap: 1px;
+    }
+}
