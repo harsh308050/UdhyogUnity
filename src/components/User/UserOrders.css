@@ -320,6 +320,10 @@
 }
 
 .refresh-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
     margin-top: 10px;
     padding: 8px 16px;
     background: #4a69e2;
@@ -327,6 +331,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    /* height: 100px !important; */
 }
 
 @keyframes spin {

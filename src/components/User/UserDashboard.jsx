@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, Calendar, MessageSquare, Settings, LogOut, Package, Heart, ShoppingBag, User } from 'react-feather';
 import './UserDashboard.css';
 import { useAuth } from '../../context/AuthContext';
 import { getUserFromFirestore } from '../../Firebase/db';
 import { auth } from '../../Firebase/auth';
 import { signOut } from 'firebase/auth';
-import UserBookings from './UserBookings';
+import UserBookings from './BookingSelector';
 import UserFavorites from './UserFavorites';
 import UserProfileSettings from './UserProfileSettings';
 import UserExplore from './UserExplore';
 import UserMessages from './UserMessages';
 import UserOrders from './UserOrders';
+import ServiceBookingModal from './ServiceBookingModal';
 import { getCustomerBookings } from '../../Firebase/bookingDb';
 import { getCustomerOrders } from '../../Firebase/ordersDb';
-import { collection, query, where, getDocs, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../Firebase/config';
 
 function UserDashboard() {
@@ -26,9 +27,12 @@ function UserDashboard() {
         savedBusinesses: 0,
         recentReviews: 0
     });
+    const [serviceToBook, setServiceToBook] = useState(null);
+    const [serviceLoading, setServiceLoading] = useState(false);
 
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         // Get user data or fetch from Firestore
@@ -72,38 +76,125 @@ function UserDashboard() {
         }
     }, [currentUser]);
 
+    // Check for service booking information in location state
+    useEffect(() => {
+        if (location.state?.openServiceBooking) {
+            const { serviceId, businessId, serviceData } = location.state;
+
+            // If we already have the service data, use it directly
+            if (serviceData) {
+                setServiceToBook(serviceData);
+                // Set active tab to explore to show the correct background content
+                setActiveTab('explore');
+                // Clear the location state
+                navigate(location.pathname, { replace: true, state: {} });
+                return;
+            }
+
+            // Otherwise, we need to fetch the service data from Firestore
+            const fetchServiceData = async () => {
+                setServiceLoading(true);
+                try {
+                    // Try multiple paths to find the service
+                    const paths = [
+                        `Services/${businessId}/Active/${serviceId}`,
+                        `Businesses/${businessId}/services/${serviceId}`,
+                        `Services/${businessId}/${serviceId}`
+                    ];
+
+                    let serviceData = null;
+
+                    // Try each path
+                    for (const path of paths) {
+                        console.log(`Attempting to fetch service from path: ${path}`);
+                        const serviceDoc = await getDoc(doc(db, path));
+
+                        if (serviceDoc.exists()) {
+                            serviceData = {
+                                id: serviceId,
+                                businessId: businessId,
+                                ...serviceDoc.data()
+                            };
+                            console.log(`Service data found at path: ${path}`, serviceData);
+                            break;
+                        }
+                    }
+
+                    if (serviceData) {
+                        setServiceToBook(serviceData);
+                        // Set active tab to explore to show the correct background content
+                        setActiveTab('explore');
+                    } else {
+                        console.error(`Service not found for ID: ${serviceId} and business ID: ${businessId}`);
+                        // Handle the case when service is not found
+                        alert("Service not found. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching service data:", error);
+                    alert("Error loading service details. Please try again.");
+                } finally {
+                    setServiceLoading(false);
+                    // Clear the location state
+                    navigate(location.pathname, { replace: true, state: {} });
+                }
+            };
+
+            fetchServiceData();
+        }
+    }, [location, navigate]);
+
     // Load real user statistics from Firebase
     const loadUserStats = async (userEmail) => {
         try {
             // Get upcoming bookings
             const bookings = await getCustomerBookings(userEmail);
+
+            // Filter and sort bookings on client side
             const upcomingBookings = bookings.filter(booking => {
                 const bookingDate = booking.dateTime?.toDate ? booking.dateTime.toDate() : new Date(booking.dateTime);
                 return bookingDate > new Date() && booking.status !== 'cancelled';
             });
 
-            // Get saved businesses and products using new schema
-            const userFavoritesRef = doc(db, "UserFavorites", userEmail);
-            const businessesCollectionRef = collection(userFavoritesRef, "Businesses");
-            const productsCollectionRef = collection(userFavoritesRef, "Products");
+            // Get saved businesses and products using new schema - wrap in try-catch to handle if collections don't exist
+            let savedBusinessesCount = 0;
+            let savedProductsCount = 0;
 
-            const [businessesSnapshot, productsSnapshot, orders] = await Promise.all([
-                getDocs(businessesCollectionRef),
-                getDocs(productsCollectionRef),
-                getCustomerOrders(userEmail)
-            ]);
+            try {
+                const userFavoritesRef = doc(db, "UserFavorites", userEmail);
+                const businessesCollectionRef = collection(userFavoritesRef, "Businesses");
+                const productsCollectionRef = collection(userFavoritesRef, "Products");
 
-            // Get pending orders
-            const pendingOrders = orders.filter(order =>
-                !['Picked Up', 'Cancelled'].includes(order.status)
-            ).length;
+                const [businessesSnapshot, productsSnapshot] = await Promise.all([
+                    getDocs(businessesCollectionRef),
+                    getDocs(productsCollectionRef)
+                ]);
+
+                savedBusinessesCount = businessesSnapshot.size;
+                savedProductsCount = productsSnapshot.size;
+            } catch (err) {
+                console.log("Error fetching favorites:", err);
+                // Just continue with zeros
+            }
+
+            // Get pending orders - wrap in try-catch
+            let pendingOrders = 0;
+
+            try {
+                const orders = await getCustomerOrders(userEmail);
+                pendingOrders = orders.filter(order =>
+                    !['Picked Up', 'Cancelled'].includes(order.status)
+                ).length;
+            } catch (err) {
+                console.log("Error fetching orders:", err);
+                // Just continue with zero
+            }
 
             // Set the stats
             setStats({
                 upcomingBookings: upcomingBookings.length,
                 pendingOrders: pendingOrders,
-                savedBusinesses: businessesSnapshot.size,
-                savedProducts: productsSnapshot.size,
+                savedBusinesses: savedBusinessesCount,
+                savedProducts: savedProductsCount,
                 recentReviews: 0 // Placeholder until review system is implemented
             });
         } catch (error) {
@@ -326,6 +417,28 @@ function UserDashboard() {
                     </div>
                 </main>
             </div>
+
+            {/* Service Booking Modal */}
+            {serviceToBook && (
+                <ServiceBookingModal
+                    service={serviceToBook}
+                    onClose={() => setServiceToBook(null)}
+                    onSuccess={(bookingDetails) => {
+                        console.log("Booking successful:", bookingDetails);
+                        setServiceToBook(null);
+                        // Navigate to the bookings tab
+                        setActiveTab('bookings');
+                    }}
+                />
+            )}
+
+            {/* Loading overlay for service data */}
+            {serviceLoading && (
+                <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                    <p>Loading service details...</p>
+                </div>
+            )}
         </div>
     );
 }

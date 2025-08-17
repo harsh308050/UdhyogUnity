@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Star, Heart, ShoppingBag, Package, Calendar, Zap, MessageSquare } from 'react-feather';
 import './UserExplore.css';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ProductQuickView from './ProductQuickView';
+import ServiceBookingModal from './ServiceBookingModal';
 import { getAllBusinesses, getAllProducts, getAllServices, searchAll } from '../../Firebase/exploreDb';
 import { addToFavorites, removeFromFavorites, checkIfFavorite, getUserFavorites } from '../../Firebase/favoriteDb';
 import { startConversationWithBusiness } from '../../Firebase/messageDb';
@@ -20,8 +21,10 @@ function UserExplore() {
     const [sortBy, setSortBy] = useState('featured');
     const [favorites, setFavorites] = useState(new Set());
     const [quickViewProduct, setQuickViewProduct] = useState(null);
+    const [serviceToBook, setServiceToBook] = useState(null);
 
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchData();
@@ -418,58 +421,68 @@ function UserExplore() {
         </div>
     );
 
-    const renderServiceCard = (service) => (
-        <div key={service.id} className="explore-card service-card">
-            <div className="card-image">
-                <img
-                    src={getImageUrl(service)}
-                    alt={service.name}
-                />
-                <div className="service-badge">
-                    Service
-                </div>
-            </div>
-
-            <div className="card-content">
-                <h3>{service.name}</h3>
-                <p className="business-name">{service.businessName}</p>
-                <p className="description">{service.description}</p>
-
-                <div className="service-details">
-                    <div className="price">
-                        <span className="current-price">₹{service.price?.toLocaleString()}</span>
+    const renderServiceCard = (service) => {
+        console.log("Service data in UserExplore:", service);
+        return (
+            <div key={service.id} className="explore-card service-card">
+                <div className="card-image">
+                    <img
+                        src={getImageUrl(service)}
+                        alt={service.name}
+                    />
+                    <div className="service-badge">
+                        Service
                     </div>
-                    {service.duration && (
-                        <div className="duration">
-                            <Calendar size={14} />
-                            <span>{service.duration} min</span>
+                </div>
+
+                <div className="card-content">
+                    <h3>{service.name}</h3>
+                    <p className="business-name">{service.businessName}</p>
+                    <p className="description">{service.description}</p>
+
+                    <div className="service-details">
+                        <div className="price">
+                            <span className="current-price">₹{service.price?.toLocaleString()}</span>
                         </div>
-                    )}
-                </div>
-
-                <div className="rating">
-                    <div className="stars">
-                        {renderStars(service.rating || 0)}
+                        {service.duration && (
+                            <div className="duration">
+                                <Calendar size={14} />
+                                <span>{service.duration} min</span>
+                            </div>
+                        )}
                     </div>
-                    <span className="rating-text">
-                        ({service.reviewCount || 0} reviews)
-                    </span>
-                </div>
 
-                <div className="card-actions">
-                    <Link to={`/service/${service.id}`} className="btn-view">
-                        Book Service
-                    </Link>
-                    <button
-                        className={`btn-favorite ${favorites.has(`service_${service.id}`) ? 'active' : ''}`}
-                        onClick={() => handleFavoriteToggle(service, 'service')}
-                    >
-                        <Heart size={16} />
-                    </button>
+                    <div className="rating">
+                        <div className="stars">
+                            {renderStars(service.rating || 0)}
+                        </div>
+                        <span className="rating-text">
+                            ({service.reviewCount || 0} reviews)
+                        </span>
+                    </div>
+
+                    <div className="card-actions">
+                        <button
+                            className="btn-view"
+                            onClick={() => {
+                                console.log("Opening booking modal for service:", service);
+                                setServiceToBook(service);
+                            }}
+                        >
+                            <Calendar size={16} />
+                            Book Service
+                        </button>
+                        <button
+                            className={`btn-favorite ${favorites.has(`service_${service.id}`) ? 'active' : ''}`}
+                            onClick={() => handleFavoriteToggle(service, 'service')}
+                        >
+                            <Heart size={16} />
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="user-explore">
@@ -602,10 +615,23 @@ function UserExplore() {
                                 onClose={() => setQuickViewProduct(null)}
                             />
                         )}
+
+                        {serviceToBook && (
+                            <ServiceBookingModal
+                                service={serviceToBook}
+                                onClose={() => setServiceToBook(null)}
+                                onSuccess={(bookingDetails) => {
+                                    console.log("Booking successful:", bookingDetails);
+                                    setServiceToBook(null);
+                                    // You could navigate to the bookings tab or show a success message
+                                }}
+                            />
+                        )}
                     </>
                 )}
             </div>
         </div>
     );
 }
+
 export default UserExplore;

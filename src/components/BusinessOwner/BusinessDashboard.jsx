@@ -7,6 +7,7 @@ import ServiceManagement from './Services/ServiceManagement';
 import SettingsManagement from './Settings/SettingsManagement';
 import BusinessMessages from './Messages/BusinessMessages';
 import OrdersManagement from './Orders/OrdersManagement';
+import EnhancedBookingManagement from './Services/Bookings/EnhancedBookingManagement';
 import { getBusinessDataFromFirestore, getCurrentBusinessEmail } from '../../Firebase/getBusinessData';
 
 function BusinessDashboard() {
@@ -244,12 +245,7 @@ function BusinessDashboard() {
             case 'reservations':
                 return (
                     <div className="dashboard-content">
-                        <h1>Customer Reservations</h1>
-                        <p>View and manage customer reservations for offline pickup.</p>
-                        <div className="placeholder-container">
-                            <Calendar size={48} />
-                            <p>Your reservation management interface will appear here.</p>
-                        </div>
+                        <EnhancedBookingManagement businessData={businessData} />
                     </div>
                 );
             case 'messages':

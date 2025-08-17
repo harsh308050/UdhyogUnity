@@ -1,34 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+    Calendar, Clock, User, Phone, Mail, FileText, CheckCircle,
+    CreditCard, DollarSign, Calendar as CalendarIcon, ChevronLeft, ChevronRight
+} from 'lucide-react';
 import { addBooking } from '../../../../Firebase/bookingDb';
 import { generateAvailableTimeSlots } from '../../../../Firebase/scheduleDb';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../../../../Firebase/config';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
-import { useAuth } from '../../../../context/AuthContext';
 import './BookingForm.css';
 
-const BookingForm = ({ service, businessData, onSuccess }) => {
+const EnhancedBookingForm = ({ service, businessData, onSuccess }) => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [availableDates, setAvailableDates] = useState([]);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [existingBookings, setExistingBookings] = useState([]);
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
-    const [validationErrors, setValidationErrors] = useState({
-        date: null,
-        time: null,
-        customerName: null,
-        customerPhone: null,
-        customerEmail: null
-    });
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [paymentMethod, setPaymentMethod] = useState('pay_at_store');
 
     const [formData, setFormData] = useState({
-        customerName: currentUser?.displayName || '',
+        customerName: '',
         customerPhone: '',
-        customerEmail: currentUser?.email || '',
+        customerEmail: '',
         notes: ''
     });
 
@@ -46,7 +43,60 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
     // Get business hours from businessData or use defaults
     const businessHours = businessData?.businessHours || defaultBusinessHours;
 
-    // Fetch existing bookings for the service provider
+    // Generate calendar dates for the current month
+    useEffect(() => {
+        const generateDates = () => {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+
+            // Get the first day of the month
+            const firstDay = new Date(year, month, 1);
+
+            // Get the last day of the month
+            const lastDay = new Date(year, month + 1, 0);
+
+            // Get the day of the week of the first day (0 = Sunday, 6 = Saturday)
+            const firstDayOfWeek = firstDay.getDay();
+
+            // Create an array to hold all the dates
+            const dates = [];
+
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                dates.push({ date: null, available: false });
+            }
+
+            // Add all the days of the month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toISOString().split('T')[0];
+
+                // Check if it's a business day
+                const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'lowercase' });
+                const dayHours = businessHours[dayOfWeek];
+
+                // Check if the date is in the past
+                const isPast = date < new Date().setHours(0, 0, 0, 0);
+
+                // Calculate availability
+                const isAvailable = !isPast && dayHours && dayHours.isOpen;
+
+                dates.push({
+                    date,
+                    dateString,
+                    day,
+                    available: isAvailable,
+                    isToday: dateString === new Date().toISOString().split('T')[0]
+                });
+            }
+
+            setAvailableDates(dates);
+        };
+
+        generateDates();
+    }, [currentMonth, businessHours]);
+
+    // Fetch existing bookings for the service provider when date changes
     useEffect(() => {
         if (!businessData?.businessId || !selectedDate) return;
 
@@ -149,9 +199,10 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
                     );
                 });
 
-                if (!isBooked) {
-                    slots.push(timeString);
-                }
+                slots.push({
+                    time: timeString,
+                    available: !isBooked
+                });
 
                 currentMinutes += slotIncrement;
             }
@@ -169,52 +220,19 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
             ...formData,
             [name]: value
         });
-
-        // Clear validation error for this field when user starts typing
-        if (validationErrors[name]) {
-            setValidationErrors({
-                ...validationErrors,
-                [name]: null
-            });
-        }
-    };
-
-    // Validate form data
-    const validateForm = () => {
-        const errors = {};
-
-        if (!selectedDate) {
-            errors.date = 'Please select a date';
-        }
-
-        if (!selectedTime) {
-            errors.time = 'Please select a time';
-        }
-
-        if (!formData.customerName.trim()) {
-            errors.customerName = 'Name is required';
-        }
-
-        if (!formData.customerPhone.trim()) {
-            errors.customerPhone = 'Phone number is required';
-        } else if (!/^(\+\d{1,3}[- ]?)?\d{10}$/.test(formData.customerPhone.replace(/\s+/g, ''))) {
-            errors.customerPhone = 'Please enter a valid phone number';
-        }
-
-        if (formData.customerEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
-            errors.customerEmail = 'Please enter a valid email address';
-        }
-
-        setValidationErrors(errors);
-        return Object.keys(errors).length === 0;
     };
 
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateForm()) {
-            toast.error("Please fix the errors in the form");
+        if (!selectedDate || !selectedTime) {
+            toast.error("Please select a date and time for your appointment");
+            return;
+        }
+
+        if (!formData.customerName || !formData.customerPhone) {
+            toast.error("Please provide your name and phone number");
             return;
         }
 
@@ -228,21 +246,22 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
 
             // Create booking record
             const bookingData = {
-                businessId: businessData.businessId || businessData.email || businessId,
-                businessName: businessData.businessName || businessData.name || "Business",
+                businessId: businessData.businessId,
+                businessName: businessData.businessName,
                 serviceId: service.id,
                 serviceName: service.name,
                 dateTime: Timestamp.fromDate(dateTime),
                 status: 'pending',
+                paymentMethod: paymentMethod,
+                paymentStatus: paymentMethod === 'pay_now' ? 'paid' : 'pending',
+                price: service.price,
+                duration: service.duration,
                 ...formData,
-                userId: currentUser?.uid || null,
-                customerEmail: currentUser?.email || formData.customerEmail, // Ensure this field exists
-                createdAt: Timestamp.now(),
-                price: service.price || 0
+                createdAt: Timestamp.now()
             };
 
             // Add to Firestore
-            const docRef = await addDoc(collection(db, "bookings"), bookingData);
+            const booking = await addBooking(bookingData);
 
             setLoading(false);
             toast.success("Booking request submitted successfully!");
@@ -250,7 +269,7 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
             // Call onSuccess callback with booking info
             if (onSuccess) {
                 onSuccess({
-                    id: docRef.id,
+                    id: booking.id,
                     ...bookingData,
                     dateTime: dateTime
                 });
@@ -262,37 +281,43 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
         }
     };
 
-    // Generate date options (next 30 days)
-    const generateDateOptions = () => {
-        const options = [];
+    // Handle month navigation
+    const goToPreviousMonth = () => {
+        const prevMonth = new Date(currentMonth);
+        prevMonth.setMonth(prevMonth.getMonth() - 1);
+        setCurrentMonth(prevMonth);
+    };
+
+    const goToNextMonth = () => {
+        const nextMonth = new Date(currentMonth);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        setCurrentMonth(nextMonth);
+    };
+
+    // Format the current month and year
+    const formatMonthYear = (date) => {
+        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    };
+
+    // Check if a previous month is allowed (not before current month)
+    const isPrevMonthAllowed = () => {
         const today = new Date();
+        return !(
+            currentMonth.getMonth() === today.getMonth() &&
+            currentMonth.getFullYear() === today.getFullYear()
+        );
+    };
 
-        for (let i = 0; i < 30; i++) {
-            const date = new Date();
-            date.setDate(today.getDate() + i);
+    // Limit to next 3 months
+    const isNextMonthAllowed = () => {
+        const today = new Date();
+        const maxDate = new Date();
+        maxDate.setMonth(today.getMonth() + 3);
 
-            // Skip dates when business is closed
-            const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'lowercase' });
-            const dayHours = businessHours[dayOfWeek];
-
-            if (dayHours && dayHours.isOpen) {
-                const dateString = date.toISOString().split('T')[0];
-                const formattedDate = date.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-
-                options.push(
-                    <option key={dateString} value={dateString}>
-                        {formattedDate}
-                    </option>
-                );
-            }
-        }
-
-        return options;
+        return !(
+            currentMonth.getMonth() === maxDate.getMonth() &&
+            currentMonth.getFullYear() === maxDate.getFullYear()
+        );
     };
 
     return (
@@ -329,82 +354,137 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
 
             <form onSubmit={handleSubmit}>
                 <div className="form-section">
-                    <h4 className="section-title">Select Date & Time</h4>
+                    <h4 className="section-title">Select Date</h4>
 
-                    <div className={`form-group ${validationErrors.date ? 'has-error' : ''}`}>
-                        <label htmlFor="appointmentDate">Date</label>
-                        <select
-                            id="appointmentDate"
-                            className="form-control"
-                            value={selectedDate}
-                            onChange={(e) => {
-                                setSelectedDate(e.target.value);
-                                setSelectedTime(''); // Reset time when date changes
-                                // Clear validation error
-                                if (validationErrors.date) {
-                                    setValidationErrors({ ...validationErrors, date: null });
-                                }
-                            }}
-                            required
-                        >
-                            <option value="">Select a date</option>
-                            {generateDateOptions()}
-                        </select>
-                        {validationErrors.date && (
-                            <div className="error-message">
-                                <AlertCircle size={14} />
-                                {validationErrors.date}
-                            </div>
-                        )}
-                    </div>
+                    <div className="date-picker-container">
+                        <div className="month-selector">
+                            <button
+                                type="button"
+                                className="month-nav-btn"
+                                onClick={goToPreviousMonth}
+                                disabled={!isPrevMonthAllowed()}
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <span className="current-month">{formatMonthYear(currentMonth)}</span>
+                            <button
+                                type="button"
+                                className="month-nav-btn"
+                                onClick={goToNextMonth}
+                                disabled={!isNextMonthAllowed()}
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
 
-                    <div className={`form-group ${validationErrors.time ? 'has-error' : ''}`}>
-                        <label htmlFor="appointmentTime">Time</label>
-                        {selectedDate ? (
-                            availableSlots.length > 0 ? (
-                                <select
-                                    id="appointmentTime"
-                                    className="form-control"
-                                    value={selectedTime}
-                                    onChange={(e) => {
-                                        setSelectedTime(e.target.value);
-                                        // Clear validation error
-                                        if (validationErrors.time) {
-                                            setValidationErrors({ ...validationErrors, time: null });
+                        <div className="week-days">
+                            <div className="week-day">Sun</div>
+                            <div className="week-day">Mon</div>
+                            <div className="week-day">Tue</div>
+                            <div className="week-day">Wed</div>
+                            <div className="week-day">Thu</div>
+                            <div className="week-day">Fri</div>
+                            <div className="week-day">Sat</div>
+                        </div>
+
+                        <div className="date-grid">
+                            {availableDates.map((dateObj, index) => (
+                                <div
+                                    key={index}
+                                    className={`date-cell ${dateObj.date ? '' : 'empty'} ${dateObj.isToday ? 'today' : ''
+                                        } ${dateObj.available ? '' : 'unavailable'} ${dateObj.dateString === selectedDate ? 'selected' : ''
+                                        }`}
+                                    onClick={() => {
+                                        if (dateObj.date && dateObj.available) {
+                                            setSelectedDate(dateObj.dateString);
+                                            setSelectedTime(''); // Reset time when date changes
                                         }
                                     }}
-                                    required
                                 >
-                                    <option value="">Select a time</option>
-                                    {availableSlots.map(time => (
-                                        <option key={time} value={time}>
-                                            {time}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <div className="no-slots-message">
-                                    No available slots for this date. Please select another date.
+                                    {dateObj.day}
                                 </div>
-                            )
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="form-section">
+                    <h4 className="section-title">Select Time</h4>
+
+                    {selectedDate ? (
+                        availableSlots.length > 0 ? (
+                            <div className="time-slots">
+                                {availableSlots.map(slot => (
+                                    <div
+                                        key={slot.time}
+                                        className={`time-slot ${slot.time === selectedTime ? 'selected' : ''
+                                            } ${slot.available ? '' : 'unavailable'}`}
+                                        onClick={() => {
+                                            if (slot.available) {
+                                                setSelectedTime(slot.time);
+                                            }
+                                        }}
+                                    >
+                                        {slot.time}
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
                             <div className="no-slots-message">
-                                Please select a date first
+                                No available slots for this date. Please select another date.
                             </div>
-                        )}
-                        {validationErrors.time && (
-                            <div className="error-message">
-                                <AlertCircle size={14} />
-                                {validationErrors.time}
-                            </div>
-                        )}
+                        )
+                    ) : (
+                        <div className="no-slots-message">
+                            Please select a date first
+                        </div>
+                    )}
+                </div>
+
+                <div className="form-section">
+                    <h4 className="section-title">Payment Method</h4>
+
+                    <div className="payment-methods">
+                        <div className="payment-method">
+                            <input
+                                type="radio"
+                                id="pay_at_store"
+                                name="paymentMethod"
+                                value="pay_at_store"
+                                checked={paymentMethod === 'pay_at_store'}
+                                onChange={() => setPaymentMethod('pay_at_store')}
+                            />
+                            <label htmlFor="pay_at_store" className="payment-method-label">
+                                <div className="payment-icon">
+                                    <DollarSign size={16} />
+                                </div>
+                                Pay at Store
+                            </label>
+                        </div>
+
+                        <div className="payment-method">
+                            <input
+                                type="radio"
+                                id="pay_now"
+                                name="paymentMethod"
+                                value="pay_now"
+                                checked={paymentMethod === 'pay_now'}
+                                onChange={() => setPaymentMethod('pay_now')}
+                            />
+                            <label htmlFor="pay_now" className="payment-method-label">
+                                <div className="payment-icon">
+                                    <CreditCard size={16} />
+                                </div>
+                                Pay Now Online
+                            </label>
+                        </div>
                     </div>
                 </div>
 
                 <div className="form-section">
                     <h4 className="section-title">Your Details</h4>
 
-                    <div className={`form-group ${validationErrors.customerName ? 'has-error' : ''}`}>
+                    <div className="form-group">
                         <label htmlFor="customerName">
                             <User size={14} />
                             Name*
@@ -419,15 +499,9 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
                             placeholder="Your full name"
                             required
                         />
-                        {validationErrors.customerName && (
-                            <div className="error-message">
-                                <AlertCircle size={14} />
-                                {validationErrors.customerName}
-                            </div>
-                        )}
                     </div>
 
-                    <div className={`form-group ${validationErrors.customerPhone ? 'has-error' : ''}`}>
+                    <div className="form-group">
                         <label htmlFor="customerPhone">
                             <Phone size={14} />
                             Phone Number*
@@ -442,18 +516,12 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
                             placeholder="Your phone number"
                             required
                         />
-                        {validationErrors.customerPhone && (
-                            <div className="error-message">
-                                <AlertCircle size={14} />
-                                {validationErrors.customerPhone}
-                            </div>
-                        )}
                     </div>
 
-                    <div className={`form-group ${validationErrors.customerEmail ? 'has-error' : ''}`}>
+                    <div className="form-group">
                         <label htmlFor="customerEmail">
                             <Mail size={14} />
-                            Email {!currentUser ? '(optional)' : ''}
+                            Email (optional)
                         </label>
                         <input
                             type="email"
@@ -463,14 +531,7 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
                             value={formData.customerEmail}
                             onChange={handleChange}
                             placeholder="Your email address"
-                            disabled={!!currentUser}
                         />
-                        {validationErrors.customerEmail && (
-                            <div className="error-message">
-                                <AlertCircle size={14} />
-                                {validationErrors.customerEmail}
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -496,7 +557,7 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
                     <button
                         type="submit"
                         className="btn-book"
-                        disabled={loading}
+                        disabled={loading || !selectedDate || !selectedTime}
                     >
                         {loading ? (
                             <>
@@ -516,4 +577,4 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
     );
 };
 
-export default BookingForm;
+export default EnhancedBookingForm;

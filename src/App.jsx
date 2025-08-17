@@ -75,6 +75,11 @@ function AppRoutes() {
           <UserProfileSettings />
         </ProtectedRoute>
       } />
+      <Route path="/service/:serviceId/:businessId" element={
+        <ProtectedRoute>
+          <ServiceBooking />
+        </ProtectedRoute>
+      } />
       <Route path="/service/:businessId/:serviceId" element={
         <ProtectedRoute>
           <ServiceBooking />

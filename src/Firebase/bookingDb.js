@@ -121,10 +121,12 @@ export const deleteBooking = async (bookingId) => {
 // Get all bookings for a business
 export const getBusinessBookings = async (businessId) => {
     try {
+        console.log("Getting bookings for businessId:", businessId);
+
+        // Use simple query without orderBy to avoid requiring a composite index
         const q = query(
             collection(db, "bookings"),
-            where("businessId", "==", businessId),
-            orderBy("dateTime", "desc")
+            where("businessId", "==", businessId)
         );
 
         const querySnapshot = await getDocs(q);
@@ -132,6 +134,15 @@ export const getBusinessBookings = async (businessId) => {
             id: doc.id,
             ...doc.data()
         }));
+
+        console.log(`Found ${bookings.length} bookings for businessId: ${businessId}`);
+
+        // Sort the results in memory instead of using orderBy in the query
+        bookings.sort((a, b) => {
+            const dateA = a.dateTime?.toDate ? a.dateTime.toDate() : new Date(a.dateTime);
+            const dateB = b.dateTime?.toDate ? b.dateTime.toDate() : new Date(b.dateTime);
+            return dateB - dateA; // Descending order (newest first)
+        });
 
         return bookings;
     } catch (error) {
@@ -143,10 +154,10 @@ export const getBusinessBookings = async (businessId) => {
 // Get bookings for a specific service
 export const getServiceBookings = async (serviceId) => {
     try {
+        // Use simple query without orderBy to avoid requiring a composite index
         const q = query(
             collection(db, "bookings"),
-            where("serviceId", "==", serviceId),
-            orderBy("dateTime", "desc")
+            where("serviceId", "==", serviceId)
         );
 
         const querySnapshot = await getDocs(q);
@@ -154,6 +165,13 @@ export const getServiceBookings = async (serviceId) => {
             id: doc.id,
             ...doc.data()
         }));
+
+        // Sort the results in memory instead of using orderBy in the query
+        bookings.sort((a, b) => {
+            const dateA = a.dateTime?.toDate ? a.dateTime.toDate() : new Date(a.dateTime);
+            const dateB = b.dateTime?.toDate ? b.dateTime.toDate() : new Date(b.dateTime);
+            return dateB - dateA; // Descending order (newest first)
+        });
 
         return bookings;
     } catch (error) {
@@ -163,12 +181,12 @@ export const getServiceBookings = async (serviceId) => {
 };
 
 // Get bookings for a specific customer
-export const getCustomerBookings = async (customerId) => {
+export const getCustomerBookings = async (customerEmail) => {
     try {
+        // Use simpler query without orderBy to avoid requiring a compound index
         const q = query(
             collection(db, "bookings"),
-            where("customerId", "==", customerId),
-            orderBy("dateTime", "desc")
+            where("customerEmail", "==", customerEmail)
         );
 
         const querySnapshot = await getDocs(q);
@@ -176,6 +194,13 @@ export const getCustomerBookings = async (customerId) => {
             id: doc.id,
             ...doc.data()
         }));
+
+        // Sort the results in memory instead of using orderBy in the query
+        bookings.sort((a, b) => {
+            const dateA = a.dateTime?.toDate ? a.dateTime.toDate() : new Date(a.dateTime);
+            const dateB = b.dateTime?.toDate ? b.dateTime.toDate() : new Date(b.dateTime);
+            return dateB - dateA; // Descending order (newest first)
+        });
 
         return bookings;
     } catch (error) {
@@ -211,12 +236,12 @@ export const getBookingsByDateRange = async (businessId, startDate, endDate) => 
         const startTimestamp = Timestamp.fromDate(new Date(startDate));
         const endTimestamp = Timestamp.fromDate(new Date(endDate));
 
+        // Query without orderBy to avoid index requirements
         const q = query(
             collection(db, "bookings"),
             where("businessId", "==", businessId),
             where("dateTime", ">=", startTimestamp),
-            where("dateTime", "<=", endTimestamp),
-            orderBy("dateTime", "asc")
+            where("dateTime", "<=", endTimestamp)
         );
 
         const querySnapshot = await getDocs(q);
@@ -224,6 +249,13 @@ export const getBookingsByDateRange = async (businessId, startDate, endDate) => 
             id: doc.id,
             ...doc.data()
         }));
+
+        // Sort in memory
+        bookings.sort((a, b) => {
+            const dateA = a.dateTime?.toDate ? a.dateTime.toDate() : new Date(a.dateTime);
+            const dateB = b.dateTime?.toDate ? b.dateTime.toDate() : new Date(b.dateTime);
+            return dateA - dateB; // Ascending order (oldest first)
+        });
 
         return bookings;
     } catch (error) {

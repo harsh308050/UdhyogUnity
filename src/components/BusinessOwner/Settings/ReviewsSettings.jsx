@@ -336,10 +336,6 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                         <div className="stat-value">{reviews.filter(r => r.businessResponse).length}</div>
                         <div className="stat-label">Replied Reviews</div>
                     </div>
-                    <div className="stat-item">
-                        <div className="stat-value">{calculateAverageRating() >= 4 ? 'Good' : (calculateAverageRating() >= 3 ? 'Fair' : 'Needs Work')}</div>
-                        <div className="stat-label">Overall Rating</div>
-                    </div>
                 </div>
             </div>
 
@@ -417,10 +413,6 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                             {formatDate(review.createdAt)}
                                         </div>
                                     </div>
-                                </div>                                <div className="review-actions">
-                                    <button className="action-btn">
-                                        <MoreHorizontal size={16} />
-                                    </button>
                                 </div>
                             </div>
 
@@ -436,17 +428,6 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                 <p className="review-comment">{review.comment || review.text || ''}</p>
 
                                 <div className="review-meta">
-                                    <div className="helpful-votes">
-                                        <button className="helpful-btn">
-                                            <ThumbsUp size={14} />
-                                            {review.helpful || 0}
-                                        </button>
-                                        <button className="not-helpful-btn">
-                                            <ThumbsDown size={14} />
-                                            {review.notHelpful || 0}
-                                        </button>
-                                    </div>
-
                                     <button
                                         className={`reply-btn ${review.replied ? 'replied' : 'needs-reply'}`}
                                         onClick={() => handleReply(review)}

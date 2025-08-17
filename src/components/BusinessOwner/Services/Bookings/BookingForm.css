@@ -112,15 +112,22 @@
     font-size: 14px;
 }
 
-.form-control:focus {
-    outline: none;
-    border-color: #3563bf;
-    box-shadow: 0 0 0 2px rgba(53, 99, 191, 0.2);
+.form-group.has-error .form-control {
+    border-color: #f44336;
+    box-shadow: 0 0 0 1px rgba(244, 67, 54, 0.2);
 }
 
-textarea.form-control {
-    resize: vertical;
-    min-height: 80px;
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 5px;
+    color: #f44336;
+    font-size: 12px;
+}
+
+.error-message svg {
+    flex-shrink: 0;
 }
 
 .no-slots-message {
