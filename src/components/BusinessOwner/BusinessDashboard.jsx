@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Package, Calendar, MessageSquare, Settings, LogOut, Star, DollarSign, Clock, ShoppingBag, Shield, List } from 'react-feather';
+import { Home, Package, Calendar, MessageSquare, Settings, LogOut, Star, IndianRupee, Clock, ShoppingBag, Shield, List } from 'react-feather';
 import './BusinessDashboard.css';
 import ProductManagement from './Products/ProductManagement';
 import ServiceManagement from './Services/ServiceManagement';
@@ -9,6 +9,7 @@ import BusinessMessages from './Messages/BusinessMessages';
 import OrdersManagement from './Orders/OrdersManagement';
 import EnhancedBookingManagement from './Services/Bookings/EnhancedBookingManagement';
 import { getBusinessDataFromFirestore, getCurrentBusinessEmail } from '../../Firebase/getBusinessData';
+import { IndianRupee } from 'lucide-react';
 
 function BusinessDashboard() {
     const [businessData, setBusinessData] = useState(null);
@@ -204,7 +205,7 @@ function BusinessDashboard() {
 
                             <div className="overview-card">
                                 <div className="card-icon customers-icon">
-                                    <DollarSign size={32} />
+                                    <IndianRupee size={32} />
                                 </div>
                                 <div className="card-info">
                                     <div className="card-label">Payments Received</div>

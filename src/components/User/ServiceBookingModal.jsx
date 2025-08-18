@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, DollarSign, Tag, User, Phone, Mail, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Calendar, Clock, IndianRupee, Tag, User, Phone, Mail, FileText, CheckCircle, AlertCircle, IndianRupee } from 'lucide-react';
 import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../Firebase/config';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import './ServiceBookingModal.css';
 
 const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
@@ -15,6 +17,9 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
     const [existingBookings, setExistingBookings] = useState([]);
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
+    const [selectedDateTime, setSelectedDateTime] = useState(null);
+    const [availableDates, setAvailableDates] = useState([]);
+    const [excludedTimes, setExcludedTimes] = useState([]);
     const [bookingSuccess, setBookingSuccess] = useState(false);
     const [bookingDetails, setBookingDetails] = useState(null);
     const [validationErrors, setValidationErrors] = useState({
@@ -90,6 +95,33 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
         fetchBusinessData();
     }, [service]);
 
+    // Generate available dates based on business hours
+    useEffect(() => {
+        if (!businessData) return;
+
+        const generateAvailableDates = () => {
+            const dates = [];
+            const today = new Date();
+
+            for (let i = 0; i < 30; i++) {
+                const date = new Date();
+                date.setDate(today.getDate() + i);
+
+                // Check if business is open on this day
+                const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                const dayHours = businessData?.businessHours?.[dayOfWeek] || defaultBusinessHours[dayOfWeek];
+
+                if (dayHours && dayHours.isOpen) {
+                    dates.push(new Date(date));
+                }
+            }
+
+            setAvailableDates(dates);
+        };
+
+        generateAvailableDates();
+    }, [businessData]);
+
     // Fetch existing bookings for the service provider
     useEffect(() => {
         if (!businessData?.businessId || !selectedDate) return;
@@ -127,11 +159,11 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
         fetchBookings();
     }, [businessData, selectedDate]);
 
-    // Generate available time slots based on business hours and existing bookings
+    // Generate available time slots and excluded times based on business hours and existing bookings
     useEffect(() => {
         if (!selectedDate || !service?.duration || !businessData) return;
 
-        const generateTimeSlots = () => {
+        const generateTimeData = () => {
             const date = new Date(selectedDate);
             const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
@@ -145,6 +177,7 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
 
             const serviceDuration = parseInt(service.duration); // in minutes
             const slots = [];
+            const excludedTimes = [];
 
             // Parse opening and closing times
             const [startHour, startMinute] = dayHours.start.split(':').map(Number);
@@ -166,7 +199,7 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
 
                 const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 
-                // Check if this slot overlaps with existing bookings
+                // Create a date object for this time slot
                 const slotDate = new Date(selectedDate);
                 slotDate.setHours(hour, minute, 0, 0);
 
@@ -194,7 +227,11 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
                     );
                 });
 
-                if (!isBooked) {
+                if (isBooked) {
+                    // Add this time to the excluded times
+                    const excludedTime = new Date(slotDate);
+                    excludedTimes.push(excludedTime);
+                } else {
                     slots.push(timeString);
                 }
 
@@ -202,9 +239,14 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
             }
 
             setAvailableSlots(slots);
+
+            // We return the excluded times array to use in the component state
+            return excludedTimes;
         };
 
-        generateTimeSlots();
+        const excludedTimes = generateTimeData();
+        // Update the state with excluded times
+        setExcludedTimes(excludedTimes || []);
     }, [selectedDate, service, businessData, existingBookings]);
 
     // Handle input changes
@@ -228,12 +270,24 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
     const validateForm = () => {
         const errors = {};
 
-        if (!selectedDate) {
+        if (!selectedDateTime) {
             errors.date = 'Please select a date';
-        }
-
-        if (!selectedTime) {
             errors.time = 'Please select a time';
+        } else {
+            // If there's a date but no time component (hours and minutes are 0)
+            if (selectedDateTime.getHours() === 0 && selectedDateTime.getMinutes() === 0) {
+                errors.time = 'Please select a time';
+            }
+
+            // Check if the date component is today or future
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dateToCheck = new Date(selectedDateTime);
+            dateToCheck.setHours(0, 0, 0, 0);
+
+            if (dateToCheck < today) {
+                errors.date = 'Please select today or a future date';
+            }
         }
 
         if (!formData.customerName.trim()) {
@@ -266,10 +320,8 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
         try {
             setLoading(true);
 
-            // Create datetime object
-            const dateTime = new Date(selectedDate);
-            const [hours, minutes] = selectedTime.split(':').map(Number);
-            dateTime.setHours(hours, minutes, 0, 0);
+            // Use the selected DateTime directly
+            const dateTime = selectedDateTime;
 
             // Create booking record
             const bookingData = {
@@ -453,8 +505,10 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
                                 </div>
 
                                 <div className="service-details">
-                                    <h3>{service.name}</h3>
-                                    <p className="business-name">{businessData.businessName}</p>
+                                    <div className="service-title">
+                                        <h3>{service.name}</h3>
+                                        <p className="business-name">{businessData.businessName}</p>
+                                    </div>
 
                                     <div className="service-meta">
                                         <div className="service-meta-item">
@@ -463,8 +517,8 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
                                         </div>
 
                                         <div className="service-meta-item">
-                                            <DollarSign size={16} />
-                                            <span>₹{service.price}</span>
+                                            <IndianRupee size={16} />
+                                            <span>{service.price}</span>
                                         </div>
 
                                         {service.category && (
@@ -487,73 +541,139 @@ const ServiceBookingModal = ({ service, onClose, onSuccess }) => {
                                 <div className="form-section">
                                     <h4 className="section-title">Select Date & Time</h4>
 
-                                    <div className={`form-group ${validationErrors.date ? 'has-error' : ''}`}>
-                                        <label htmlFor="appointmentDate">Date</label>
-                                        <select
-                                            id="appointmentDate"
-                                            className="form-control"
-                                            value={selectedDate}
-                                            onChange={(e) => {
-                                                setSelectedDate(e.target.value);
-                                                setSelectedTime(''); // Reset time when date changes
-                                                // Clear validation error
-                                                if (validationErrors.date) {
-                                                    setValidationErrors({ ...validationErrors, date: null });
-                                                }
-                                            }}
-                                            required
-                                        >
-                                            <option value="">Select a date</option>
-                                            {generateDateOptions()}
-                                        </select>
-                                        {validationErrors.date && (
-                                            <div className="error-message">
-                                                <AlertCircle size={14} />
-                                                {validationErrors.date}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <div className="date-time-fields-container">
+                                        <div className={`form-group ${validationErrors.date ? 'has-error' : ''}`}>
+                                            <label htmlFor="appointmentDate">
+                                                <Calendar size={14} />
+                                                Select Date
+                                            </label>
+                                            <div className="datepicker-container">
+                                                <DatePicker
+                                                    selected={selectedDateTime}
+                                                    onChange={(date) => {
+                                                        // Create a new date with the selected date but keep current time
+                                                        const newDateTime = new Date(selectedDateTime || new Date());
+                                                        newDateTime.setFullYear(date.getFullYear());
+                                                        newDateTime.setMonth(date.getMonth());
+                                                        newDateTime.setDate(date.getDate());
+                                                        setSelectedDateTime(newDateTime);
 
-                                    <div className={`form-group ${validationErrors.time ? 'has-error' : ''}`}>
-                                        <label htmlFor="appointmentTime">Time</label>
-                                        {selectedDate ? (
-                                            availableSlots.length > 0 ? (
-                                                <select
-                                                    id="appointmentTime"
-                                                    className="form-control"
-                                                    value={selectedTime}
-                                                    onChange={(e) => {
-                                                        setSelectedTime(e.target.value);
-                                                        // Clear validation error
-                                                        if (validationErrors.time) {
-                                                            setValidationErrors({ ...validationErrors, time: null });
-                                                        }
+                                                        // Also update the individual date for compatibility
+                                                        const dateString = newDateTime.toISOString().split('T')[0];
+                                                        setSelectedDate(dateString);
+
+                                                        // Clear validation errors
+                                                        setValidationErrors({
+                                                            ...validationErrors,
+                                                            date: null
+                                                        });
                                                     }}
-                                                    required
-                                                >
-                                                    <option value="">Select a time</option>
-                                                    {availableSlots.map(time => (
-                                                        <option key={time} value={time}>
-                                                            {time}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <div className="no-slots-message">
-                                                    No available slots for this date. Please select another date.
+                                                    includeDates={availableDates}
+                                                    minDate={new Date()}
+                                                    dateFormat="MMMM d, yyyy"
+                                                    placeholderText="Click to select date"
+                                                    className="form-control date-picker"
+                                                    calendarClassName="purple-themed-calendar"
+                                                    dayClassName={date =>
+                                                        date.getDate() === new Date().getDate() &&
+                                                            date.getMonth() === new Date().getMonth() ?
+                                                            "today-date" : undefined
+                                                    }
+                                                    popperModifiers={{
+                                                        preventOverflow: {
+                                                            enabled: true,
+                                                        },
+                                                    }}
+                                                    popperPlacement="bottom"
+                                                    showMonthDropdown
+                                                    showYearDropdown
+                                                    dropdownMode="select"
+                                                />
+                                                <div className="date-time-icon">
+                                                    <Calendar size={18} />
                                                 </div>
-                                            )
-                                        ) : (
-                                            <div className="no-slots-message">
-                                                Please select a date first
                                             </div>
-                                        )}
-                                        {validationErrors.time && (
-                                            <div className="error-message">
-                                                <AlertCircle size={14} />
-                                                {validationErrors.time}
+                                            {validationErrors.date && (
+                                                <div className="error-message">
+                                                    <AlertCircle size={14} />
+                                                    {validationErrors.date}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className={`form-group ${validationErrors.time ? 'has-error' : ''}`}>
+                                            <label htmlFor="appointmentTime">
+                                                <Clock size={14} />
+                                                Select Time
+                                            </label>
+                                            <div className="datepicker-container">
+                                                <DatePicker
+                                                    selected={selectedDateTime}
+                                                    onChange={(date) => {
+                                                        // Create a new date with the current date but selected time
+                                                        const newDateTime = new Date(selectedDateTime || new Date());
+                                                        newDateTime.setHours(date.getHours());
+                                                        newDateTime.setMinutes(date.getMinutes());
+                                                        setSelectedDateTime(newDateTime);
+
+                                                        // Also update the individual time for compatibility
+                                                        const hours = newDateTime.getHours().toString().padStart(2, '0');
+                                                        const minutes = newDateTime.getMinutes().toString().padStart(2, '0');
+                                                        setSelectedTime(`${hours}:${minutes}`);
+
+                                                        // Clear validation errors
+                                                        setValidationErrors({
+                                                            ...validationErrors,
+                                                            time: null
+                                                        });
+                                                    }}
+                                                    showTimeSelect
+                                                    showTimeSelectOnly
+                                                    timeIntervals={30}
+                                                    timeCaption="Time"
+                                                    dateFormat="h:mm aa"
+                                                    placeholderText="Click to select time"
+                                                    className="form-control time-picker"
+                                                    calendarClassName="purple-themed-calendar"
+                                                    timeClassName={() => "time-option"}
+                                                    filterTime={(time) => {
+                                                        // Only show times when the business is open
+                                                        if (!selectedDateTime) return false;
+
+                                                        const dayOfWeek = selectedDateTime.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+                                                        const dayHours = businessData?.businessHours?.[dayOfWeek] || defaultBusinessHours[dayOfWeek];
+
+                                                        if (!dayHours || !dayHours.isOpen) return false;
+
+                                                        // Parse opening and closing times
+                                                        const [startHour, startMinute] = dayHours.start.split(':').map(Number);
+                                                        const [endHour, endMinute] = dayHours.end.split(':').map(Number);
+
+                                                        const timeHour = time.getHours();
+                                                        const timeMinute = time.getMinutes();
+
+                                                        // Convert to minutes since midnight for easy comparison
+                                                        const timeInMinutes = timeHour * 60 + timeMinute;
+                                                        const startInMinutes = startHour * 60 + startMinute;
+                                                        const endInMinutes = endHour * 60 + endMinute;
+
+                                                        // Check if the time is within business hours minus service duration
+                                                        const serviceDuration = parseInt(service.duration) || 60;
+                                                        return timeInMinutes >= startInMinutes && timeInMinutes <= (endInMinutes - serviceDuration);
+                                                    }}
+                                                    excludeTimes={excludedTimes}
+                                                />
+                                                <div className="date-time-icon">
+                                                    <Clock size={18} />
+                                                </div>
                                             </div>
-                                        )}
+                                            {validationErrors.time && (
+                                                <div className="error-message">
+                                                    <AlertCircle size={14} />
+                                                    {validationErrors.time}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

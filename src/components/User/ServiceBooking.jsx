@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../Firebase/config';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { toast } from 'react-toastify';
-import { ArrowLeft, Calendar, Clock, DollarSign, Tag, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, IndianRupee, Tag, User } from 'lucide-react';
 import BookingForm from '../BusinessOwner/Services/Bookings/BookingForm';
-import './UserDashboard.css';
+// import './UserDashboard.css';
 import './ServiceBooking.css';
-import '../BusinessOwner/Services/Bookings/BookingForm.css';
+// import '../BusinessOwner/Services/Bookings/BookingForm.css';
 
 const ServiceBooking = () => {
     const params = useParams();
@@ -441,7 +441,7 @@ const ServiceBooking = () => {
                                             </div>
 
                                             <div className="service-meta-item">
-                                                <DollarSign size={16} />
+                                                <IndianRupee size={16} />
                                                 <span>₹{service.price}</span>
                                             </div>
 

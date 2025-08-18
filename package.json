@@ -33,6 +33,7 @@
     "react-bootstrap": "^2.10.9",
     "react-bootstrap-icons": "^1.11.5",
     "react-confetti": "^6.3.0",
+    "react-datepicker": "^8.5.0",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
     "react-feather": "^2.0.10",

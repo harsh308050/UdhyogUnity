@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Wallet, DollarSign, Ban as Bank, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CreditCard, Wallet, IndianRupee, Ban as Bank, ArrowLeft, ArrowRight } from 'lucide-react';
 
 const PaymentSetupForm = ({ formData, updateFormData, onNext, onPrevious }) => {
   const [errors, setErrors] = useState({});
@@ -8,7 +8,7 @@ const PaymentSetupForm = ({ formData, updateFormData, onNext, onPrevious }) => {
   const paymentMethods = [
     { id: 'upi', name: 'UPI', icon: <Wallet size={18} /> },
     { id: 'card', name: 'Card', icon: <CreditCard size={18} /> },
-    { id: 'cash', name: 'Cash', icon: <DollarSign size={18} /> },
+    { id: 'cash', name: 'Cash', icon: <IndianRupee size={18} /> },
     { id: 'bank', name: 'Bank Transfer', icon: <Bank size={18} /> }
   ];
 

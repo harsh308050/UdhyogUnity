@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     Calendar, Clock, User, Phone, Mail, FileText, CheckCircle,
-    CreditCard, DollarSign, Calendar as CalendarIcon, ChevronLeft, ChevronRight
+    CreditCard, IndianRupee, Calendar as CalendarIcon, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { addBooking } from '../../../../Firebase/bookingDb';
 import { generateAvailableTimeSlots } from '../../../../Firebase/scheduleDb';
@@ -456,7 +456,7 @@ const EnhancedBookingForm = ({ service, businessData, onSuccess }) => {
                             />
                             <label htmlFor="pay_at_store" className="payment-method-label">
                                 <div className="payment-icon">
-                                    <DollarSign size={16} />
+                                    <IndianRupee size={16} />
                                 </div>
                                 Pay at Store
                             </label>

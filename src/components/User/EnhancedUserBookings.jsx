@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar, Clock, MapPin, X, Check, AlertTriangle,
-    MessageSquare, RefreshCw, Star, CreditCard, DollarSign,
+    MessageSquare, RefreshCw, Star, CreditCard, IndianRupee,
     Calendar as CalendarIcon, User, Phone, Mail, FileText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -277,8 +277,8 @@ function EnhancedUserBookings() {
     const getPaymentMethodIcon = (method) => {
         switch (method) {
             case 'pay_now': return <CreditCard size={16} />;
-            case 'pay_at_store': return <DollarSign size={16} />;
-            default: return <DollarSign size={16} />;
+            case 'pay_at_store': return <IndianRupee size={16} />;
+            default: return <IndianRupee size={16} />;
         }
     };
 
@@ -389,7 +389,7 @@ function EnhancedUserBookings() {
 
                                         {booking.price && (
                                             <div className="booking-detail">
-                                                <DollarSign size={16} />
+                                                <IndianRupee size={16} />
                                                 <span>₹{booking.price}</span>
                                             </div>
                                         )}

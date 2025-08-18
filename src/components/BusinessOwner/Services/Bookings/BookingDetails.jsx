@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Calendar, Clock, User, Phone, Mail, MapPin, Tag, Scissors, DollarSign, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Phone, Mail, MapPin, Tag, Scissors, IndianRupee, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const BookingDetails = ({ booking, serviceName, onBack, onUpdateStatus }) => {
     if (!booking) return null;
@@ -174,7 +174,7 @@ const BookingDetails = ({ booking, serviceName, onBack, onUpdateStatus }) => {
                                 <div className="detail-item">
                                     <div className="detail-label">Price</div>
                                     <div className="detail-value">
-                                        <DollarSign size={16} />
+                                        <IndianRupee size={16} />
                                         <span>{formatPrice(booking.price)}</span>
                                     </div>
                                 </div>

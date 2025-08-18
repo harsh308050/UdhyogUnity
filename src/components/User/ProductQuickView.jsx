@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, X, Tag, CheckCircle, XCircle, Calendar, Clock, Package, Store, Award, ExternalLink, Star, ShoppingBag, CreditCard, DollarSign, AlertCircle, CreditCard as PaymentIcon, MapPin, ClipboardList } from 'lucide-react';
+import { ArrowLeft, X, Tag, CheckCircle, XCircle, Calendar, Clock, Package, Store, Award, ExternalLink, Star, ShoppingBag, CreditCard, IndianRupee, AlertCircle, CreditCard as PaymentIcon, MapPin, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { createOrder } from '../../Firebase/ordersDb';
 import { createRazorpayOrder } from '../../Firebase/razorpayUtil';
@@ -495,7 +495,7 @@ const ProductQuickView = ({ product, onClose, onBuy }) => {
                       className={`payment-option ${paymentMethod === 'cash' ? 'active' : ''}`}
                       onClick={() => setPaymentMethod('cash')}
                     >
-                      <DollarSign size={24} />
+                      <IndianRupee size={24} />
                       <span>Pay at Pickup</span>
                       <p className="payment-description">Cash or UPI payment when you collect your items</p>
                     </div>

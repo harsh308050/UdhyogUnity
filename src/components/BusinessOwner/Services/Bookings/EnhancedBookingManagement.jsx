@@ -11,7 +11,9 @@ import { getBusinessServices } from '../../../../Firebase/serviceDb';
 import CalendarView from './CalendarView';
 import BookingsList from './BookingsList';
 import BookingDetails from './BookingDetails';
-import './Enhanced-Bookings.css'; // Import the CSS for enhanced bookings
+// import './EBookings.css'; // Import the CSS for enhanced bookings
+import './EnhancedBookings.css';
+import './Bookings.css';
 
 const EnhancedBookingManagement = ({ businessData }) => {
     const [bookings, setBookings] = useState([]);

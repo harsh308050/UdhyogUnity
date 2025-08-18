@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Clock, Users, DollarSign, Calendar, Tag, CheckCircle, XCircle, Grid, List, Search, Filter, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Clock, Users, IndianRupee, Calendar, Tag, CheckCircle, XCircle, Grid, List, Search, Filter, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { addService, updateService, deleteService, getBusinessServices, toggleServiceStatus } from '../../../Firebase/serviceDb';
 import { uploadToCloudinary, formatCloudinaryFolder } from '../../../Firebase/cloudinary';
 import { doc } from 'firebase/firestore';

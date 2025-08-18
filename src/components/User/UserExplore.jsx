@@ -469,7 +469,6 @@ function UserExplore() {
                                 setServiceToBook(service);
                             }}
                         >
-                            <Calendar size={16} />
                             Book Service
                         </button>
                         <button
