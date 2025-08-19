@@ -62,7 +62,7 @@
 
 .service-details {
     display: flex;
-    gap: 15px;
+    gap: 5px;
 }
 
 .service-duration,

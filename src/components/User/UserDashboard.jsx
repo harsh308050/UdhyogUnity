@@ -285,16 +285,6 @@ function UserDashboard() {
                             </div>
                         </div>
 
-                        {/* Recent Activity */}
-                        <div className="user-recent-activity-section">
-                            <h2>Recent Activity</h2>
-                            <div className="user-activity-list">
-                                {/* Show a placeholder when no activities */}
-                                <div className="user-empty-activity">
-                                    <p>No recent activity to show.</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 );
             case 'explore':

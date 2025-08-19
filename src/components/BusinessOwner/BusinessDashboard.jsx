@@ -50,16 +50,11 @@ function BusinessDashboard() {
                 }
 
                 if (businessData) {
-                    // If there's no logo in the data, add a test logo for demo purposes
-                    if (!businessData.logo) {
-                        console.log("No logo found in business data, adding test logo");
-                        businessData.logo = {
-                            folder: "UdhyogUnity/FUELPART/Profile",
-                            full_path: "UdhyogUnity/FUELPART/Profile/logo.png",
-                            original_name: "blob",
-                            public_id: "UdhyogUnity/FUELPART/Profile/logo.png",
-                            url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfg_GBpz0w-D4j10cAuw0W_oDR7dQMcZ6l4UDBn1L6HEuAYOxBIr6yHkTCKxW5QDTUUrg&usqp=CAU"
-                        };
+                    // Log if we have a logo in the business data
+                    if (businessData.logo) {
+                        console.log("Found logo in business data:", businessData.logo);
+                    } else {
+                        console.log("No logo found in business data");
                     }
 
                     console.log("Final business data with logo:", businessData);
@@ -429,20 +424,27 @@ function BusinessDashboard() {
                             <h5>{businessData.businessName}</h5>
                             <div className="user-menu">
                                 <div className="business-avatar">
-                                    {console.log("Rendering avatar with logoUrl:", businessData.logoUrl)}
-                                    {businessData.logo ? (
-                                        <img
-                                            src={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfg_GBpz0w-D4j10cAuw0W_oDR7dQMcZ6l4UDBn1L6HEuAYOxBIr6yHkTCKxW5QDTUUrg&usqp=CAU"}
-                                            alt={`${businessData.businessName} logo`}
-                                            className="business-logo"
-                                            onError={(e) => {
-                                                console.log("Logo image failed to load:", e);
-                                                e.target.src = "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png";
-                                            }}
-                                        />
-                                    ) : (
-                                        businessData.businessName?.charAt(0) || 'B'
-                                    )}
+                                    {(() => {
+                                        // Get logo URL using the extractLogoUrl function
+                                        const logoUrl = businessData.logo ? extractLogoUrl(businessData.logo) : null;
+                                        console.log("Rendering avatar with extracted logoUrl:", logoUrl);
+
+                                        if (logoUrl) {
+                                            return (
+                                                <img
+                                                    src={logoUrl}
+                                                    alt={`${businessData.businessName} logo`}
+                                                    className="business-logo"
+                                                    onError={(e) => {
+                                                        console.log("Logo image failed to load:", e);
+                                                        e.target.src = "https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png";
+                                                    }}
+                                                />
+                                            );
+                                        } else {
+                                            return businessData.businessName?.charAt(0) || 'B';
+                                        }
+                                    })()}
                                 </div>
                             </div>
                         </div>
