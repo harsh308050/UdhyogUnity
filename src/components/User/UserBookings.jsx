@@ -23,6 +23,17 @@ function UserBookings() {
 
             try {
                 const userBookings = await getCustomerBookings(currentUser.email);
+                console.log('Fetched user bookings:', userBookings);
+                
+                // Check for any status issues (null, undefined, or unexpected values)
+                userBookings.forEach(booking => {
+                    if (!booking.status) {
+                        console.warn(`Booking ${booking.id} (${booking.serviceName}) has no status!`);
+                    } else if (booking.status === 'completed') {
+                        console.log(`Found completed booking: ${booking.id} (${booking.serviceName})`);
+                    }
+                });
+                
                 setBookings(userBookings);
 
                 // Check which completed bookings can be reviewed
@@ -30,8 +41,10 @@ function UserBookings() {
 
                 if (userBookings && userBookings.length > 0) {
                     const completedBookings = userBookings.filter(booking =>
-                        booking.status === 'completed'
+                        booking.status && booking.status.toLowerCase() === 'completed'
                     );
+                    
+                    console.log(`Found ${completedBookings.length} completed bookings that can be reviewed`);
 
                     for (const booking of completedBookings) {
                         try {
@@ -174,7 +187,9 @@ function UserBookings() {
     };
 
     const getStatusClass = (status) => {
-        switch (status) {
+        // Convert status to lowercase for case-insensitive comparison
+        const statusLower = status?.toLowerCase() || '';
+        switch (statusLower) {
             case 'confirmed': return 'status-confirmed';
             case 'pending': return 'status-pending';
             case 'cancelled': return 'status-cancelled';
@@ -184,7 +199,9 @@ function UserBookings() {
     };
 
     const getStatusIcon = (status) => {
-        switch (status) {
+        // Convert status to lowercase for case-insensitive comparison
+        const statusLower = status?.toLowerCase() || '';
+        switch (statusLower) {
             case 'confirmed': return <Check size={16} />;
             case 'pending': return <Clock size={16} />;
             case 'cancelled': return <X size={16} />;
@@ -193,16 +210,32 @@ function UserBookings() {
         }
     };
 
+    // Debug all bookings before filtering
+    console.log('All bookings before filtering:', bookings.map(b => ({
+        id: b.id,
+        name: b.serviceName,
+        status: b.status,
+        date: b.dateTime?.toDate?.() || new Date(b.dateTime)
+    })));
+    
     const filteredBookings = bookings.filter(booking => {
+        // Make sure we handle both Firestore Timestamp and regular date strings
         const bookingDate = booking.dateTime?.toDate ? booking.dateTime.toDate() : new Date(booking.dateTime);
         const now = new Date();
+        
+        // Normalize status to lowercase for consistent comparison
+        const status = booking.status?.toLowerCase() || '';
+        
+        console.log(`Filtering booking: ${booking.serviceName}, status: ${status}, date: ${bookingDate}, tab: ${activeTab}`);
 
         if (activeTab === 'upcoming') {
-            return bookingDate > now && booking.status !== 'cancelled';
+            // Only show future bookings that are not cancelled and not completed
+            return bookingDate > now && status !== 'cancelled' && status !== 'completed';
         } else if (activeTab === 'past') {
-            return bookingDate < now || booking.status === 'completed';
+            // Show past bookings or any completed bookings (regardless of date)
+            return bookingDate < now || status === 'completed';
         } else if (activeTab === 'cancelled') {
-            return booking.status === 'cancelled';
+            return status === 'cancelled';
         }
         return true;
     });

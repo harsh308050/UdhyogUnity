@@ -21,12 +21,6 @@ function SignUp({ signupForm, setSignupForm, signupPasswordVisible, togglePasswo
                 </div>
             )}
 
-            {!isGoogleUser && signupForm.password === "" && signupForm.email && (
-                <div className="alert alert-warning mb-3" role="alert">
-                    <i className="fas fa-user-edit me-2"></i>
-                    <strong>Complete Your Profile:</strong> Please fill in the missing information to access your dashboard.
-                </div>
-            )}
 
             <form onSubmit={handleFormSubmit}>
                 {/* Scrollable form fields */}

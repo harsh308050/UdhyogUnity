@@ -148,12 +148,21 @@ function UserDashboard() {
         try {
             // Get upcoming bookings
             const bookings = await getCustomerBookings(userEmail);
+            
+            console.log("All bookings:", bookings);
 
             // Filter and sort bookings on client side
             const upcomingBookings = bookings.filter(booking => {
                 const bookingDate = booking.dateTime?.toDate ? booking.dateTime.toDate() : new Date(booking.dateTime);
-                return bookingDate > new Date() && booking.status !== 'cancelled';
+                const bookingStatus = booking.status?.toLowerCase() || '';
+                
+                // Only show future bookings that are neither cancelled nor completed
+                return bookingDate > new Date() && 
+                       bookingStatus !== 'cancelled' && 
+                       bookingStatus !== 'completed';
             });
+            
+            console.log("Filtered upcoming bookings:", upcomingBookings);
 
             // Get saved businesses and products using new schema - wrap in try-catch to handle if collections don't exist
             let savedBusinessesCount = 0;
@@ -181,9 +190,18 @@ function UserDashboard() {
 
             try {
                 const orders = await getCustomerOrders(userEmail);
-                pendingOrders = orders.filter(order =>
-                    !['Picked Up', 'Cancelled'].includes(order.status)
-                ).length;
+                console.log("All customer orders:", orders);
+                
+                pendingOrders = orders.filter(order => {
+                    // Convert to lowercase to handle case variations
+                    const orderStatus = order.status?.toLowerCase() || '';
+                    
+                    // Only count orders that are genuinely pending/in progress
+                    // Exclude completed, delivered, cancelled, and picked up orders
+                    return !['picked up', 'cancelled', 'completed', 'delivered'].includes(orderStatus);
+                }).length;
+                
+                console.log("Filtered pending orders:", pendingOrders);
             } catch (err) {
                 console.log("Error fetching orders:", err);
                 // Just continue with zero
@@ -221,8 +239,18 @@ function UserDashboard() {
             photoURL: ""
         };
 
-        console.log("Setting demo data:", demoData);
+        console.log("Setting demo data for user profile:", demoData);
         setUserData(demoData);
+        
+        // Reset stats to zero when using demo data
+        console.log("Resetting dashboard stats to zero (demo mode)");
+        setStats({
+            upcomingBookings: 0,
+            pendingOrders: 0,
+            savedBusinesses: 0,
+            savedProducts: 0,
+            recentReviews: 0
+        });
     };
 
     const handleLogout = async () => {
