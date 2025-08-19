@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, IndianRupee, Tag, User, Phone, Mail, FileText, CheckCircle, AlertCircle, IndianRupee } from 'lucide-react';
+import { X, Calendar, Clock, IndianRupee, Tag, User, Phone, Mail, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { collection, query, where, getDocs, addDoc, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../Firebase/config';
 import { toast } from 'react-toastify';

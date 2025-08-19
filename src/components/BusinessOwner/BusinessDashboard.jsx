@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Package, Calendar, MessageSquare, Settings, LogOut, Star, IndianRupee, Clock, ShoppingBag, Shield, List } from 'react-feather';
+import { Home, Package, Calendar, MessageSquare, Settings, LogOut, Star, Clock, ShoppingBag, Shield, List } from 'react-feather';
 import './BusinessDashboard.css';
 import ProductManagement from './Products/ProductManagement';
 import ServiceManagement from './Services/ServiceManagement';

@@ -299,9 +299,7 @@
     color: var(--accent);
 }
 
-.price {
-    margin-bottom: 1rem;
-}
+
 
 .current-price {
     font-size: 1.2rem;
@@ -436,7 +434,7 @@
 .service-details {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    /* align-items: center; */
     margin: 0.75rem 0;
 }
 
