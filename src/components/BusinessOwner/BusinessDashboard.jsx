@@ -9,17 +9,21 @@ import BusinessMessages from './Messages/BusinessMessages';
 import OrdersManagement from './Orders/OrdersManagement';
 import EnhancedBookingManagement from './Services/Bookings/EnhancedBookingManagement';
 import { getBusinessDataFromFirestore, getCurrentBusinessEmail } from '../../Firebase/getBusinessData';
+import { fetchDashboardStats } from '../../Firebase/dashboardStats';
 import { IndianRupee } from 'lucide-react';
 
 function BusinessDashboard() {
     const [businessData, setBusinessData] = useState(null);
+    const [dashboardStats, setDashboardStats] = useState(null);
     const [activeTab, setActiveTab] = useState('home');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
         // Get business data from session storage or fetch from Firestore
         const loadData = async () => {
             try {
+                setLoading(true);
                 let businessData = null;
 
                 // First try session storage
@@ -60,19 +64,55 @@ function BusinessDashboard() {
 
                     console.log("Final business data with logo:", businessData);
                     setBusinessData(businessData);
+
+                    // Fetch dashboard statistics - prefer email over businessId for lookup
+                    const lookupId = businessData.email || businessData.businessId;
+                    console.log("Fetching dashboard statistics for:", lookupId);
+                    console.log("Full business data:", businessData);
+
+                    // Check if rating and reviewCount already exist in business document
+                    if (businessData.rating && businessData.reviewCount) {
+                        console.log(`Business document already has rating ${businessData.rating} and reviewCount ${businessData.reviewCount}`);
+                    }
+
+                    const stats = await fetchDashboardStats(lookupId);
+                    console.log("Dashboard statistics:", stats);
+
+                    // Update the businessData with the stats
+                    setBusinessData(prevData => {
+                        // Keep existing values if stats return 0 but we already have values
+                        const updatedData = {
+                            ...prevData,
+                            serviceCount: stats.serviceCount > 0 ? stats.serviceCount : prevData.serviceCount || 0,
+                            productCount: stats.productCount > 0 ? stats.productCount : prevData.productCount || 0,
+                            pendingReservations: stats.pendingReservations > 0 ? stats.pendingReservations : prevData.pendingReservations || 0,
+                            paymentsReceived: stats.paymentsReceived > 0 ? stats.paymentsReceived : prevData.paymentsReceived || 0,
+                            // For rating, use the one from stats if available, otherwise keep existing rating
+                            averageRating: stats.averageRating > 0 ? stats.averageRating : prevData.rating || 0,
+                            totalReviews: stats.totalReviews > 0 ? stats.totalReviews : prevData.reviewCount || 0
+                        };
+
+                        console.log("Updated business data:", updatedData);
+                        return updatedData;
+                    });
+
+                    setDashboardStats(stats);
                 } else {
                     // No data found anywhere, use demo data
                     console.log("No business data found, using demo data");
                     setDemoData();
                 }
+
+                setLoading(false);
             } catch (err) {
                 console.error("Error loading business data:", err);
                 setDemoData();
+                setLoading(false);
             }
         };
 
         loadData();
-    }, []);
+    }, [activeTab]);
 
     // Set demo data for development or when no session data exists
     const setDemoData = () => {
@@ -82,10 +122,12 @@ function BusinessDashboard() {
             email: "demo@example.com",
             isVerified: true,
             businessType: "Service", // Can be "Product" or "Service"
-            productCount: 5,
-            pendingReservations: 7,
-            paymentsReceived: 12500,
-            averageRating: 4.6,
+            serviceCount: 0,
+            productCount: 0,
+            pendingReservations: 0,
+            paymentsReceived: 0,
+            averageRating: 0,
+            totalReviews: 0,
             // Mock logo data structure as it would be in Firestore (Cloudinary format)
             logo: {
                 folder: "UdhyogUnity/FUELPART/Profile",
@@ -98,6 +140,14 @@ function BusinessDashboard() {
 
         console.log("Setting demo data:", demoData);
         setBusinessData(demoData);
+        setDashboardStats({
+            serviceCount: 0,
+            productCount: 0,
+            pendingReservations: 0,
+            paymentsReceived: 0,
+            averageRating: 0,
+            totalReviews: 0
+        });
     };
 
     // Helper function to extract logo URL from various formats
@@ -152,23 +202,10 @@ function BusinessDashboard() {
             case 'home':
                 return (
                     <div className="dashboard-content">
-                        <h1 className="welcome-header">Welcome back, {businessData?.businessName} 👋</h1>
+                        <h1 className="welcome-header">Welcome back, {businessData?.businessName}</h1>
 
                         {/* Dashboard Overview Cards */}
                         <div className="dashboard-overview">
-                            <div className="overview-card">
-                                <div className="card-icon">
-                                    <Shield size={32} />
-                                </div>
-                                <div className="card-info">
-                                    <h3>Business Status</h3>
-                                    {businessData?.isVerified ?
-                                        <span className="verification-badge verified">✓ Verified</span> :
-                                        <span className="verification-badge pending">⏳ Pending</span>
-                                    }
-                                </div>
-                            </div>
-
                             {businessData?.businessType === 'Product' ? (
                                 <div className="overview-card">
                                     <div className="card-icon products-icon">
@@ -176,7 +213,15 @@ function BusinessDashboard() {
                                     </div>
                                     <div className="card-info">
                                         <div className="card-label">Total Products Listed</div>
-                                        <div className="card-value">{businessData?.productCount || 0}</div>
+                                        <div className="card-value">
+                                            {loading ? (
+                                                <span className="loading-indicator">Loading...</span>
+                                            ) : businessData?.productCount > 0 ? (
+                                                businessData.productCount
+                                            ) : (
+                                                "No products added yet"
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
@@ -186,7 +231,15 @@ function BusinessDashboard() {
                                     </div>
                                     <div className="card-info">
                                         <div className="card-label">Total Services Listed</div>
-                                        <div className="card-value">{businessData?.serviceCount || 0}</div>
+                                        <div className="card-value">
+                                            {loading ? (
+                                                <span className="loading-indicator">Loading...</span>
+                                            ) : businessData?.serviceCount > 0 ? (
+                                                businessData.serviceCount
+                                            ) : (
+                                                "No services added yet"
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -198,7 +251,12 @@ function BusinessDashboard() {
                                     </div>
                                     <div className="card-info">
                                         <div className="card-label">Pending Reservations</div>
-                                        <div className="card-value">{businessData?.pendingReservations || 0}</div>
+                                        <div className="card-value">
+                                            {loading ?
+                                                <span className="loading-indicator">Loading...</span> :
+                                                businessData?.pendingReservations || 0
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -209,7 +267,12 @@ function BusinessDashboard() {
                                 </div>
                                 <div className="card-info">
                                     <div className="card-label">Payments Received</div>
-                                    <div className="card-value">₹{businessData?.paymentsReceived?.toLocaleString() || 0}</div>
+                                    <div className="card-value">
+                                        {loading ?
+                                            <span className="loading-indicator">Loading...</span> :
+                                            `₹${businessData?.paymentsReceived?.toLocaleString() || 0}`
+                                        }
+                                    </div>
                                 </div>
                             </div>
 
@@ -219,7 +282,15 @@ function BusinessDashboard() {
                                 </div>
                                 <div className="card-info">
                                     <div className="card-label">Average Review Rating</div>
-                                    <div className="card-value">{businessData?.averageRating || 0} / 5</div>
+                                    <div className="card-value">
+                                        {loading ? (
+                                            <span className="loading-indicator">Loading...</span>
+                                        ) : businessData?.averageRating > 0 || businessData?.rating > 0 ? (
+                                            `${businessData.averageRating || businessData.rating} / 5`
+                                        ) : (
+                                            "No reviews yet"
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -267,7 +338,14 @@ function BusinessDashboard() {
     };
 
     if (!businessData) {
-        return <div className="loading">Loading...</div>;
+        return (
+            <div className="business-dashboard-theme">
+                <div className="loading">
+                    <div className="loading-spinner"></div>
+                    Loading dashboard data...
+                </div>
+            </div>
+        );
     }
 
     return (

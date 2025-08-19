@@ -241,7 +241,7 @@ function UserDashboard() {
                 return (
                     <div className="user-dashboard-content">
                         <div className="user-welcome-section">
-                            <h1 className="user-welcome-header">Welcome back, {userData?.firstName || 'User'} 👋</h1>
+                            <h1 className="user-welcome-header">Welcome back, {userData?.firstName || 'User'} </h1>
                             <p>Discover local businesses and services in your area</p>
                             <button className="user-btn-primary user-explore-btn" onClick={() => setActiveTab('explore')}>
                                 <Search size={18} />

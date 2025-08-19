@@ -528,13 +528,7 @@ const ServiceListItem = ({ service, onEdit, onDelete, onView }) => {
                     >
                         <Edit size={16} />
                     </button>
-                    <button
-                        className={`list-action-button ${service.isActive ? 'deactivate-button' : 'activate-button'}`}
-                        onClick={() => handleToggleServiceStatus(service.id, !service.isActive)}
-                        title={service.isActive ? "Deactivate Service" : "Activate Service"}
-                    >
-                        {service.isActive ? <XCircle size={16} /> : <CheckCircle size={16} />}
-                    </button>
+
                     <button
                         className="list-action-button delete-button"
                         onClick={onDelete}

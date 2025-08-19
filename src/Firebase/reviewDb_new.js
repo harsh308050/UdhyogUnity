@@ -157,9 +157,53 @@ const resolveBusinessDocumentId = async (businessIdentifier) => {
 };
 
 /**
- * Search across Products collection to find which business document contains the given productId
- * Returns the business document id (document key under Products) or null if not found.
+ * Get service info and ensure it has a valid rating and review count
+ * This is used to fix services that don't have proper rating values
  */
+const ensureServiceRating = async (businessId, serviceId, defaultRating = 0, defaultCount = 0) => {
+    try {
+        const serviceRef = doc(db, 'Services', businessId, 'Active', serviceId);
+        const serviceSnap = await getDoc(serviceRef);
+
+        if (serviceSnap.exists()) {
+            const serviceData = serviceSnap.data();
+            let needsUpdate = false;
+            let updateData = {};
+
+            // Check if rating is missing or invalid
+            if (typeof serviceData.rating !== 'number' || isNaN(serviceData.rating)) {
+                console.log(`Service ${serviceId} has invalid rating: ${serviceData.rating}, setting to ${defaultRating}`);
+                updateData.rating = defaultRating;
+                needsUpdate = true;
+            }
+
+            // Check if reviewCount is missing or invalid
+            if (typeof serviceData.reviewCount !== 'number' || isNaN(serviceData.reviewCount)) {
+                console.log(`Service ${serviceId} has invalid reviewCount: ${serviceData.reviewCount}, setting to ${defaultCount}`);
+                updateData.reviewCount = defaultCount;
+                needsUpdate = true;
+            }
+
+            // Update if needed
+            if (needsUpdate) {
+                console.log(`Updating service ${serviceId} with fixed rating data:`, updateData);
+                await updateDoc(serviceRef, updateData);
+
+                // Return the updated service data
+                return {
+                    ...serviceData,
+                    ...updateData
+                };
+            }
+
+            return serviceData;
+        }
+        return null;
+    } catch (error) {
+        console.error(`Error ensuring service rating: ${error.message}`);
+        return null;
+    }
+};
 const findProductOwner = async (productId) => {
     if (!productId) return null;
     try {
@@ -251,7 +295,17 @@ export const addReview = async (reviewType, businessId, itemId, userId, userName
         } else if (reviewType === 'product' && itemId) {
             collectionPath = `Reviews/Products/${businessId}_${itemId}`;
         } else if (reviewType === 'service' && itemId) {
-            collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                console.log(`Using business email directly for service review: ${businessId}`);
+                collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                console.log(`Using business identifier for service review: ${businessIdentifier}`);
+                collectionPath = `Reviews/Services/${businessIdentifier}_${itemId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -311,7 +365,17 @@ export const getReviews = async (reviewType, businessId, itemId = null, pageSize
             // Reviews/Products/businessEmail_productId
             collectionPath = `Reviews/Products/${businessId}_${itemId}`;
         } else if (reviewType === 'service' && itemId) {
-            collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                console.log(`Using business email directly for service review: ${businessId}`);
+                collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                console.log(`Using business identifier for service review: ${businessIdentifier}`);
+                collectionPath = `Reviews/Services/${businessIdentifier}_${itemId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -415,7 +479,15 @@ export const getReviewById = async (reviewType, businessId, itemId = null, revie
         } else if (reviewType === 'product' && itemId) {
             docPath = `Reviews/Products/${businessId}_${itemId}/${reviewId}`;
         } else if (reviewType === 'service' && itemId) {
-            docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                docPath = `Reviews/Services/${businessIdentifier}_${itemId}/${reviewId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -478,7 +550,15 @@ export const updateReview = async (reviewType, businessId, itemId, reviewId, upd
         } else if (reviewType === 'product' && itemId) {
             docPath = `Reviews/Products/${businessId}_${itemId}/${reviewId}`;
         } else if (reviewType === 'service' && itemId) {
-            docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                docPath = `Reviews/Services/${businessIdentifier}_${itemId}/${reviewId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -536,7 +616,15 @@ export const deleteReview = async (reviewType, businessId, itemId, reviewId) => 
         } else if (reviewType === 'product' && itemId) {
             docPath = `Reviews/Products/${businessId}_${itemId}/${reviewId}`;
         } else if (reviewType === 'service' && itemId) {
-            docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                docPath = `Reviews/Services/${businessIdentifier}_${itemId}/${reviewId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -578,7 +666,15 @@ export const respondToReview = async (reviewType, businessId, itemId, reviewId, 
         } else if (reviewType === 'product' && itemId) {
             docPath = `Reviews/Products/${businessId}_${itemId}/${reviewId}`;
         } else if (reviewType === 'service' && itemId) {
-            docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                docPath = `Reviews/Services/${businessId}_${itemId}/${reviewId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                docPath = `Reviews/Services/${businessIdentifier}_${itemId}/${reviewId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -648,7 +744,17 @@ export const updateAverageRating = async (reviewType, businessId, itemId = null)
         } else if (reviewType === 'product' && itemId) {
             collectionPath = `Reviews/Products/${businessId}_${itemId}`;
         } else if (reviewType === 'service' && itemId) {
-            collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                console.log(`Using business email directly for service review: ${businessId}`);
+                collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                console.log(`Using business identifier for service review: ${businessIdentifier}`);
+                collectionPath = `Reviews/Services/${businessIdentifier}_${itemId}`;
+            }
         } else {
             throw new Error('Invalid review type or missing item ID');
         }
@@ -661,16 +767,23 @@ export const updateAverageRating = async (reviewType, businessId, itemId = null)
         let totalRating = 0;
         let reviewCount = 0;
 
+        console.log(`Found ${reviewsSnapshot.size} reviews in ${collectionPath}`);
+
+        // Log all reviews for debugging purposes
         reviewsSnapshot.forEach(doc => {
             const reviewData = doc.data();
+            console.log(`Review ${doc.id}: rating=${reviewData.rating}, user=${reviewData.userName}`);
+
             if (reviewData.rating) {
                 totalRating += reviewData.rating;
                 reviewCount++;
             }
         });
 
+        console.log(`Total rating: ${totalRating}, count: ${reviewCount}`);
         const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
         const roundedAverage = Math.round(averageRating * 10) / 10; // Round to 1 decimal place
+        console.log(`Calculated average rating: ${roundedAverage} from ${reviewCount} reviews`);
 
         // Update the entity with the new average rating
         if (reviewType === 'business') {
@@ -804,12 +917,300 @@ export const updateAverageRating = async (reviewType, businessId, itemId = null)
                 throw error;
             }
         } else if (reviewType === 'service') {
-            // Update service document
-            const serviceRef = doc(db, 'Services', businessId, 'ActiveServices', itemId);
-            await updateDoc(serviceRef, {
-                rating: roundedAverage,
-                reviewCount
-            });
+            try {
+                // First check if businessId is already an email (directly usable as collection key)
+                if (businessId.includes('@')) {
+                    console.log(`Business ID appears to be an email: ${businessId}, using directly for Services collection`);
+
+                    // Try to update using the email directly
+                    const serviceRef = doc(db, 'Services', businessId, 'Active', itemId);
+
+                    // Check if the document exists before updating
+                    const serviceDoc = await getDoc(serviceRef);
+                    if (serviceDoc.exists()) {
+                        console.log(`Service document found at Services/${businessId}/Active/${itemId}`);
+                        console.log(`Current service data:`, serviceDoc.data());
+                        console.log(`Updating service with rating: ${roundedAverage}, reviewCount: ${reviewCount}`);
+
+                        // Include current rating in update only if it's valid
+                        await updateDoc(serviceRef, {
+                            rating: roundedAverage,
+                            reviewCount
+                        });
+                        console.log(`Updated service rating successfully using email: ${businessId}`);
+
+                        // Also update the business's overall rating
+                        try {
+                            const businessRef = doc(db, 'Businesses', businessId);
+                            const businessDoc = await getDoc(businessRef);
+                            if (businessDoc.exists()) {
+                                // Make sure we're working with the current service
+                                await ensureServiceRating(businessId, itemId, roundedAverage, reviewCount);
+
+                                // Get all services to calculate overall rating
+                                const servicesRef = collection(db, 'Services', businessId, 'Active');
+                                const servicesSnap = await getDocs(servicesRef);
+
+                                console.log(`Found ${servicesSnap.size} services for business ${businessId}`);
+
+                                let totalRating = 0;
+                                let totalReviews = 0;
+                                let includedCurrentService = false;
+
+                                // Debug: log each service and its rating
+                                servicesSnap.forEach(doc => {
+                                    const serviceData = doc.data();
+                                    console.log(`Service ${doc.id}: rating=${serviceData.rating || 'none'}, reviewCount=${serviceData.reviewCount || 0}`);
+
+                                    if (doc.id === itemId) {
+                                        includedCurrentService = true;
+
+                                        // For the current service, use the freshly calculated rating
+                                        console.log(`Using fresh rating for current service: rating=${roundedAverage}, reviewCount=${reviewCount}`);
+                                        if (reviewCount > 0) {
+                                            totalRating += roundedAverage * reviewCount;
+                                            totalReviews += reviewCount;
+                                        }
+                                    } else {
+                                        // Only include services with valid ratings and review counts
+                                        if (typeof serviceData.rating === 'number' && !isNaN(serviceData.rating) &&
+                                            typeof serviceData.reviewCount === 'number' && !isNaN(serviceData.reviewCount) &&
+                                            serviceData.reviewCount > 0) {
+                                            totalRating += serviceData.rating * serviceData.reviewCount;
+                                            totalReviews += serviceData.reviewCount;
+                                        }
+                                    }
+                                });
+
+                                // If we didn't include the current service in the calculation and it's a valid service
+                                if (!includedCurrentService && itemId && reviewCount > 0) {
+                                    console.log(`Adding current service ${itemId} that wasn't in the fetched services`);
+                                    totalRating += roundedAverage * reviewCount;
+                                    totalReviews += reviewCount;
+                                }
+
+                                console.log(`Total weighted rating: ${totalRating}, Total reviews: ${totalReviews}`);
+
+                                // Make sure we have at least one valid review
+                                const businessAvgRating = totalReviews > 0 ? Math.round((totalRating / totalReviews) * 10) / 10 : 0;
+
+                                // Also look at the business document to see if it already has a rating
+                                const currentBusinessData = businessDoc.data();
+                                if (currentBusinessData.rating > 0 &&
+                                    typeof currentBusinessData.reviewCount === 'number' &&
+                                    currentBusinessData.reviewCount > 0 &&
+                                    totalReviews === 0) {
+                                    // If we didn't find any service ratings but the business already has a rating, preserve it
+                                    console.log(`Preserving existing business rating: ${currentBusinessData.rating} from ${currentBusinessData.reviewCount} reviews`);
+                                } else if (totalReviews > 0) {
+                                    // Only update if we have valid service ratings
+                                    await updateDoc(businessRef, {
+                                        rating: businessAvgRating,
+                                        reviewCount: totalReviews
+                                    });
+
+                                    console.log(`Updated business ${businessId} with overall rating: ${businessAvgRating} from ${totalReviews} reviews`);
+                                } else {
+                                    console.log(`No reviews found for business ${businessId}, not updating business rating`);
+                                }
+                            }
+                        } catch (businessError) {
+                            console.error('Error updating business overall rating:', businessError);
+                        }
+
+                        return { averageRating: roundedAverage, reviewCount };
+                    } else {
+                        console.log(`Service not found at Services/${businessId}/Active/${itemId}, trying alternative paths`);
+                    }
+                }
+
+                // If not an email or service not found, try to resolve the business document to get the email
+                console.log(`Looking up business email for ID: ${businessId}`);
+                const businessesRef = collection(db, 'Businesses');
+                const q = query(businessesRef, where('businessId', '==', businessId));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    // Get the first match (should only be one)
+                    const businessDoc = querySnapshot.docs[0];
+                    const businessData = businessDoc.data();
+                    const businessEmail = businessData.email || businessDoc.id;
+
+                    console.log(`Found business email: ${businessEmail} for business ID: ${businessId}`);
+
+                    // Update using the email as the collection key
+                    const serviceRef = doc(db, 'Services', businessEmail, 'Active', itemId);
+
+                    // Check if service exists before updating
+                    const serviceDoc = await getDoc(serviceRef);
+                    if (serviceDoc.exists()) {
+                        console.log(`Service found at Services/${businessEmail}/Active/${itemId}`);
+                        console.log(`Current service data:`, serviceDoc.data());
+                        console.log(`Updating service with rating: ${roundedAverage}, reviewCount: ${reviewCount}`);
+
+                        // Include current rating in update only if it's valid
+                        await updateDoc(serviceRef, {
+                            rating: roundedAverage,
+                            reviewCount
+                        });
+                        console.log(`Updated service rating successfully using resolved email: ${businessEmail}`);
+
+                        // Also update the business's overall rating
+                        try {
+                            const businessRef = doc(db, 'Businesses', businessEmail);
+                            const businessDoc = await getDoc(businessRef);
+                            if (businessDoc.exists()) {
+                                // Make sure we're working with the current service
+                                await ensureServiceRating(businessEmail, itemId, roundedAverage, reviewCount);
+
+                                // Get all services to calculate overall rating
+                                const servicesRef = collection(db, 'Services', businessEmail, 'Active');
+                                const servicesSnap = await getDocs(servicesRef);
+
+                                console.log(`Found ${servicesSnap.size} services for business ${businessEmail}`);
+
+                                let totalRating = 0;
+                                let totalReviews = 0;
+                                let includedCurrentService = false;
+
+                                // Debug: log each service and its rating
+                                servicesSnap.forEach(doc => {
+                                    const serviceData = doc.data();
+                                    console.log(`Service ${doc.id}: rating=${serviceData.rating || 'none'}, reviewCount=${serviceData.reviewCount || 0}`);
+
+                                    if (doc.id === itemId) {
+                                        includedCurrentService = true;
+
+                                        // For the current service, use the freshly calculated rating
+                                        console.log(`Using fresh rating for current service: rating=${roundedAverage}, reviewCount=${reviewCount}`);
+                                        if (reviewCount > 0) {
+                                            totalRating += roundedAverage * reviewCount;
+                                            totalReviews += reviewCount;
+                                        }
+                                    } else {
+                                        // Only include services with valid ratings and review counts
+                                        if (typeof serviceData.rating === 'number' && !isNaN(serviceData.rating) &&
+                                            typeof serviceData.reviewCount === 'number' && !isNaN(serviceData.reviewCount) &&
+                                            serviceData.reviewCount > 0) {
+                                            totalRating += serviceData.rating * serviceData.reviewCount;
+                                            totalReviews += serviceData.reviewCount;
+                                        }
+                                    }
+                                });
+
+                                // If we didn't include the current service in the calculation and it's a valid service
+                                if (!includedCurrentService && itemId && reviewCount > 0) {
+                                    console.log(`Adding current service ${itemId} that wasn't in the fetched services`);
+                                    totalRating += roundedAverage * reviewCount;
+                                    totalReviews += reviewCount;
+                                }
+
+                                console.log(`Total weighted rating: ${totalRating}, Total reviews: ${totalReviews}`);
+
+                                // Make sure we have at least one valid review
+                                const businessAvgRating = totalReviews > 0 ? Math.round((totalRating / totalReviews) * 10) / 10 : 0;
+
+                                // Also look at the business document to see if it already has a rating
+                                const currentBusinessData = businessDoc.data();
+                                if (currentBusinessData.rating > 0 &&
+                                    typeof currentBusinessData.reviewCount === 'number' &&
+                                    currentBusinessData.reviewCount > 0 &&
+                                    totalReviews === 0) {
+                                    // If we didn't find any service ratings but the business already has a rating, preserve it
+                                    console.log(`Preserving existing business rating: ${currentBusinessData.rating} from ${currentBusinessData.reviewCount} reviews`);
+                                } else if (totalReviews > 0) {
+                                    // Only update if we have valid service ratings
+                                    await updateDoc(businessRef, {
+                                        rating: businessAvgRating,
+                                        reviewCount: totalReviews
+                                    });
+
+                                    console.log(`Updated business ${businessEmail} with overall rating: ${businessAvgRating} from ${totalReviews} reviews`);
+                                } else {
+                                    console.log(`No reviews found for business ${businessEmail}, not updating business rating`);
+                                }
+                            }
+                        } catch (businessError) {
+                            console.error('Error updating business overall rating:', businessError);
+                        }
+
+                        return { averageRating: roundedAverage, reviewCount };
+                    } else {
+                        console.log(`Service not found at Services/${businessEmail}/Active/${itemId}, trying alternative paths`);
+                    }
+                }
+
+                // Last attempt: try with lowercase services collection
+                console.log(`Trying lowercase 'services' collection with ID: ${itemId}`);
+                const serviceRef = doc(db, 'services', itemId);
+                const serviceDoc = await getDoc(serviceRef);
+                if (serviceDoc.exists()) {
+                    console.log(`Service document exists at services/${itemId}, updating rating`);
+                    const serviceData = serviceDoc.data();
+                    console.log(`Current service data:`, serviceData);
+
+                    // Update the service with the new rating
+                    await updateDoc(serviceRef, {
+                        rating: roundedAverage,
+                        reviewCount
+                    });
+
+                    // If the service has a businessId field, try to update that business's overall rating too
+                    if (serviceData.businessId) {
+                        try {
+                            // First get the business email from the businessId
+                            const businessEmail = await resolveBusinessDocumentId(serviceData.businessId);
+                            if (businessEmail) {
+                                const businessRef = doc(db, 'Businesses', businessEmail);
+                                const businessDoc = await getDoc(businessRef);
+
+                                if (businessDoc.exists()) {
+                                    // Get all services for this business to calculate overall rating
+                                    const servicesQuery = query(
+                                        collection(db, 'services'),
+                                        where('businessId', '==', serviceData.businessId)
+                                    );
+                                    const servicesSnap = await getDocs(servicesQuery);
+
+                                    console.log(`Found ${servicesSnap.size} services in lowercase collection for business ${serviceData.businessId}`);
+
+                                    let totalRating = 0;
+                                    let totalReviews = 0;
+
+                                    servicesSnap.forEach(doc => {
+                                        const svcData = doc.data();
+                                        if (typeof svcData.rating === 'number' && !isNaN(svcData.rating) &&
+                                            typeof svcData.reviewCount === 'number' && !isNaN(svcData.reviewCount) &&
+                                            svcData.reviewCount > 0) {
+                                            totalRating += svcData.rating * svcData.reviewCount;
+                                            totalReviews += svcData.reviewCount;
+                                        }
+                                    });
+
+                                    // Update the business rating
+                                    const businessAvgRating = totalReviews > 0 ? Math.round((totalRating / totalReviews) * 10) / 10 : 0;
+                                    await updateDoc(businessRef, {
+                                        rating: businessAvgRating,
+                                        reviewCount: totalReviews
+                                    });
+
+                                    console.log(`Updated business ${businessEmail} with overall rating: ${businessAvgRating} from ${totalReviews} reviews in lowercase services collection`);
+                                }
+                            }
+                        } catch (businessError) {
+                            console.error('Error updating business rating from lowercase services collection:', businessError);
+                        }
+                    }
+
+                    return { averageRating: roundedAverage, reviewCount };
+                }
+
+                console.error(`Service document not found for itemId: ${itemId} under any collection path`);
+                throw new Error(`Service with ID ${itemId} not found for business ${businessId}`);
+            } catch (error) {
+                console.error('Error updating service rating:', error);
+                throw error;
+            }
         }
 
         return {
@@ -1010,7 +1411,15 @@ export const getReviewStats = async (reviewType, businessId, itemId = null) => {
             // For product reviews, use Reviews/Products/businessEmail_productId
             collectionPath = `Reviews/Products/${businessId}_${itemId}`;
         } else if (reviewType === 'service' && itemId) {
-            collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            // For services, first check if businessId looks like an email
+            if (businessId.includes('@')) {
+                collectionPath = `Reviews/Services/${businessId}_${itemId}`;
+            } else {
+                // Try to resolve the business email from businessId
+                const resolvedBusinessId = await resolveBusinessDocumentId(businessId);
+                const businessIdentifier = resolvedBusinessId || businessId;
+                collectionPath = `Reviews/Services/${businessIdentifier}_${itemId}`;
+            }
         } else {
             console.error(`❌ Invalid review type "${reviewType}" or missing item ID for non-business review`);
             return { averageRating: 0, reviewCount: 0, ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };

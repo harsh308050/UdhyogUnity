@@ -157,8 +157,8 @@ const ServiceBooking = () => {
 
                     // Try path 1: Services/businessId/Active/serviceId
                     try {
-                        console.log(`Trying path 1: Services/${businessId}/Active/${serviceId}`);
-                        const serviceRef1 = doc(db, "Services", businessId, "Active", serviceId);
+                        console.log(`Trying path 1: Services/${businessEmail}/Active/${serviceId}`);
+                        const serviceRef1 = doc(db, "Services", businessEmail, "Active", serviceId);
                         const serviceDoc = await getDoc(serviceRef1);
                         if (serviceDoc.exists()) {
                             serviceData = {
@@ -175,8 +175,8 @@ const ServiceBooking = () => {
                 // Try path 2: Services/businessId/Inactive/serviceId (some services might be inactive)
                 if (!serviceData) {
                     try {
-                        console.log(`Trying path 2: Services/${businessId}/Inactive/${serviceId}`);
-                        const serviceRef2 = doc(db, "Services", businessId, "Inactive", serviceId);
+                        console.log(`Trying path 2: Services/${businessEmail}/Inactive/${serviceId}`);
+                        const serviceRef2 = doc(db, "Services", businessEmail, "Inactive", serviceId);
                         const serviceDoc = await getDoc(serviceRef2);
                         if (serviceDoc.exists()) {
                             serviceData = {
@@ -193,8 +193,8 @@ const ServiceBooking = () => {
                 // Try path 3: Services/businessId/ActiveServices/serviceId (for backward compatibility)
                 if (!serviceData) {
                     try {
-                        console.log(`Trying path 3: Services/${businessId}/ActiveServices/${serviceId}`);
-                        const serviceRef3 = doc(db, "Services", businessId, "ActiveServices", serviceId);
+                        console.log(`Trying path 3: Services/${businessId}/Active/${serviceId}`);
+                        const serviceRef3 = doc(db, "Services", businessId, "Active", serviceId);
                         const serviceDoc = await getDoc(serviceRef3);
                         if (serviceDoc.exists()) {
                             serviceData = {
