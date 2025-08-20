@@ -24,7 +24,7 @@ function UserBookings() {
             try {
                 const userBookings = await getCustomerBookings(currentUser.email);
                 console.log('Fetched user bookings:', userBookings);
-                
+
                 // Check for any status issues (null, undefined, or unexpected values)
                 userBookings.forEach(booking => {
                     if (!booking.status) {
@@ -33,7 +33,7 @@ function UserBookings() {
                         console.log(`Found completed booking: ${booking.id} (${booking.serviceName})`);
                     }
                 });
-                
+
                 setBookings(userBookings);
 
                 // Check which completed bookings can be reviewed
@@ -43,7 +43,7 @@ function UserBookings() {
                     const completedBookings = userBookings.filter(booking =>
                         booking.status && booking.status.toLowerCase() === 'completed'
                     );
-                    
+
                     console.log(`Found ${completedBookings.length} completed bookings that can be reviewed`);
 
                     for (const booking of completedBookings) {
@@ -217,15 +217,15 @@ function UserBookings() {
         status: b.status,
         date: b.dateTime?.toDate?.() || new Date(b.dateTime)
     })));
-    
+
     const filteredBookings = bookings.filter(booking => {
         // Make sure we handle both Firestore Timestamp and regular date strings
         const bookingDate = booking.dateTime?.toDate ? booking.dateTime.toDate() : new Date(booking.dateTime);
         const now = new Date();
-        
+
         // Normalize status to lowercase for consistent comparison
         const status = booking.status?.toLowerCase() || '';
-        
+
         console.log(`Filtering booking: ${booking.serviceName}, status: ${status}, date: ${bookingDate}, tab: ${activeTab}`);
 
         if (activeTab === 'upcoming') {

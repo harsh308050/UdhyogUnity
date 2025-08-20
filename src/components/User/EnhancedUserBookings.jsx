@@ -37,7 +37,7 @@ function EnhancedUserBookings() {
                 setLoading(true);
                 const userBookings = await getCustomerBookings(currentUser.email);
                 console.log('Fetched user bookings:', userBookings);
-                
+
                 // Check for any status issues (null, undefined, or unexpected values)
                 userBookings.forEach(booking => {
                     if (!booking.status) {
@@ -46,7 +46,7 @@ function EnhancedUserBookings() {
                         console.log(`Found completed booking: ${booking.id} (${booking.serviceName})`);
                     }
                 });
-                
+
                 setBookings(userBookings);
 
                 // Check which completed bookings can be reviewed
@@ -257,7 +257,7 @@ function EnhancedUserBookings() {
     const getStatusClass = (status) => {
         // Convert status to lowercase for case-insensitive comparison
         const statusLower = status?.toLowerCase() || '';
-        
+
         switch (statusLower) {
             case 'confirmed': return 'status-confirmed';
             case 'pending': return 'status-pending';
@@ -272,7 +272,7 @@ function EnhancedUserBookings() {
     const getStatusIcon = (status) => {
         // Convert status to lowercase for case-insensitive comparison
         const statusLower = status?.toLowerCase() || '';
-        
+
         switch (statusLower) {
             case 'confirmed': return <Check size={16} />;
             case 'pending': return <Clock size={16} />;
@@ -287,7 +287,7 @@ function EnhancedUserBookings() {
     const getStatusText = (status) => {
         // Convert status to lowercase for case-insensitive comparison
         const statusLower = status?.toLowerCase() || '';
-        
+
         switch (statusLower) {
             case 'reschedule_requested': return 'Reschedule Requested';
             case 'completed': return 'Completed';
@@ -322,15 +322,15 @@ function EnhancedUserBookings() {
         status: b.status,
         date: b.dateTime?.toDate?.() || new Date(b.dateTime)
     })));
-    
+
     const filteredBookings = bookings.filter(booking => {
         // Make sure we handle both Firestore Timestamp and regular date strings
         const bookingDate = booking.dateTime?.toDate ? booking.dateTime.toDate() : new Date(booking.dateTime);
         const now = new Date();
-        
+
         // Normalize status to lowercase for consistent comparison
         const status = booking.status?.toLowerCase() || '';
-        
+
         console.log(`Filtering booking: ${booking.serviceName}, status: ${status}, date: ${bookingDate}, tab: ${activeTab}`);
 
         if (activeTab === 'upcoming') {

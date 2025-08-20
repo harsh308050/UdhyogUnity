@@ -341,7 +341,8 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.product-context {
+.product-context,
+.service-context {
     font-size: 14px;
     color: #c9d4e8;
     margin-bottom: 8px;
@@ -350,6 +351,11 @@
     border-radius: 4px;
     display: inline-block;
     border: 1px solid rgba(74, 108, 247, 0.3);
+}
+
+.service-context {
+    background-color: rgba(76, 175, 80, 0.15);
+    border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .review-comment {
@@ -685,6 +691,47 @@
     box-shadow: none;
 }
 
+/* Load More Button */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 40px;
+}
+
+.load-more-button {
+    padding: 12px 24px;
+    background-color: rgba(74, 108, 247, 0.2);
+    color: #c9d4e8;
+    border: 1px solid rgba(74, 108, 247, 0.3);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.load-more-button:hover:not(:disabled) {
+    background-color: rgba(74, 108, 247, 0.3);
+    box-shadow: 0 2px 10px rgba(74, 108, 247, 0.2);
+}
+
+.load-more-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spinner-small {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid #4a6cf7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .reviews-overview {
@@ -732,4 +779,25 @@
     .sort-select {
         flex: 1;
     }
+}
+
+/* Refresh button styles */
+.refresh-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #c9d4e8;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+    background-color: rgba(76, 175, 80, 0.3);
+    box-shadow: 0 2px 10px rgba(76, 175, 80, 0.2);
 }

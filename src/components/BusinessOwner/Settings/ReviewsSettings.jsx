@@ -21,6 +21,7 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
     const [filteredReviews, setFilteredReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterRating, setFilterRating] = useState('all');
+    const [filterType, setFilterType] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('newest');
     const [selectedReview, setSelectedReview] = useState(null);
@@ -85,13 +86,39 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                 }
             });
 
-            const productReviewsArrays = await Promise.all(productReviewPromises);
-            const productReviews = productReviewsArrays.flat();
+            // Fetch services for this business
+            const activeServicesCol = collection(db, 'Services', businessEmail, 'Active');
+            const activeServicesSnap = await getDocs(activeServicesCol);
+            const allServices = [...activeServicesSnap.docs].map(d => ({ id: d.id, ...d.data() }));
+            console.log(`Found ${allServices.length} services for business:`, businessEmail);
 
-            // Tag business reviews and combine
+            // For each service, fetch recent service reviews (limit 5 each) and tag with service info
+            const serviceReviewPromises = allServices.map(async (s) => {
+                try {
+                    console.log(`Fetching reviews for service: ${s.id}, business: ${businessEmail}`);
+                    const sr = await getReviews('service', businessEmail, s.id, 5);
+                    console.log(`Reviews for service ${s.id}:`, sr.reviews?.length || 0);
+
+                    // Tag each review with service metadata
+                    return (sr.reviews || []).map(r => ({ ...r, itemId: s.id, serviceName: s.name || s.serviceName || s.title || '', _reviewType: 'service' }));
+                } catch (e) {
+                    console.error('Error fetching service reviews for', s.id, e);
+                    return [];
+                }
+            });
+
+            const [productReviewsArrays, serviceReviewsArrays] = await Promise.all([
+                Promise.all(productReviewPromises),
+                Promise.all(serviceReviewPromises)
+            ]);
+
+            const productReviews = productReviewsArrays.flat();
+            const serviceReviews = serviceReviewsArrays.flat();
+
+            // Tag business reviews and combine all reviews
             const taggedBusinessReviews = businessReviews.map(r => ({ ...r, _reviewType: 'business' }));
 
-            const combined = [...taggedBusinessReviews, ...productReviews];
+            const combined = [...taggedBusinessReviews, ...productReviews, ...serviceReviews];
 
             // Sort combined reviews by createdAt desc
             combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -120,8 +147,10 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
             // Get more reviews starting after the last visible document
             const result = await getReviews('business', businessEmail, null, 10, lastVisible);
 
+            const taggedBusinessReviews = result.reviews.map(r => ({ ...r, _reviewType: 'business' }));
+
             // Append new reviews to existing ones
-            setReviews(prevReviews => [...prevReviews, ...result.reviews]);
+            setReviews(prevReviews => [...prevReviews, ...taggedBusinessReviews]);
             setLastVisible(result.lastVisible);
             setHasMoreReviews(result.reviews.length === 10);
 
@@ -135,7 +164,7 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
     useEffect(() => {
         // Removed mock reviews logic - use real data only
         filterAndSortReviews();
-    }, [reviews, filterRating, searchTerm, sortBy, loading]);
+    }, [reviews, filterRating, filterType, searchTerm, sortBy, loading]);
 
     const filterAndSortReviews = () => {
         let filtered = [...reviews];
@@ -145,12 +174,20 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
             filtered = filtered.filter(review => review.rating === parseInt(filterRating));
         }
 
+        // Filter by review type
+        if (filterType !== 'all') {
+            filtered = filtered.filter(review => review._reviewType === filterType);
+        }
+
         // Filter by search term
         if (searchTerm) {
             filtered = filtered.filter(review =>
-                review.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                review.comment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                review.title.toLowerCase().includes(searchTerm.toLowerCase())
+                review.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                review.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                review.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                review.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (review.productName && review.productName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (review.serviceName && review.serviceName.toLowerCase().includes(searchTerm.toLowerCase()))
             );
         }
 
@@ -158,17 +195,17 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
         filtered.sort((a, b) => {
             switch (sortBy) {
                 case 'newest':
-                    return new Date(b.date) - new Date(a.date);
+                    return new Date(b.createdAt) - new Date(a.createdAt);
                 case 'oldest':
-                    return new Date(a.date) - new Date(b.date);
+                    return new Date(a.createdAt) - new Date(b.createdAt);
                 case 'highest':
                     return b.rating - a.rating;
                 case 'lowest':
                     return a.rating - b.rating;
                 case 'helpful':
-                    return b.helpful - a.helpful;
+                    return (b.helpful || 0) - (a.helpful || 0);
                 default:
-                    return new Date(b.date) - new Date(a.date);
+                    return new Date(b.createdAt) - new Date(a.createdAt);
             }
         });
 
@@ -225,6 +262,14 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
             if (selectedReview._reviewType === 'product') {
                 await respondToReview(
                     'product',
+                    businessEmail,
+                    selectedReview.itemId,
+                    selectedReview.id,
+                    replyText.trim()
+                );
+            } else if (selectedReview._reviewType === 'service') {
+                await respondToReview(
+                    'service',
                     businessEmail,
                     selectedReview.itemId,
                     selectedReview.id,
@@ -356,6 +401,7 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                         <option value="1">1 Star</option>
                     </select>
 
+
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
@@ -391,22 +437,25 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                         {review.userPhotoURL ? (
                                             <img
                                                 src={review.userPhotoURL}
-                                                alt={review.userName}
+                                                alt={review.userName || review.customerName || 'User'}
                                                 onError={(e) => {
                                                     e.target.onerror = null;
                                                     e.target.src = null;
-                                                    e.target.parentNode.innerHTML = review.userName.charAt(0);
+                                                    const nameInitial = (review.userName || review.customerName || 'U').charAt(0);
+                                                    if (e.target && e.target.parentNode) {
+                                                        e.target.parentNode.innerHTML = nameInitial;
+                                                    }
                                                 }}
                                             />
                                         ) : (
                                             <div className="avatar-placeholder">
-                                                {review.userName.charAt(0)}
+                                                {(review.userName || review.customerName || 'U').charAt(0)}
                                             </div>
                                         )}
                                     </div>
                                     <div className="customer-details">
                                         <div className="customer-name">
-                                            {review.userName}
+                                            {review.userName || review.customerName || 'Anonymous User'}
                                         </div>
                                         <div className="review-date">
                                             <Calendar size={12} />
@@ -423,6 +472,10 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                 {/* Show product name for product reviews */}
                                 {review._reviewType === 'product' && (
                                     <div className="product-context">Product: <strong>{review.productName || review.itemId}</strong></div>
+                                )}
+                                {/* Show service name for service reviews */}
+                                {review._reviewType === 'service' && (
+                                    <div className="product-context service-context">Service: <strong>{review.serviceName || review.itemId}</strong></div>
                                 )}
                                 <h4 className="review-title">{review.title || ''}</h4>
                                 <p className="review-comment">{review.comment || review.text || ''}</p>
@@ -455,10 +508,30 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                     <div className="no-reviews">
                         <Star size={48} />
                         <h3>No reviews found</h3>
-                        <p>No reviews match your current filters.</p>
+                        <p>No reviews match your current filters or this business hasn't received any reviews yet.</p>
                     </div>
                 )}
             </div>
+
+            {/* Load More Button */}
+            {hasMoreReviews && (
+                <div className="load-more-container">
+                    <button
+                        className="load-more-button"
+                        onClick={loadMoreReviews}
+                        disabled={loadingMore}
+                    >
+                        {loadingMore ? (
+                            <>
+                                <div className="spinner-small"></div>
+                                Loading...
+                            </>
+                        ) : (
+                            'Load More Reviews'
+                        )}
+                    </button>
+                </div>
+            )}
 
             {/* Reply Modal */}
             <AnimatePresence>
@@ -492,8 +565,8 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                     <div className="review-rating">
                                         {renderStars(selectedReview?.rating || 0)}
                                     </div>
-                                    <p>"{selectedReview?.comment}"</p>
-                                    <small>- {selectedReview?.userName}</small>
+                                    <p>"{selectedReview?.comment || selectedReview?.text || ''}"</p>
+                                    <small>- {selectedReview?.userName || selectedReview?.customerName || 'Anonymous User'}</small>
                                 </div>
 
                                 <div className="reply-form">

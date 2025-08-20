@@ -737,12 +737,12 @@ export const getRatingStats = async (businessId) => {
     // 1. First check in "reviews" collection
     try {
       const reviewsQuery = query(
-        collection(db, "reviews"),
+        collection(db, "Reviews"),
         where("businessId", "==", businessId)
       );
 
       const reviewsSnapshot = await getDocs(reviewsQuery);
-      console.log(`Found ${reviewsSnapshot.size} reviews in 'reviews' collection`);
+      console.log(`Found ${reviewsSnapshot.size} reviews in 'Reviews' collection`);
 
       reviewsSnapshot.forEach(doc => {
         const reviewData = doc.data();
