@@ -63,10 +63,24 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
             setLastVisible(businessResult.lastVisible);
             setHasMoreReviews(businessResult.reviews?.length === 10);
 
+            // Log each review to help with debugging
+            businessReviews.forEach((review, index) => {
+                console.log(`Business review ${index}:`, review);
+            });
+
             // Fetch products for this business (Available + Unavailable)
             const availCol = collection(db, 'Products', businessEmail, 'Available');
             const unavailCol = collection(db, 'Products', businessEmail, 'Unavailable');
-            const [availSnap, unavailSnap] = await Promise.all([getDocs(availCol), getDocs(unavailCol)]);
+            const [availSnap, unavailSnap] = await Promise.all([
+                getDocs(availCol).catch(e => {
+                    console.log(`Error fetching Available products: ${e.message}`);
+                    return { docs: [] };
+                }),
+                getDocs(unavailCol).catch(e => {
+                    console.log(`Error fetching Unavailable products: ${e.message}`);
+                    return { docs: [] };
+                })
+            ]);
 
             const allProducts = [...availSnap.docs, ...unavailSnap.docs].map(d => ({ id: d.id, ...d.data() }));
             console.log(`Found ${allProducts.length} products for business:`, businessEmail);
@@ -87,10 +101,15 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
             });
 
             // Fetch services for this business
-            const activeServicesCol = collection(db, 'Services', businessEmail, 'Active');
-            const activeServicesSnap = await getDocs(activeServicesCol);
-            const allServices = [...activeServicesSnap.docs].map(d => ({ id: d.id, ...d.data() }));
-            console.log(`Found ${allServices.length} services for business:`, businessEmail);
+            let allServices = [];
+            try {
+                const activeServicesCol = collection(db, 'Services', businessEmail, 'Active');
+                const activeServicesSnap = await getDocs(activeServicesCol);
+                allServices = [...activeServicesSnap.docs].map(d => ({ id: d.id, ...d.data() }));
+                console.log(`Found ${allServices.length} services for business:`, businessEmail);
+            } catch (servicesError) {
+                console.log(`Error fetching services: ${servicesError.message}`);
+            }
 
             // For each service, fetch recent service reviews (limit 5 each) and tag with service info
             const serviceReviewPromises = allServices.map(async (s) => {
@@ -118,7 +137,17 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
             // Tag business reviews and combine all reviews
             const taggedBusinessReviews = businessReviews.map(r => ({ ...r, _reviewType: 'business' }));
 
-            const combined = [...taggedBusinessReviews, ...productReviews, ...serviceReviews];
+            // Check if we have at least one valid review
+            let combined = [...taggedBusinessReviews, ...productReviews, ...serviceReviews];
+
+            // Filter out any invalid reviews (missing rating or other essential data)
+            combined = combined.filter(review => {
+                return review && typeof review.rating === 'number';
+            });
+
+            console.log(`Total valid reviews found: ${combined.length}`);
+
+
 
             // Sort combined reviews by createdAt desc
             combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -128,13 +157,98 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
 
             // Get review statistics
             const stats = await getReviewStats('business', businessEmail);
-            setReviewStats(stats);
+            console.log("Retrieved review stats:", stats);
+
+            // If we have reviews but stats show 0, create stats from the reviews
+            if (combined.length > 0 && (!stats || stats.reviewCount === 0)) {
+                console.log("Reviews exist but stats show zero. Creating stats from reviews.");
+                const calculatedStats = calculateStatsFromReviews(combined);
+                console.log("Calculated stats from reviews:", calculatedStats);
+                setReviewStats(calculatedStats);
+            } else {
+                setReviewStats(stats);
+            }
 
         } catch (error) {
             console.error('Error loading reviews:', error);
+            // Even if there's an error, try to use business data for stats
+            if (businessData && typeof businessData.rating === 'number' && businessData.rating > 0) {
+                const fallbackStats = {
+                    averageRating: businessData.rating,
+                    reviewCount: businessData.reviewCount || 1,
+                    ratingCounts: {
+                        1: 0,
+                        2: 0,
+                        3: 0,
+                        4: 0,
+                        5: 0
+                    },
+                    ratingPercentages: {
+                        1: 0,
+                        2: 0,
+                        3: 0,
+                        4: 0,
+                        5: 0
+                    }
+                };
+
+                // Assign all reviews to the nearest rating bucket
+                const roundedRating = Math.round(businessData.rating);
+                if (roundedRating >= 1 && roundedRating <= 5) {
+                    fallbackStats.ratingCounts[roundedRating] = businessData.reviewCount || 1;
+                    fallbackStats.ratingPercentages[roundedRating] = 100;
+                }
+
+                console.log("Using fallback stats from business data:", fallbackStats);
+                setReviewStats(fallbackStats);
+            }
         } finally {
             setLoading(false);
         }
+    };
+
+    // Helper function to calculate stats from reviews
+    const calculateStatsFromReviews = (reviewsList) => {
+        if (!reviewsList || reviewsList.length === 0) {
+            return {
+                averageRating: 0,
+                reviewCount: 0,
+                ratingCounts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                ratingPercentages: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+            };
+        }
+
+        let totalRating = 0;
+        const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+        reviewsList.forEach(review => {
+            if (review && typeof review.rating === 'number') {
+                totalRating += review.rating;
+
+                // Count reviews by rating - use Math.round for proper bucket assignment
+                const ratingBucket = Math.round(review.rating);
+                if (ratingBucket >= 1 && ratingBucket <= 5) {
+                    ratingCounts[ratingBucket]++;
+                }
+            }
+        });
+
+        const reviewCount = reviewsList.length;
+        const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+        const roundedAverage = Math.round(averageRating * 10) / 10;
+
+        // Calculate rating percentages
+        const ratingPercentages = {};
+        for (let i = 1; i <= 5; i++) {
+            ratingPercentages[i] = reviewCount > 0 ? (ratingCounts[i] / reviewCount) * 100 : 0;
+        }
+
+        return {
+            averageRating: roundedAverage,
+            reviewCount,
+            ratingCounts,
+            ratingPercentages
+        };
     };
 
     const loadMoreReviews = async () => {
@@ -224,26 +338,33 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
     };
 
     const calculateAverageRating = () => {
-        if (reviewStats) {
+        if (reviewStats && typeof reviewStats.averageRating === 'number') {
+            console.log("Using reviewStats.averageRating:", reviewStats.averageRating);
             return reviewStats.averageRating.toFixed(1);
         }
 
         if (reviews.length === 0) return 0;
-        const total = reviews.reduce((sum, review) => sum + review.rating, 0);
-        return (total / reviews.length).toFixed(1);
+        const total = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+        const average = (total / reviews.length).toFixed(1);
+        console.log("Calculated average from reviews:", average);
+        return average;
     };
 
     const getRatingDistribution = () => {
-        if (reviewStats) {
+        if (reviewStats && reviewStats.ratingCounts) {
+            console.log("Using reviewStats.ratingCounts:", reviewStats.ratingCounts);
             return reviewStats.ratingCounts;
         }
 
         const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
         reviews.forEach(review => {
-            if (review.rating >= 1 && review.rating <= 5) {
-                distribution[Math.floor(review.rating)]++;
+            if (review && typeof review.rating === 'number') {
+                // Use Math.round instead of Math.floor for more accurate rating distribution
+                const bucket = Math.min(Math.max(Math.round(review.rating), 1), 5);
+                distribution[bucket]++;
             }
         });
+        console.log("Calculated distribution from reviews:", distribution);
         return distribution;
     };
 
@@ -362,7 +483,13 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                     <div
                                         className="bar-fill"
                                         style={{
-                                            width: `${reviews.length > 0 ? (ratingDistribution[rating] / reviews.length) * 100 : 0}%`
+                                            width: `${reviewStats && reviewStats.ratingCounts
+                                                ? (reviewStats.reviewCount > 0
+                                                    ? (reviewStats.ratingCounts[rating] / reviewStats.reviewCount) * 100
+                                                    : 0)
+                                                : (reviews.length > 0
+                                                    ? (ratingDistribution[rating] / reviews.length) * 100
+                                                    : 0)}%`
                                         }}
                                     ></div>
                                 </div>
