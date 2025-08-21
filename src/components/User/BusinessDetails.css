@@ -474,11 +474,50 @@
 
 .map-container {
     width: 100%;
-    height: 180px;
-    background-color: #ffffff;
+    height: 250px;
+    background-color: var(--card-bg);
     border-radius: 10px;
     overflow: hidden;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.google-map {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.map-actions {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 5;
+}
+
+.btn-directions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #2A4FA8;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-directions:hover {
+    /* background-color: var(--accent-dark); */
+    background-color: #1A3F7A;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .map-placeholder {
@@ -504,6 +543,11 @@
     max-width: 100%;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    margin-bottom: 1rem;
+}
+
+.map-placeholder .btn-directions {
+    margin-top: 1rem;
 }
 
 .products-grid,
@@ -685,8 +729,7 @@
 .business-full-description,
 .business-story,
 .business-specialties,
-.business-established,
-.business-verification {
+.business-established {
     margin-bottom: 1.5rem;
     padding: 0.75rem;
     background-color: var(--card-bg);
@@ -707,8 +750,7 @@
 .business-full-description h3,
 .business-story h3,
 .business-specialties h3,
-.business-established h3,
-.business-verification h3 {
+.business-established h3 {
     margin-bottom: 0.75rem;
     font-size: 1.1rem;
     color: var(--text-light);
@@ -725,6 +767,15 @@
     font-size: 0.9rem;
     width: fit-content;
 }
+
+.business-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: left;
+    align-items: flex-start;
+}
+
 
 .verification-status.verified {
     background-color: rgba(46, 204, 113, 0.1);

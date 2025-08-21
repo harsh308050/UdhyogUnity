@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     MapPin,
     Phone,
     Mail,
     Clock,
+    User,
     Star,
     ChevronLeft,
     Globe,
@@ -17,7 +18,8 @@ import {
     Bookmark,
     X,
     ChevronRight,
-    ChevronLeft as ArrowLeft
+    ChevronLeft as ArrowLeft,
+    Navigation
 } from 'react-feather';
 import { getBusinessById } from '../../Firebase/exploreDb';
 import { getAllProducts, getAllServices } from '../../Firebase/exploreDb';
@@ -85,6 +87,13 @@ const BusinessDetails = () => {
                 if (currentUser) {
                     const favorited = await checkIfFavorite(currentUser.email, businessId, 'business');
                     setIsFavorite(favorited);
+                }
+
+                // Process address for map if needed
+                if (businessData.address && !businessData.address.latitude && !businessData.address.longitude) {
+                    // If there's an address but no coordinates, we might want to geocode in the future
+                    // For now, we'll just use the address for a text-based map search
+                    console.log("Business has address but no coordinates for map");
                 }
 
                 // Extract business photos
@@ -485,10 +494,7 @@ const BusinessDetails = () => {
                                         <div className="info-item">
                                             <MapPin size={16} />
                                             <span>
-                                                {business.address.street && `${business.address.street}, `}
-                                                {business.address.city && `${business.address.city}, `}
-                                                {business.address.state && `${business.address.state}, `}
-                                                {business.address.pincode}
+                                                {business.cityName && `${business.cityName}`}, {business.stateName && `${business.stateName}`}
                                             </span>
                                         </div>
                                     )}
@@ -575,22 +581,61 @@ const BusinessDetails = () => {
                                 )}
                             </div>
 
-                            {business.address && (
-                                <div className="business-map-section">
-                                    <h2>Location</h2>
-                                    <div className="map-container">
+                            <div className="business-map-section">
+                                <h2>Location</h2>
+                                <div className="map-container">
+                                    {business.location && business.location.lat && business.location.lng ? (
+                                        <>
+                                            <div className="google-map">
+                                                <iframe
+                                                    title="Business Location"
+                                                    width="100%"
+                                                    height="100%"
+                                                    frameBorder="0"
+                                                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${business.location.lat},${business.location.lng}&zoom=15`}
+                                                    allowFullScreen
+                                                />
+                                            </div>
+                                            <div className="map-actions">
+                                                <a
+                                                    href={`https://www.google.com/maps/dir/?api=1&destination=${business.location.lat},${business.location.lng}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn-directions"
+                                                >
+                                                    <Navigation size={16} />
+                                                    Get Directions
+                                                </a>
+                                            </div>
+                                        </>
+                                    ) : business.address ? (
                                         <div className="map-placeholder">
                                             <MapPin size={24} />
                                             <p>
-                                                {business.address.street && `${business.address.street}, `}
-                                                {business.address.city && `${business.address.city}, `}
-                                                {business.address.state && `${business.address.state}`}
-                                                {business.address.pincode && ` - ${business.address.pincode}`}
+                                                {typeof business.address === 'string'
+                                                    ? business.address
+                                                    : `${business.address.street || ''} ${business.address.city || ''} ${business.address.state || ''} ${business.address.pincode || ''}`}
                                             </p>
+                                            <a
+                                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                                    business.businessName + ' ' + (typeof business.address === 'string' ? business.address : '')
+                                                )}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn-directions mt-3"
+                                            >
+                                                <Navigation size={16} />
+                                                Find on Google Maps
+                                            </a>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="map-placeholder">
+                                            <MapPin size={24} />
+                                            <p>No location information available</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
 
@@ -658,17 +703,18 @@ const BusinessDetails = () => {
                                 </div>
                             )}
 
-                            <div className="business-verification">
-                                <h3>Verification Status</h3>
-                                <div className={`verification-status ${business.isVerified ? 'verified' : 'not-verified'}`}>
-                                    {business.isVerified ? (
-                                        <>
-                                            <CheckCircle size={18} />
-                                            <span>Verified Business</span>
-                                        </>
-                                    ) : (
-                                        <span>Not Verified</span>
-                                    )}
+                            <div className="business-info">
+                                <h3>Contact Information</h3>
+                                <div className='info-grid'>
+                                    <div className='info-item'><User size={20} /> <span>{business.ownerName || 'Unknown'}</span></div>
+                                    <div className="info-item">
+                                        <Phone size={16} />
+                                        <span>{business.phoneNumber}</span>
+                                    </div>
+                                    <div className="info-item">
+                                        <Mail size={16} />
+                                        <span>{business.email}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -291,13 +291,12 @@ function UserFavorites() {
                             {favorite.itemDetails.address && (
                                 <div className="location">
                                     <MapPin size={14} />
-                                    <span>{favorite.itemDetails.city}, {favorite.itemDetails.state}</span>
+                                    <span>{favorite.itemDetails.cityName}, {favorite.itemDetails.stateName}</span>
                                 </div>
                             )}
 
-                            <Link to={`/business/${favorite.itemId}`} className="view-link">
+                            <Link to={`/business/${favorite.itemId}`} className=" btn">
                                 <span>View Business</span>
-                                <ExternalLink size={16} />
                             </Link>
                         </div>
                     </div>

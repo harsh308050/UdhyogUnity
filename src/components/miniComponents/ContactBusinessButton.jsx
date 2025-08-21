@@ -78,7 +78,7 @@ function ContactBusinessButton({
 
     return (
         <button
-            className={`btn-message ${className}`}
+            className={`btn-message ${className} btn`}
             onClick={handleStartConversation}
             disabled={loading || !currentUser}
             title={!currentUser ? 'Please login to contact business' : `Start conversation with ${businessName}`}
