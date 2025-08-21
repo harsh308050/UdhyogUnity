@@ -12,6 +12,7 @@ import UserFavorites from "./components/User/UserFavorites";
 import UserBookings from "./components/User/UserBookings";
 import UserProfileSettings from "./components/User/UserProfileSettings";
 import ServiceBooking from "./components/User/ServiceBooking";
+import BusinessDetails from "./components/User/BusinessDetails";
 
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -83,6 +84,12 @@ function AppRoutes() {
       <Route path="/service/:businessId/:serviceId" element={
         <ProtectedRoute>
           <ServiceBooking />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/business/:businessId" element={
+        <ProtectedRoute>
+          <BusinessDetails />
         </ProtectedRoute>
       } />
 

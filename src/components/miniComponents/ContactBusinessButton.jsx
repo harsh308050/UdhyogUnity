@@ -82,9 +82,10 @@ function ContactBusinessButton({
             onClick={handleStartConversation}
             disabled={loading || !currentUser}
             title={!currentUser ? 'Please login to contact business' : `Start conversation with ${businessName}`}
+            style={style}
         >
             <MessageSquare size={16} />
-            {loading ? '...' : buttonText}
+            {loading ? '...' : buttonText || 'Contact'}
         </button>
     );
 }
