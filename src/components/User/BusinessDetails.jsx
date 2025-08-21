@@ -14,7 +14,10 @@ import {
     Heart,
     MessageSquare,
     Home,
-    Bookmark
+    Bookmark,
+    X,
+    ChevronRight,
+    ChevronLeft as ArrowLeft
 } from 'react-feather';
 import { getBusinessById } from '../../Firebase/exploreDb';
 import { getAllProducts, getAllServices } from '../../Firebase/exploreDb';
@@ -40,6 +43,8 @@ const BusinessDetails = () => {
     const [quickViewProduct, setQuickViewProduct] = useState(null);
     const [serviceToBook, setServiceToBook] = useState(null);
     const [businessPhotos, setBusinessPhotos] = useState([]);
+    const [showPhotoGallery, setShowPhotoGallery] = useState(false);
+    const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -85,27 +90,44 @@ const BusinessDetails = () => {
                 // Extract business photos
                 const photos = [];
 
-                // Add logo if available
-                if (businessData.logo) {
-                    const logoUrl = typeof businessData.logo === 'string'
-                        ? businessData.logo
-                        : businessData.logo.url;
-                    photos.push(logoUrl);
+                // Check for businessPhotos array directly as seen in Firestore
+                if (businessData.businessPhotos && Array.isArray(businessData.businessPhotos)) {
+                    // Process all images from the businessPhotos array
+                    businessData.businessPhotos.forEach(photo => {
+                        // Check if the photo has a url property
+                        if (photo.url) {
+                            photos.push(photo.url);
+                        } else if (typeof photo === 'string') {
+                            photos.push(photo);
+                        }
+                    });
                 }
 
-                // Add cover photo if available
+                // Add logo if available and not already included
+                // if (businessData.logo) {
+                //     const logoUrl = typeof businessData.logo === 'string'
+                //         ? businessData.logo
+                //         : businessData.logo.url;
+                //     if (logoUrl && !photos.includes(logoUrl)) {
+                //         photos.push(logoUrl);
+                //     }
+                // }
+
+                // Add cover photo if available and not already included
                 if (businessData.coverPhoto) {
                     const coverUrl = typeof businessData.coverPhoto === 'string'
                         ? businessData.coverPhoto
                         : businessData.coverPhoto.url;
-                    photos.push(coverUrl);
+                    if (coverUrl && !photos.includes(coverUrl)) {
+                        photos.push(coverUrl);
+                    }
                 }
 
                 // Add any other photos
                 if (businessData.photos && Array.isArray(businessData.photos)) {
                     businessData.photos.forEach(photo => {
                         const photoUrl = typeof photo === 'string' ? photo : photo.url;
-                        if (photoUrl) photos.push(photoUrl);
+                        if (photoUrl && !photos.includes(photoUrl)) photos.push(photoUrl);
                     });
                 }
 
@@ -114,7 +136,7 @@ const BusinessDetails = () => {
                     businessData.documents.forEach(doc => {
                         if (doc.type === 'image' || (doc.url && doc.url.includes('.jpg') || doc.url.includes('.png') || doc.url.includes('.jpeg'))) {
                             const photoUrl = typeof doc === 'string' ? doc : doc.url;
-                            if (photoUrl) photos.push(photoUrl);
+                            if (photoUrl && !photos.includes(photoUrl)) photos.push(photoUrl);
                         }
                     });
                 }
@@ -123,6 +145,8 @@ const BusinessDetails = () => {
                 if (photos.length === 0) {
                     photos.push('https://via.placeholder.com/800x400?text=No+Business+Photos+Available');
                 }
+
+                console.log('Business photos:', photos);
 
                 setBusinessPhotos(photos);
                 setLoading(false);
@@ -324,17 +348,39 @@ const BusinessDetails = () => {
             <div className="business-cover-section">
                 {businessPhotos.length > 0 && (
                     <div className="business-cover-photo">
-                        <img src={businessPhotos[0]} alt={business.businessName} />
+                        <img
+                            src={businessPhotos[0]}
+                            alt={business.businessName}
+                            onClick={() => {
+                                setCurrentPhotoIndex(0);
+                                setShowPhotoGallery(true);
+                            }}
+                            style={{ cursor: 'pointer' }}
+                        />
 
                         <div className="business-photos-grid">
-                            {businessPhotos.slice(0, 4).map((photo, index) => (
-                                <div key={index} className="business-photo-thumbnail">
-                                    <img src={photo} alt={`${business.businessName} - ${index}`} />
+                            {/* Show thumbnails for photos 2-5 (indices 1-4) */}
+                            {businessPhotos.slice(1, 5).map((photo, index) => (
+                                <div
+                                    key={index}
+                                    className="business-photo-thumbnail"
+                                    onClick={() => {
+                                        setCurrentPhotoIndex(index + 1);
+                                        setShowPhotoGallery(true);
+                                    }}
+                                >
+                                    <img src={photo} alt={`${business.businessName} - ${index + 1}`} />
                                 </div>
                             ))}
-                            {businessPhotos.length > 4 && (
-                                <div className="business-photo-more">
-                                    <span>+{businessPhotos.length - 4} more</span>
+                            {businessPhotos.length > 5 && (
+                                <div
+                                    className="business-photo-more"
+                                    onClick={() => {
+                                        setCurrentPhotoIndex(0);
+                                        setShowPhotoGallery(true);
+                                    }}
+                                >
+                                    <span>+{businessPhotos.length - 5} more</span>
                                 </div>
                             )}
                         </div>
@@ -363,12 +409,6 @@ const BusinessDetails = () => {
                                 <span className="business-review-count">
                                     {business.rating || 4}/5 ({business.reviewCount || 0} reviews)
                                 </span>
-                                {business.isVerified && (
-                                    <span className="business-verified-badge">
-                                        <CheckCircle size={16} />
-                                        Verified
-                                    </span>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -655,6 +695,58 @@ const BusinessDetails = () => {
                         // navigate('/bookings');
                     }}
                 />
+            )}
+
+            {/* Photo Gallery Modal */}
+            {showPhotoGallery && (
+                <div className="photo-gallery-modal">
+                    <div className="photo-gallery-header">
+                        <h3>{business.businessName} Photos</h3>
+                        <button className="close-gallery" onClick={() => setShowPhotoGallery(false)}>
+                            <X size={24} />
+                        </button>
+                    </div>
+                    <div className="photo-gallery-content">
+                        <button
+                            className="gallery-nav prev"
+                            onClick={() => setCurrentPhotoIndex(prev =>
+                                prev === 0 ? businessPhotos.length - 1 : prev - 1
+                            )}
+                            disabled={businessPhotos.length <= 1}
+                        >
+                            <ArrowLeft size={30} />
+                        </button>
+                        <div className="gallery-main-image">
+                            <img
+                                src={businessPhotos[currentPhotoIndex]}
+                                alt={`${business.businessName} photo ${currentPhotoIndex + 1}`}
+                            />
+                        </div>
+                        <button
+                            className="gallery-nav next"
+                            onClick={() => setCurrentPhotoIndex(prev =>
+                                prev === businessPhotos.length - 1 ? 0 : prev + 1
+                            )}
+                            disabled={businessPhotos.length <= 1}
+                        >
+                            <ChevronRight size={30} />
+                        </button>
+                    </div>
+                    <div className="photo-gallery-thumbnails">
+                        {businessPhotos.map((photo, index) => (
+                            <div
+                                key={index}
+                                className={`gallery-thumbnail ${currentPhotoIndex === index ? 'active' : ''}`}
+                                onClick={() => setCurrentPhotoIndex(index)}
+                            >
+                                <img src={photo} alt={`Thumbnail ${index + 1}`} />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="photo-counter">
+                        {currentPhotoIndex + 1} / {businessPhotos.length}
+                    </div>
+                </div>
             )}
         </div>
     );

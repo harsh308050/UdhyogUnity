@@ -425,7 +425,6 @@ function BusinessDashboard() {
                             <div className="user-menu">
                                 <div className="business-avatar">
                                     {(() => {
-                                        // Get logo URL using the extractLogoUrl function
                                         const logoUrl = businessData.logo ? extractLogoUrl(businessData.logo) : null;
                                         console.log("Rendering avatar with extracted logoUrl:", logoUrl);
 
