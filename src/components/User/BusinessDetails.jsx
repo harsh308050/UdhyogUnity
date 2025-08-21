@@ -379,7 +379,7 @@ const BusinessDetails = () => {
                             businessName={business.businessName}
                             initialMessage={`Hello! I'm interested in your business.`}
                             buttonText="Message"
-                            className="regBtn"
+                            className="btn"
                         />
 
                         <button
