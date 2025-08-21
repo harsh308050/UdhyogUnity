@@ -188,6 +188,7 @@
     bottom: 0;
     z-index: 1;
     border-radius: 50%;
+    background-color: var(--bg-dark);
 }
 
 .user-dashboard-theme .user-main-content {

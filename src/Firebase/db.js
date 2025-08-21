@@ -43,7 +43,15 @@ export const getUserFromFirestore = async (email) => {
     try {
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
-            return userDoc.data();
+            const userData = userDoc.data();
+
+            // Normalize photoURL if it's an object
+            if (userData.photoURL && typeof userData.photoURL === 'object') {
+                console.log("Normalizing photoURL in getUserFromFirestore:", userData.photoURL);
+                userData.photoURL = userData.photoURL.url || userData.photoURL.toString() || '';
+            }
+
+            return userData;
         } else {
             console.log("No user found in Firestore for email:", email);
             return null;

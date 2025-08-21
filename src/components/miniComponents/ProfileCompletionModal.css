@@ -1,0 +1,138 @@
+.profile-completion-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.profile-completion-modal .modal-container {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.profile-completion-modal .modal-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 18px 20px;
+    background: linear-gradient(120deg,
+            rgba(64, 77, 141, 1) 15%,
+            rgba(89, 109, 181, 1) 50%,
+            rgba(22, 155, 223, 1) 100%);
+}
+
+.profile-completion-modal .modal-title {
+    margin: 0;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.profile-completion-modal .modal-body {
+    padding: 20px;
+}
+
+.profile-completion-modal .modal-footer {
+    /* border-top: 1px solid #000; */
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.profile-completion-modal .modal-footer .btn-outline-secondary {}
+
+
+
+.profile-completion-modal .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.profile-completion-modal .text-danger {
+    color: #dc3545;
+}
+
+.profile-completion-modal .form-control {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.profile-completion-modal .form-control:focus {
+    border-color: #4e73df;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+
+.profile-completion-modal button.regBtn {
+    all: unset;
+    background: linear-gradient(400deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 8vw;
+    transition: background-color 0.2s ease;
+}
+
+.profile-completion-modal button.regBtn:hover {
+    background: linear-gradient(240deg, rgba(64, 77, 141, 1) 15%,
+            rgba(89, 109, 181, 1) 50%,
+            rgba(22, 155, 223, 1) 100%);
+    color: white;
+}
+
+.profile-completion-modal button.regBtn:disabled {
+    background-color: #a2aed0;
+    cursor: not-allowed;
+}
+
+.profile-completion-modal .btn-outline-secondary {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #4e73df;
+    background-color: #ffffff !important;
+    border-radius: 6px;
+    color: #4e73df;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    width: 10vw;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.profile-completion-modal .btn-outline-secondary:hover {
+    color: #fff;
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.profile-completion-modal .alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}

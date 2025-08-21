@@ -1,9 +1,87 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import UserProfileCompletionModal from "../UserProfileCompletionModal";
 
 function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisibility, handleFormSubmit, handleTabChange, handleGoogleSignIn, loading, currentUser, isSuccessfullyLoggedIn }) {
+    // State for profile completion modal
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [profileData, setProfileData] = useState({
+        email: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+        city: "",
+        photoURL: ""
+    });
+    const [profileError, setProfileError] = useState("");
+
+    // Function to handle Google sign-in with profile completion if needed
+    const handleGoogleSignInWithProfileCheck = async () => {
+        try {
+            // Call the original Google sign-in function, but pass our callback
+            // This allows us to intercept the result and show our modal if needed
+            const result = await handleGoogleSignIn({
+                onNewUser: (userData) => {
+                    // If we have a new user from Google, show profile completion modal
+                    setProfileData({
+                        email: userData.email || "",
+                        firstName: userData.firstName || "",
+                        lastName: userData.lastName || "",
+                        phone: "",
+                        city: "",
+                        photoURL: userData.photoURL || ""
+                    });
+                    setShowProfileModal(true);
+                    return true; // Signal that we've handled this
+                }
+            });
+
+            return result;
+        } catch (error) {
+            console.error("Google sign-in failed:", error);
+        }
+    };
+
+    // Handle profile completion submission
+    const handleProfileSubmit = (e) => {
+        e.preventDefault();
+
+        // Validate fields
+        if (!profileData.city.trim()) {
+            setProfileError("Please enter your city");
+            return;
+        }
+
+        if (!profileData.phone.trim()) {
+            setProfileError("Please enter your phone number");
+            return;
+        }
+
+        // Call the profile completion handler
+        if (typeof handleGoogleSignIn === 'function') {
+            handleGoogleSignIn({
+                completeProfile: true,
+                profileData
+            });
+        }
+
+        // Close the modal
+        setShowProfileModal(false);
+    };
+
     return (
         <div className="tab-pane fade show active" id="signin" role="tabpanel" aria-labelledby="signin-tab">
+            {/* Profile Completion Modal */}
+            <UserProfileCompletionModal
+                show={showProfileModal}
+                onClose={() => setShowProfileModal(false)}
+                userData={profileData}
+                setUserData={setProfileData}
+                onSubmit={handleProfileSubmit}
+                loading={loading}
+                error={profileError}
+            />
+
             <form onSubmit={handleFormSubmit}>
                 <div className="form-fields-container">
                     <div className="mt-2 mb-2">
@@ -45,9 +123,14 @@ function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisi
                             {loading ? 'Signing In...' : 'Sign In'}
                         </button>
                     )}
-                    <button type="button" className="google-btn" onClick={handleGoogleSignIn} disabled={loading}>
+                    <button
+                        type="button"
+                        className="google-btn"
+                        onClick={handleGoogleSignInWithProfileCheck}
+                        disabled={loading}
+                    >
                         <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
-                        {loading ? 'Processing...' : 'Sign In with Google'}
+                        {loading ? 'Processing...' : 'Continue with Google'}
                     </button>
                     <p className="mt-3">
                         Don't have an account?

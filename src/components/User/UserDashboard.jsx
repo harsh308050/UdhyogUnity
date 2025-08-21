@@ -45,11 +45,18 @@ function UserDashboard() {
 
                     if (firestoreData) {
                         console.log("Retrieved user data from Firestore:", firestoreData);
+                        console.log("Profile photo URL:", firestoreData.photoURL);
+
+                        // Check if photoURL is a string or an object
+                        if (firestoreData.photoURL && typeof firestoreData.photoURL === 'object') {
+                            console.log("photoURL is an object, extracting URL property:", firestoreData.photoURL);
+                            firestoreData.photoURL = firestoreData.photoURL.url || firestoreData.photoURL.toString();
+                        }
+
                         setUserData(firestoreData);
                     } else {
                         // No data found, use demo data
                         console.log("No user data found, using demo data");
-                        setDemoData();
                     }
 
                     // Load real stats from Firebase
@@ -57,11 +64,9 @@ function UserDashboard() {
                 } else {
                     // No user found, use demo data
                     console.log("No current user, using demo data");
-                    setDemoData();
                 }
             } catch (err) {
                 console.error("Error user-loading user data:", err);
-                setDemoData();
             }
         };
 
@@ -226,31 +231,6 @@ function UserDashboard() {
                 recentReviews: 0
             });
         }
-    };
-
-    // Set demo data for development or when no user data exists
-    const setDemoData = () => {
-        const demoData = {
-            firstName: "John",
-            lastName: "Doe",
-            email: "john.doe@example.com",
-            phone: "+91 1234567890",
-            city: "Mumbai",
-            photoURL: ""
-        };
-
-        console.log("Setting demo data for user profile:", demoData);
-        setUserData(demoData);
-
-        // Reset stats to zero when using demo data
-        console.log("Resetting dashboard stats to zero (demo mode)");
-        setStats({
-            upcomingBookings: 0,
-            pendingOrders: 0,
-            savedBusinesses: 0,
-            savedProducts: 0,
-            recentReviews: 0
-        });
     };
 
     const handleLogout = async () => {
@@ -420,6 +400,7 @@ function UserDashboard() {
                                             onError={(e) => {
                                                 console.log("Photo failed to load:", e);
                                                 e.target.style.display = 'none';
+                                                e.target.parentElement.innerText = userData.firstName?.charAt(0) || 'U';
                                             }}
                                         />
                                     ) : (

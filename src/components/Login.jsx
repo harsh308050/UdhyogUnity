@@ -122,12 +122,41 @@ function Login() {
         }
     };
 
-    const handleGoogleSignIn = async () => {
+    const handleGoogleSignIn = async (options = {}) => {
         try {
             setLoading(true);
             setError("");
             setIsSuccessfullyLoggedIn(false); // Reset state
 
+            // Handle profile completion case
+            if (options.completeProfile && options.profileData) {
+                console.log("Completing profile for Google user:", options.profileData);
+
+                // Validate profile data
+                if (!options.profileData.city || !options.profileData.phone) {
+                    setError("Please enter both City and Phone Number.");
+                    return null;
+                }
+
+                // Save user data to Firestore
+                const userData = {
+                    email: options.profileData.email,
+                    firstName: options.profileData.firstName,
+                    lastName: options.profileData.lastName,
+                    phone: options.profileData.phone,
+                    city: options.profileData.city,
+                    photoURL: options.profileData.photoURL || "",
+                    userType: 'customer'
+                };
+
+                await addUserToFirestore({ email: options.profileData.email }, userData);
+                setIsSuccessfullyLoggedIn(true);
+                setError("Signed in successfully with Google!");
+                navigate("/dashboard");
+                return userData;
+            }
+
+            // Normal Google sign-in flow
             // Authenticate with Google
             const user = await signInWithGoogle();
 
@@ -152,9 +181,25 @@ function Login() {
                         email: user.email,
                         password: ""
                     });
-                    return;
+                    return user;
                 } else {
                     // New user, allow profile completion
+                    const newUserData = {
+                        email: user.email,
+                        firstName: nameParts[0] || "",
+                        lastName: nameParts.length > 1 ? nameParts.slice(1).join(" ") : "",
+                        photoURL: user.photoURL || ""
+                    };
+
+                    // Call the onNewUser callback if provided
+                    if (options.onNewUser && typeof options.onNewUser === 'function') {
+                        const handled = options.onNewUser(newUserData);
+                        if (handled) {
+                            return newUserData;
+                        }
+                    }
+
+                    // Otherwise use the old flow
                     setSignupForm({
                         email: user.email,
                         firstName: nameParts[0] || "",
@@ -168,12 +213,30 @@ function Login() {
                     setShowProfileCompletion(true); // Show profile completion modal
                     setGoogleUser(user);
                     setError("Please provide your details to complete signup.");
+                    return newUserData;
                 }
             } else {
                 // activeTab === 'signin'
                 if (!userExists) {
                     console.log("Google sign-in - New user in SIGNIN tab, showing profile completion modal");
-                    // Show a modal to collect city and phone, then continue
+
+                    // Create new user data object
+                    const newUserData = {
+                        email: user.email,
+                        firstName: nameParts[0] || "",
+                        lastName: nameParts.length > 1 ? nameParts.slice(1).join(" ") : "",
+                        photoURL: user.photoURL || ""
+                    };
+
+                    // Call the onNewUser callback if provided
+                    if (options.onNewUser && typeof options.onNewUser === 'function') {
+                        const handled = options.onNewUser(newUserData);
+                        if (handled) {
+                            return newUserData;
+                        }
+                    }
+
+                    // Otherwise use the old flow
                     setSignupForm({
                         email: user.email,
                         firstName: nameParts[0] || "",
@@ -187,7 +250,7 @@ function Login() {
                     setShowProfileCompletion(true); // Show profile completion modal
                     setGoogleUser(user);
                     setError("Please complete your profile to continue.");
-                    return;
+                    return newUserData;
                 } else {
                     // User exists, just proceed with login
                     console.log("Google sign-in - Existing user, proceeding with login:", {
@@ -196,12 +259,14 @@ function Login() {
                     setIsSuccessfullyLoggedIn(true);
                     setError("Signed in successfully with Google!");
                     navigate("/dashboard");
+                    return user;
                 }
             }
         } catch (error) {
             console.error("Google Sign-In Error:", error);
             setError("Failed to sign in with Google: " + error.message);
             setIsSuccessfullyLoggedIn(false);
+            return null;
         } finally {
             setLoading(false);
         }

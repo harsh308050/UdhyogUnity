@@ -24,6 +24,13 @@ function UserProfileSettings() {
 
     useEffect(() => {
         if (userDetails) {
+            // Process photoURL - handle if it's an object with URL property
+            let photoURL = userDetails.photoURL || '';
+            if (photoURL && typeof photoURL === 'object') {
+                console.log("photoURL is an object in UserProfileSettings:", photoURL);
+                photoURL = photoURL.url || photoURL.toString() || '';
+            }
+
             setFormData({
                 firstName: userDetails.firstName || '',
                 lastName: userDetails.lastName || '',
@@ -34,8 +41,9 @@ function UserProfileSettings() {
                 photoURL: userDetails.photoURL || ''
             });
 
-            if (userDetails.photoURL) {
-                setPreviewImage(userDetails.photoURL);
+            if (photoURL) {
+                console.log("Setting preview image:", photoURL);
+                setPreviewImage(photoURL);
             }
         }
     }, [userDetails, currentUser]);
@@ -147,6 +155,10 @@ function UserProfileSettings() {
                                 src={previewImage}
                                 alt="Profile Preview"
                                 className="profile-preview"
+                                onError={(e) => {
+                                    console.error("Error loading profile preview image:", e);
+                                    setPreviewImage(null);
+                                }}
                             />
                         ) : (
                             <div className="profile-placeholder">

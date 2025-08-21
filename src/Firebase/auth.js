@@ -62,15 +62,15 @@ export const signInWithGoogle = async () => {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
 
-        // Save user data to Firestore
-        const userData = {
-            email: user.email,
-            firstName: user.displayName ? user.displayName.split(" ")[0] : "",
-            lastName: user.displayName ? user.displayName.split(" ").slice(1).join(" ") : "",
-            photoURL: user.photoURL || "",
-        };
+        // Normalize user data - ensure photoURL is a string
+        if (user.photoURL && typeof user.photoURL === 'object') {
+            console.log("Normalizing photoURL from Google sign-in:", user.photoURL);
+            user.photoURL = user.photoURL.url || user.photoURL.toString() || '';
+        }
 
-        await addUserToFirestore(user, userData);
+        // Do NOT automatically add to Firestore here
+        // We want to check first if they exist, and if not, collect additional info
+        console.log("Successful Google sign-in, returning user data:", user);
 
         return user;
     } catch (error) {
