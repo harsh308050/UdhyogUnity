@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Save, Upload } from 'react-feather';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserInFirestore } from '../../Firebase/db';
-import { storage } from '../../Firebase/config';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadToCloudinary } from '../../Firebase/cloudinary';
 import './UserProfileSettings.css';
 
 function UserProfileSettings() {
@@ -21,6 +20,7 @@ function UserProfileSettings() {
     const [message, setMessage] = useState({ text: '', type: '' });
     const [previewImage, setPreviewImage] = useState(null);
     const [imageFile, setImageFile] = useState(null);
+    const [imageUploadKey, setImageUploadKey] = useState(0); // Force re-render key
 
     useEffect(() => {
         if (userDetails) {
@@ -59,12 +59,38 @@ function UserProfileSettings() {
     const handleImageChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                setMessage({
+                    text: "Please select a valid image file.",
+                    type: "error"
+                });
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setMessage({
+                    text: "Image size should be less than 5MB.",
+                    type: "error"
+                });
+                return;
+            }
+
             setImageFile(file);
+            setMessage({ text: '', type: '' }); // Clear any previous messages
 
             // Create preview
             const reader = new FileReader();
             reader.onload = (event) => {
                 setPreviewImage(event.target.result);
+            };
+            reader.onerror = () => {
+                setMessage({
+                    text: "Error reading image file.",
+                    type: "error"
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -74,10 +100,27 @@ function UserProfileSettings() {
         if (!imageFile) return null;
 
         try {
-            const storageRef = ref(storage, `profileImages/${currentUser.email}/${Date.now()}_${imageFile.name}`);
-            const snapshot = await uploadBytes(storageRef, imageFile);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            return downloadURL;
+            console.log("Uploading profile image to Cloudinary for user:", currentUser.email);
+
+            // Use the user's email with timestamp as the public_id for the profile image
+            // Replace @ and . with _ to make it valid for Cloudinary
+            const sanitizedEmail = currentUser.email.replace(/[@.]/g, '_');
+            const timestamp = Date.now();
+            const folder = 'profile_images';
+            const uniquePublicId = `${sanitizedEmail}_${timestamp}`;
+
+            const result = await uploadToCloudinary(
+                imageFile,
+                folder,
+                uniquePublicId
+            );
+
+            console.log("Profile image uploaded successfully:", result);
+
+            // Add cache-busting parameter to ensure fresh image load
+            const imageUrlWithCacheBust = `${result.url}?t=${timestamp}`;
+
+            return imageUrlWithCacheBust;
         } catch (error) {
             console.error("Error uploading profile image:", error);
             setMessage({
@@ -98,11 +141,25 @@ function UserProfileSettings() {
 
             // Upload new image if selected
             if (imageFile) {
+                setMessage({
+                    text: "Uploading profile image...",
+                    type: "info"
+                });
+
                 const uploadedImageURL = await uploadProfileImage();
                 if (uploadedImageURL) {
                     photoURL = uploadedImageURL;
+                    console.log("New profile image URL:", photoURL);
+                } else {
+                    // If upload failed, don't continue with the update
+                    return;
                 }
             }
+
+            setMessage({
+                text: "Updating profile...",
+                type: "info"
+            });
 
             // Update user data in Firestore
             const success = await updateUserInFirestore(formData.email, {
@@ -122,10 +179,30 @@ function UserProfileSettings() {
                         ...prev,
                         photoURL
                     }));
+
+                    // Force update the preview image with cache-busting
+                    setPreviewImage(photoURL);
+
+                    // Force re-render by updating the key
+                    setImageUploadKey(prev => prev + 1);
+
+                    // Also trigger a re-render by updating the image src
+                    setTimeout(() => {
+                        const img = document.querySelector('.profile-preview');
+                        if (img) {
+                            img.src = photoURL;
+                        }
+                    }, 100);
                 }
 
                 // Clear the file input
                 setImageFile(null);
+
+                // Clear the file input element
+                const fileInput = document.getElementById('profile-upload');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
             } else {
                 setMessage({
                     text: "Failed to update profile. Please try again.",
@@ -152,12 +229,16 @@ function UserProfileSettings() {
                     <div className="profile-image-container">
                         {previewImage ? (
                             <img
+                                key={`${previewImage}-${imageUploadKey}`} // Force re-render when URL or key changes
                                 src={previewImage}
                                 alt="Profile Preview"
                                 className="profile-preview"
                                 onError={(e) => {
                                     console.error("Error loading profile preview image:", e);
                                     setPreviewImage(null);
+                                }}
+                                onLoad={() => {
+                                    console.log("Profile image loaded successfully:", previewImage);
                                 }}
                             />
                         ) : (

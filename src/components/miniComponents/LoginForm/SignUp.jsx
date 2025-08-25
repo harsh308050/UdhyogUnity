@@ -94,7 +94,7 @@ function SignUp({ signupForm, setSignupForm, signupPasswordVisible, togglePasswo
                     </div>
 
                     {/* Only show password field for new users (not Google users or existing users completing profile) */}
-                    {!isGoogleUser && !(signupForm.password === "" && signupForm.email) && (
+                    {!isGoogleUser && (
                         <div className="mb-3 position-relative">
                             <label htmlFor="signupPassword" className="form-label">Password</label>
                             <div className="form-control d-flex align-items-center justify-content-between">
@@ -123,10 +123,8 @@ function SignUp({ signupForm, setSignupForm, signupPasswordVisible, togglePasswo
                     ) : (
                         <button type="submit" className="btn regBtn" disabled={loading}>
                             {loading ?
-                                (isGoogleUser ? 'Completing Profile...' :
-                                    (signupForm.password === "" && signupForm.email ? 'Completing Profile...' : 'Registering...')) :
-                                (isGoogleUser ? 'Complete Profile' :
-                                    (signupForm.password === "" && signupForm.email ? 'Complete Profile' : 'Register'))
+                                (isGoogleUser ? 'Completing Profile...' : 'Registering...') :
+                                (isGoogleUser ? 'Complete Profile' : 'Register')
                             }
                         </button>
                     )}

@@ -164,6 +164,12 @@
     border: 1px solid rgba(231, 76, 60, 0.3);
 }
 
+.message.info {
+    background-color: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
 .form-actions {
     display: flex;
     justify-content: flex-end;
