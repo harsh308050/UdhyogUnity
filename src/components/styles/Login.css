@@ -929,3 +929,94 @@ body.login-page {
     border-radius: 0.5rem;
     font-size: 0.9rem;
 }
+
+/* State and City Dropdown Styles */
+.dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    right: 40px;
+    color: #6c757d;
+    pointer-events: none;
+}
+
+.clear-icon {
+    position: absolute;
+    right: 15px;
+    color: #6c757d;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.clear-icon:hover {
+    color: #495057;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: var(--primary);
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.form-control:disabled {
+    background-color: rgba(248, 249, 250, 0.8) !important;
+    color: #6c757d !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* Enhanced form field styling */
+.form-label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--secondary);
+}
+
+.text-muted {
+    font-size: 0.875rem;
+    color: #6c757d !important;
+    margin-top: 0.25rem;
+}
+
+/* Textarea styling */
+textarea.form-control {
+    resize: vertical;
+    min-height: 60px;
+}

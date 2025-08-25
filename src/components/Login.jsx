@@ -21,6 +21,10 @@ function Login() {
         lastName: "",
         phone: "",
         city: "",
+        cityName: "",
+        state: "",
+        stateName: "",
+        address: "",
         password: "",
         profilePicture: null,
         isGoogleUser: false
@@ -42,8 +46,26 @@ function Login() {
         lastName: "",
         phone: "",
         city: "",
+        cityName: "",
+        state: "",
+        stateName: "",
+        address: "",
         profilePicture: null
     });
+
+    // State and city dropdown management for profile completion modal
+    const [modalStates, setModalStates] = useState([]);
+    const [modalCities, setModalCities] = useState([]);
+    const [isLoadingModalStates, setIsLoadingModalStates] = useState(false);
+    const [isLoadingModalCities, setIsLoadingModalCities] = useState(false);
+    const [modalStateSearchTerm, setModalStateSearchTerm] = useState('');
+    const [modalCitySearchTerm, setModalCitySearchTerm] = useState('');
+    const [showModalStateDropdown, setShowModalStateDropdown] = useState(false);
+    const [showModalCityDropdown, setShowModalCityDropdown] = useState(false);
+
+    // Refs for modal dropdowns
+    const modalStateDropdownRef = useRef(null);
+    const modalCityDropdownRef = useRef(null);
 
     // Reset successful login state when user logs out
     useEffect(() => {
@@ -73,6 +95,10 @@ function Login() {
                 lastName: "",
                 phone: "",
                 city: "",
+                cityName: "",
+                state: "",
+                stateName: "",
+                address: "",
                 password: "",
                 profilePicture: null,
                 isGoogleUser: false
@@ -88,6 +114,123 @@ function Login() {
         setSignupPasswordVisible(!signupPasswordVisible);
     };
 
+    // Fetch states for modal dropdowns
+    const fetchModalStates = async () => {
+        setIsLoadingModalStates(true);
+        try {
+            const response = await fetch('https://api.countrystatecity.in/v1/countries/IN/states', {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setModalStates(data);
+            }
+        } catch (error) {
+            console.error('Error fetching states:', error);
+        } finally {
+            setIsLoadingModalStates(false);
+        }
+    };
+
+    // Fetch cities for modal dropdowns
+    const fetchModalCities = async (stateCode) => {
+        setIsLoadingModalCities(true);
+        try {
+            const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${stateCode}/cities`, {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setModalCities(data);
+            }
+        } catch (error) {
+            console.error('Error fetching cities:', error);
+            setModalCities([]);
+        } finally {
+            setIsLoadingModalCities(false);
+        }
+    };
+
+    // Find state name by code for modal
+    const getModalStateName = (stateCode) => {
+        const state = modalStates.find(s => s.iso2 === stateCode);
+        return state ? state.name : '';
+    };
+
+    // Find city name by id for modal
+    const getModalCityName = (cityId) => {
+        const city = modalCities.find(c => c.id === cityId);
+        return city ? city.name : '';
+    };
+
+    // Handle state selection in modal
+    const handleModalStateSelect = (stateCode, stateName) => {
+        setSignupForm({
+            ...signupForm,
+            state: stateCode,
+            stateName: stateName,
+            city: '',
+            cityName: ''
+        });
+        setModalStateSearchTerm(stateName);
+        setShowModalStateDropdown(false);
+        setModalCities([]);
+        fetchModalCities(stateCode);
+    };
+
+    // Handle city selection in modal
+    const handleModalCitySelect = (cityId, cityName) => {
+        setSignupForm({
+            ...signupForm,
+            city: cityId,
+            cityName: cityName
+        });
+        setModalCitySearchTerm(cityName);
+        setShowModalCityDropdown(false);
+    };
+
+    // Handle clicks outside modal dropdowns
+    const handleModalClickOutside = (event) => {
+        if (modalStateDropdownRef.current && !modalStateDropdownRef.current.contains(event.target)) {
+            setShowModalStateDropdown(false);
+        }
+        if (modalCityDropdownRef.current && !modalCityDropdownRef.current.contains(event.target)) {
+            setShowModalCityDropdown(false);
+        }
+    };
+
+    // Initialize modal dropdowns when profile completion is shown
+    useEffect(() => {
+        if (showProfileCompletion) {
+            fetchModalStates();
+
+            // Add click event listener for modal dropdowns
+            document.addEventListener('mousedown', handleModalClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleModalClickOutside);
+            };
+        }
+    }, [showProfileCompletion]);
+
+    // Update modal search terms when form data changes
+    useEffect(() => {
+        if (signupForm.state) {
+            setModalStateSearchTerm(getModalStateName(signupForm.state));
+        }
+    }, [signupForm.state, modalStates]);
+
+    useEffect(() => {
+        if (signupForm.city) {
+            setModalCitySearchTerm(getModalCityName(signupForm.city));
+        }
+    }, [signupForm.city, modalCities]);
+
     const handleGoogleProfileCompletion = async (e) => {
         e.preventDefault();
         console.log("Handling Google profile completion submission");
@@ -95,8 +238,8 @@ function Login() {
         setLoading(true);
         try {
             // Validate city and phone
-            if (!signupForm.city || !signupForm.phone) {
-                setError("Please enter both City and Phone Number.");
+            if (!signupForm.city || !signupForm.phone || !signupForm.state) {
+                setError("Please enter Phone Number and select both State and City.");
                 setLoading(false);
                 return;
             }
@@ -107,6 +250,10 @@ function Login() {
                 lastName: signupForm.lastName,
                 phone: signupForm.phone,
                 city: signupForm.city,
+                cityName: signupForm.cityName,
+                state: signupForm.state,
+                stateName: signupForm.stateName,
+                address: signupForm.address,
                 userType: 'customer',
                 isGoogleUser: true
             };
@@ -133,8 +280,8 @@ function Login() {
                 console.log("Completing profile for Google user:", options.profileData);
 
                 // Validate profile data
-                if (!options.profileData.city || !options.profileData.phone) {
-                    setError("Please enter both City and Phone Number.");
+                if (!options.profileData.city || !options.profileData.phone || !options.profileData.state) {
+                    setError("Please enter Phone Number and select both State and City.");
                     return null;
                 }
 
@@ -145,6 +292,10 @@ function Login() {
                     lastName: options.profileData.lastName,
                     phone: options.profileData.phone,
                     city: options.profileData.city,
+                    cityName: options.profileData.cityName,
+                    state: options.profileData.state,
+                    stateName: options.profileData.stateName,
+                    address: options.profileData.address,
                     photoURL: options.profileData.photoURL || "",
                     userType: 'customer'
                 };
@@ -206,6 +357,10 @@ function Login() {
                         lastName: nameParts.length > 1 ? nameParts.slice(1).join(" ") : "",
                         phone: "",
                         city: "",
+                        cityName: "",
+                        state: "",
+                        stateName: "",
+                        address: "",
                         password: "",
                         profilePicture: null,
                         isGoogleUser: true
@@ -243,6 +398,10 @@ function Login() {
                         lastName: nameParts.length > 1 ? nameParts.slice(1).join(" ") : "",
                         phone: "",
                         city: "",
+                        cityName: "",
+                        state: "",
+                        stateName: "",
+                        address: "",
                         password: "",
                         profilePicture: null,
                         isGoogleUser: true
@@ -292,6 +451,10 @@ function Login() {
                         lastName: signupForm.lastName,
                         phone: signupForm.phone,
                         city: signupForm.city,
+                        cityName: signupForm.cityName,
+                        state: signupForm.state,
+                        stateName: signupForm.stateName,
+                        address: signupForm.address,
                         userType: 'customer'
                     };
 
@@ -307,6 +470,10 @@ function Login() {
                         lastName: "",
                         phone: "",
                         city: "",
+                        cityName: "",
+                        state: "",
+                        stateName: "",
+                        address: "",
                         password: "",
                         profilePicture: null,
                         isGoogleUser: false
@@ -327,6 +494,10 @@ function Login() {
                             lastName: signupForm.lastName,
                             phone: signupForm.phone,
                             city: signupForm.city,
+                            cityName: signupForm.cityName,
+                            state: signupForm.state,
+                            stateName: signupForm.stateName,
+                            address: signupForm.address,
                         };
 
                         await addUserToFirestore({ email: signupForm.email }, userData);
@@ -341,6 +512,10 @@ function Login() {
                             lastName: "",
                             phone: "",
                             city: "",
+                            cityName: "",
+                            state: "",
+                            stateName: "",
+                            address: "",
                             password: "",
                             profilePicture: null,
                             isGoogleUser: false
@@ -359,6 +534,10 @@ function Login() {
                             lastName: signupForm.lastName,
                             phone: signupForm.phone,
                             city: signupForm.city,
+                            cityName: signupForm.cityName,
+                            state: signupForm.state,
+                            stateName: signupForm.stateName,
+                            address: signupForm.address,
                             userType: 'customer'
                         };
 
@@ -396,6 +575,10 @@ function Login() {
                         lastName: userDoc?.lastName || "",
                         phone: userDoc?.phone || "",
                         city: userDoc?.city || "",
+                        cityName: userDoc?.cityName || "",
+                        state: userDoc?.state || "",
+                        stateName: userDoc?.stateName || "",
+                        address: userDoc?.address || "",
                         password: "", // Not needed for profile completion
                         profilePicture: null,
                         isGoogleUser: false // This will be treated as a profile completion
@@ -432,9 +615,10 @@ function Login() {
                 !profileCompletionForm.firstName ||
                 !profileCompletionForm.lastName ||
                 !profileCompletionForm.phone ||
-                !profileCompletionForm.city
+                !profileCompletionForm.city ||
+                !profileCompletionForm.state
             ) {
-                throw new Error("Please fill in all required fields (First Name, Last Name, Phone, City)");
+                throw new Error("Please fill in all required fields (First Name, Last Name, Phone, State, City)");
             }
 
             // Update user profile in Firestore
@@ -443,6 +627,10 @@ function Login() {
                 lastName: profileCompletionForm.lastName,
                 phone: profileCompletionForm.phone,
                 city: profileCompletionForm.city,
+                cityName: profileCompletionForm.cityName,
+                state: profileCompletionForm.state,
+                stateName: profileCompletionForm.stateName,
+                address: profileCompletionForm.address,
                 userType: 'customer'
             };
 
@@ -458,6 +646,10 @@ function Login() {
                 lastName: "",
                 phone: "",
                 city: "",
+                cityName: "",
+                state: "",
+                stateName: "",
+                address: "",
                 profilePicture: null
             });
         } catch (error) {
@@ -533,6 +725,10 @@ function Login() {
                                 lastName: signupForm.lastName,
                                 phone: signupForm.phone || "",
                                 city: signupForm.city || "",
+                                cityName: signupForm.cityName || "",
+                                state: signupForm.state || "",
+                                stateName: signupForm.stateName || "",
+                                address: signupForm.address || "",
                                 userType: 'customer'
                                 // Not storing isGoogleUser flag as it's not in your schema
                             };
@@ -567,24 +763,145 @@ function Login() {
                                 }}>Complete Your Profile</h5>
                             </div>
                             <div className="modal-body" style={{ padding: '20px' }}>
+                                {/* State Dropdown */}
+                                <div className="mb-3">
+                                    <label className="form-label">State (optional)</label>
+                                    <div className="dropdown-container" ref={modalStateDropdownRef}>
+                                        <div className="search-input-container">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Search and select state..."
+                                                value={modalStateSearchTerm}
+                                                onChange={(e) => {
+                                                    setModalStateSearchTerm(e.target.value);
+                                                    setShowModalStateDropdown(true);
+                                                }}
+                                                onFocus={() => setShowModalStateDropdown(true)}
+                                            />
+                                            {modalStateSearchTerm && (
+                                                <span
+                                                    className="clear-icon"
+                                                    onClick={() => {
+                                                        setModalStateSearchTerm('');
+                                                        setSignupForm(f => ({ ...f, state: '', stateName: '', city: '', cityName: '' }));
+                                                        setModalCities([]);
+                                                    }}
+                                                    style={{ cursor: 'pointer', position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)' }}
+                                                >
+                                                    ✕
+                                                </span>
+                                            )}
+                                        </div>
+                                        {showModalStateDropdown && (
+                                            <div className="dropdown-menu show">
+                                                {isLoadingModalStates ? (
+                                                    <div className="dropdown-item">Loading states...</div>
+                                                ) : modalStates.filter(state =>
+                                                    state.name.toLowerCase().includes(modalStateSearchTerm.toLowerCase())
+                                                ).length > 0 ? (
+                                                    modalStates.filter(state =>
+                                                        state.name.toLowerCase().includes(modalStateSearchTerm.toLowerCase())
+                                                    ).map((state) => (
+                                                        <div
+                                                            key={state.iso2}
+                                                            className="dropdown-item"
+                                                            onClick={() => handleModalStateSelect(state.iso2, state.name)}
+                                                        >
+                                                            {state.name}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="dropdown-item">No states found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* City Dropdown */}
                                 <div className="mb-3">
                                     <label className="form-label">City (optional)</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={signupForm.city}
-                                        onChange={e => setSignupForm(f => ({ ...f, city: e.target.value }))}
-                                    />
+                                    <div className="dropdown-container" ref={modalCityDropdownRef}>
+                                        <div className="search-input-container">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder={signupForm.state ? "Search and select city..." : "Please select a state first"}
+                                                value={modalCitySearchTerm}
+                                                onChange={(e) => {
+                                                    setModalCitySearchTerm(e.target.value);
+                                                    setShowModalCityDropdown(true);
+                                                }}
+                                                onFocus={() => signupForm.state && setShowModalCityDropdown(true)}
+                                                disabled={!signupForm.state}
+                                            />
+                                            {modalCitySearchTerm && (
+                                                <span
+                                                    className="clear-icon"
+                                                    onClick={() => {
+                                                        setModalCitySearchTerm('');
+                                                        setSignupForm(f => ({ ...f, city: '', cityName: '' }));
+                                                    }}
+                                                    style={{ cursor: 'pointer', position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)' }}
+                                                >
+                                                    ✕
+                                                </span>
+                                            )}
+                                        </div>
+                                        {showModalCityDropdown && signupForm.state && (
+                                            <div className="dropdown-menu show">
+                                                {isLoadingModalCities ? (
+                                                    <div className="dropdown-item">Loading cities...</div>
+                                                ) : modalCities.filter(city =>
+                                                    city.name.toLowerCase().includes(modalCitySearchTerm.toLowerCase())
+                                                ).length > 0 ? (
+                                                    modalCities.filter(city =>
+                                                        city.name.toLowerCase().includes(modalCitySearchTerm.toLowerCase())
+                                                    ).map((city) => (
+                                                        <div
+                                                            key={city.id}
+                                                            className="dropdown-item"
+                                                            onClick={() => handleModalCitySelect(city.id, city.name)}
+                                                        >
+                                                            {city.name}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="dropdown-item">No cities found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {!signupForm.state && (
+                                        <small className="text-muted">Please select a state first</small>
+                                    )}
                                 </div>
+
+                                {/* Phone Number */}
                                 <div className="mb-3">
                                     <label className="form-label">Phone Number (optional)</label>
                                     <input
                                         type="text"
                                         className="form-control"
+                                        placeholder="Enter phone number..."
                                         value={signupForm.phone}
                                         onChange={e => setSignupForm(f => ({ ...f, phone: e.target.value }))}
                                     />
                                 </div>
+
+                                {/* Address */}
+                                <div className="mb-3">
+                                    <label className="form-label">Address (optional)</label>
+                                    <textarea
+                                        className="form-control"
+                                        rows="2"
+                                        placeholder="Enter your complete address..."
+                                        value={signupForm.address || ''}
+                                        onChange={e => setSignupForm(f => ({ ...f, address: e.target.value }))}
+                                    />
+                                </div>
+
                                 {error && <div className="alert alert-danger">{error}</div>}
                             </div>
                             <div className="modal-footer" style={{

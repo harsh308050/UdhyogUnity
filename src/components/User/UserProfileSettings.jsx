@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Save, Upload } from 'react-feather';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Mail, Phone, MapPin, Save, Upload, Search, X, ChevronDown } from 'react-feather';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserInFirestore } from '../../Firebase/db';
 import { uploadToCloudinary } from '../../Firebase/cloudinary';
@@ -13,6 +13,9 @@ function UserProfileSettings() {
         email: '',
         phone: '',
         city: '',
+        cityName: '',
+        state: '',
+        stateName: '',
         address: '',
         photoURL: ''
     });
@@ -21,6 +24,22 @@ function UserProfileSettings() {
     const [previewImage, setPreviewImage] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [imageUploadKey, setImageUploadKey] = useState(0); // Force re-render key
+
+    // State and city dropdown management
+    const [states, setStates] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [isLoadingStates, setIsLoadingStates] = useState(false);
+    const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+    // Search functionality
+    const [stateSearchTerm, setStateSearchTerm] = useState('');
+    const [citySearchTerm, setCitySearchTerm] = useState('');
+    const [showStateDropdown, setShowStateDropdown] = useState(false);
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+    // Refs for clickaway detection
+    const stateDropdownRef = useRef(null);
+    const cityDropdownRef = useRef(null);
 
     useEffect(() => {
         if (userDetails) {
@@ -37,9 +56,20 @@ function UserProfileSettings() {
                 email: userDetails.email || currentUser?.email || '',
                 phone: userDetails.phone || '',
                 city: userDetails.city || '',
+                cityName: userDetails.cityName || '',
+                state: userDetails.state || '',
+                stateName: userDetails.stateName || '',
                 address: userDetails.address || '',
                 photoURL: userDetails.photoURL || ''
             });
+
+            // Initialize search terms with existing data
+            if (userDetails.stateName) {
+                setStateSearchTerm(userDetails.stateName);
+            }
+            if (userDetails.cityName) {
+                setCitySearchTerm(userDetails.cityName);
+            }
 
             if (photoURL) {
                 console.log("Setting preview image:", photoURL);
@@ -47,6 +77,171 @@ function UserProfileSettings() {
             }
         }
     }, [userDetails, currentUser]);
+
+    // Initialize dropdowns and add event listeners
+    useEffect(() => {
+        fetchStates();
+
+        // Add click event listener to close dropdowns when clicking outside
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // Debug logging
+    useEffect(() => {
+        console.log("UserProfileSettings State Debug:", {
+            showStateDropdown,
+            showCityDropdown,
+            stateSearchTerm,
+            citySearchTerm,
+            statesLength: states.length,
+            citiesLength: cities.length,
+            isLoadingStates,
+            isLoadingCities,
+            filteredStatesLength: states.filter(state =>
+                state.name.toLowerCase().includes(stateSearchTerm.toLowerCase())
+            ).length
+        });
+    }, [showStateDropdown, showCityDropdown, stateSearchTerm, citySearchTerm, states, cities, isLoadingStates, isLoadingCities]);
+
+    // Handle clicks outside the dropdown
+    const handleClickOutside = (event) => {
+        if (stateDropdownRef.current && !stateDropdownRef.current.contains(event.target)) {
+            setShowStateDropdown(false);
+        }
+        if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+            setShowCityDropdown(false);
+        }
+    };
+
+    // Update search terms when form data changes
+    useEffect(() => {
+        if (formData.state && states.length > 0) {
+            // If we have stateName, use it; otherwise, get it from state code
+            const displayName = formData.stateName || getStateName(formData.state);
+            if (displayName && stateSearchTerm !== displayName) {
+                setStateSearchTerm(displayName);
+            }
+        }
+    }, [formData.state, formData.stateName, states]);
+
+    useEffect(() => {
+        if (formData.city && cities.length > 0) {
+            // If we have cityName, use it; otherwise, get it from city ID
+            const displayName = formData.cityName || getCityName(formData.city);
+            if (displayName && citySearchTerm !== displayName) {
+                setCitySearchTerm(displayName);
+            }
+        }
+    }, [formData.city, formData.cityName, cities]);
+
+    // Fetch states from API
+    const fetchStates = async () => {
+        setIsLoadingStates(true);
+        try {
+            const response = await fetch('https://api.countrystatecity.in/v1/countries/IN/states', {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setStates(data);
+            } else {
+                console.error('Failed to fetch states');
+            }
+        } catch (error) {
+            console.error('Error fetching states:', error);
+        } finally {
+            setIsLoadingStates(false);
+        }
+    };
+
+    // Fetch cities from API based on state
+    const fetchCities = async (stateCode) => {
+        setIsLoadingCities(true);
+        try {
+            const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${stateCode}/cities`, {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCities(data);
+            } else {
+                console.error('Failed to fetch cities');
+                setCities([]);
+            }
+        } catch (error) {
+            console.error('Error fetching cities:', error);
+            setCities([]);
+        } finally {
+            setIsLoadingCities(false);
+        }
+    };
+
+    // Filter states based on search term
+    const filteredStates = states.filter(state =>
+        state.name.toLowerCase().includes(stateSearchTerm.toLowerCase())
+    );
+
+    // Filter cities based on search term
+    const filteredCities = cities.filter(city =>
+        city.name.toLowerCase().includes(citySearchTerm.toLowerCase())
+    );
+
+    // Find state name by code
+    const getStateName = (stateCode) => {
+        const state = states.find(s => s.iso2 === stateCode);
+        return state ? state.name : '';
+    };
+
+    // Find city name by id
+    const getCityName = (cityId) => {
+        const city = cities.find(c => c.id === cityId);
+        return city ? city.name : '';
+    };
+
+    // Handle state selection
+    const handleStateSelect = (stateCode, stateName) => {
+        setFormData({
+            ...formData,
+            state: stateCode,
+            stateName: stateName,
+            city: '', // Reset city when state changes
+            cityName: ''
+        });
+        setStateSearchTerm(stateName);
+        setShowStateDropdown(false);
+        setCities([]); // Clear cities
+        fetchCities(stateCode); // Fetch new cities
+    };
+
+    // Handle city selection
+    const handleCitySelect = (cityId, cityName) => {
+        setFormData({
+            ...formData,
+            city: cityId,
+            cityName: cityName
+        });
+        setCitySearchTerm(cityName);
+        setShowCityDropdown(false);
+    };
+
+    // Initialize cities if state is already selected
+    useEffect(() => {
+        if (formData.state && states.length > 0) {
+            // Only fetch cities if we don't have them yet or if state changed
+            if (cities.length === 0 || !cities.some(city => city.id == formData.city)) {
+                fetchCities(formData.state);
+            }
+        }
+    }, [formData.state, states]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -329,34 +524,122 @@ function UserProfileSettings() {
 
                 <div className="form-row">
                     <div className="form-group">
+                        <label htmlFor="state">
+                            <MapPin size={16} />
+                            <span>State</span>
+                        </label>
+                        <div className="dropdown-container" ref={stateDropdownRef}>
+                            <div
+                                className={`dropdown-input ${showStateDropdown ? 'open' : ''}`}
+                                onClick={() => {
+                                    console.log("State dropdown clicked, current state:", showStateDropdown);
+                                    setShowStateDropdown(!showStateDropdown);
+                                }}
+                            >
+                                <input
+                                    type="text"
+                                    value={stateSearchTerm}
+                                    onChange={(e) => {
+                                        setStateSearchTerm(e.target.value);
+                                        setShowStateDropdown(true);
+                                    }}
+                                    onFocus={() => setShowStateDropdown(true)}
+                                    placeholder="Search and select state"
+                                    autoComplete="off"
+                                />
+                                <ChevronDown size={16} className="dropdown-icon" />
+                            </div>
+
+                            {showStateDropdown && (
+                                <div className="dropdown-menu" style={{ backgroundColor: '#2a3f5f', color: 'white', zIndex: 9999 }}>
+                                    {isLoadingStates ? (
+                                        <div className="dropdown-item loading">Loading states...</div>
+                                    ) : filteredStates.length > 0 ? (
+                                        <>
+                                            <div className="dropdown-item" style={{ color: 'yellow', fontWeight: 'bold' }}>
+                                                Found {filteredStates.length} states
+                                            </div>
+                                            {filteredStates.map((state) => (
+                                                <div
+                                                    key={state.iso2}
+                                                    className="dropdown-item"
+                                                    onClick={() => handleStateSelect(state.iso2, state.name)}
+                                                >
+                                                    {state.name}
+                                                </div>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <div className="dropdown-item no-results">No states found (search: "{stateSearchTerm}")</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="form-group">
                         <label htmlFor="city">
                             <MapPin size={16} />
                             <span>City</span>
                         </label>
-                        <input
-                            type="text"
-                            id="city"
-                            name="city"
-                            value={formData.city}
-                            onChange={handleInputChange}
-                            placeholder="Your city"
-                        />
-                    </div>
+                        <div className="dropdown-container" ref={cityDropdownRef}>
+                            <div
+                                className={`dropdown-input ${showCityDropdown ? 'open' : ''}`}
+                                onClick={() => formData.state && setShowCityDropdown(!showCityDropdown)}
+                            >
+                                <input
+                                    type="text"
+                                    value={citySearchTerm}
+                                    onChange={(e) => {
+                                        setCitySearchTerm(e.target.value);
+                                        if (formData.state) {
+                                            setShowCityDropdown(true);
+                                        }
+                                    }}
+                                    onFocus={() => formData.state && setShowCityDropdown(true)}
+                                    placeholder={formData.state ? "Search and select city" : "Please select state first"}
+                                    autoComplete="off"
+                                    disabled={!formData.state}
+                                />
+                                <ChevronDown size={16} className="dropdown-icon" />
+                            </div>
 
-                    <div className="form-group">
-                        <label htmlFor="address">
-                            <MapPin size={16} />
-                            <span>Address</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="address"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            placeholder="Your address"
-                        />
+                            {showCityDropdown && formData.state && (
+                                <div className="dropdown-menu">
+                                    {isLoadingCities ? (
+                                        <div className="dropdown-item loading">Loading cities...</div>
+                                    ) : filteredCities.length > 0 ? (
+                                        filteredCities.map((city) => (
+                                            <div
+                                                key={city.id}
+                                                className="dropdown-item"
+                                                onClick={() => handleCitySelect(city.id, city.name)}
+                                            >
+                                                {city.name}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="dropdown-item no-results">No cities found</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="address">
+                        <MapPin size={16} />
+                        <span>Address</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        placeholder="Your full address"
+                    />
                 </div>
 
                 {message.text && (

@@ -1,7 +1,24 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Search, X, MapPin } from "react-feather";
 
 function SignUp({ signupForm, setSignupForm, signupPasswordVisible, togglePasswordVisibility, handleFormSubmit, handleTabChange, handleGoogleSignIn, loading, currentUser, isSuccessfullyLoggedIn }) {
+    // State and city dropdown management
+    const [states, setStates] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [isLoadingStates, setIsLoadingStates] = useState(false);
+    const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+    // Search functionality
+    const [stateSearchTerm, setStateSearchTerm] = useState('');
+    const [citySearchTerm, setCitySearchTerm] = useState('');
+    const [showStateDropdown, setShowStateDropdown] = useState(false);
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+    // Refs for clickaway detection
+    const stateDropdownRef = useRef(null);
+    const cityDropdownRef = useRef(null);
+
     // We'll keep this function but won't use the profile picture
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -11,6 +28,137 @@ function SignUp({ signupForm, setSignupForm, signupPasswordVisible, togglePasswo
     };
 
     const isGoogleUser = signupForm.isGoogleUser;
+
+    // Fetch states on component mount
+    useEffect(() => {
+        fetchStates();
+
+        // Add click event listener to close dropdowns when clicking outside
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // Handle clicks outside the dropdown
+    const handleClickOutside = (event) => {
+        if (stateDropdownRef.current && !stateDropdownRef.current.contains(event.target)) {
+            setShowStateDropdown(false);
+        }
+        if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+            setShowCityDropdown(false);
+        }
+    };
+
+    // Update stateSearchTerm when signupForm.state changes
+    useEffect(() => {
+        if (signupForm.state) {
+            setStateSearchTerm(getStateName(signupForm.state));
+        }
+    }, [signupForm.state, states]);
+
+    // Update citySearchTerm when signupForm.city changes
+    useEffect(() => {
+        if (signupForm.city) {
+            setCitySearchTerm(getCityName(signupForm.city));
+        }
+    }, [signupForm.city, cities]);
+
+    // Fetch states from API
+    const fetchStates = async () => {
+        setIsLoadingStates(true);
+        try {
+            const response = await fetch('https://api.countrystatecity.in/v1/countries/IN/states', {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setStates(data);
+            } else {
+                console.error('Failed to fetch states');
+            }
+        } catch (error) {
+            console.error('Error fetching states:', error);
+        } finally {
+            setIsLoadingStates(false);
+        }
+    };
+
+    // Fetch cities from API based on state
+    const fetchCities = async (stateCode) => {
+        setIsLoadingCities(true);
+        try {
+            const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${stateCode}/cities`, {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCities(data);
+            } else {
+                console.error('Failed to fetch cities');
+                setCities([]);
+            }
+        } catch (error) {
+            console.error('Error fetching cities:', error);
+            setCities([]);
+        } finally {
+            setIsLoadingCities(false);
+        }
+    };
+
+    // Filter states based on search term
+    const filteredStates = states.filter(state =>
+        state.name.toLowerCase().includes(stateSearchTerm.toLowerCase())
+    );
+
+    // Filter cities based on search term
+    const filteredCities = cities.filter(city =>
+        city.name.toLowerCase().includes(citySearchTerm.toLowerCase())
+    );
+
+    // Find state name by code
+    const getStateName = (stateCode) => {
+        const state = states.find(s => s.iso2 === stateCode);
+        return state ? state.name : '';
+    };
+
+    // Find city name by id
+    const getCityName = (cityId) => {
+        const city = cities.find(c => c.id === cityId);
+        return city ? city.name : '';
+    };
+
+    // Handle state selection
+    const handleStateSelect = (stateCode, stateName) => {
+        setSignupForm({
+            ...signupForm,
+            state: stateCode,
+            stateName: stateName,
+            city: '', // Reset city when state changes
+            cityName: ''
+        });
+        setStateSearchTerm(stateName);
+        setShowStateDropdown(false);
+        setCities([]); // Clear cities
+        fetchCities(stateCode); // Fetch new cities
+    };
+
+    // Handle city selection
+    const handleCitySelect = (cityId, cityName) => {
+        setSignupForm({
+            ...signupForm,
+            city: cityId,
+            cityName: cityName
+        });
+        setCitySearchTerm(cityName);
+        setShowCityDropdown(false);
+    };
 
     return (
         <div className="tab-pane fade show active" id="signup" role="tabpanel" aria-labelledby="signup-tab">
@@ -78,18 +226,131 @@ function SignUp({ signupForm, setSignupForm, signupPasswordVisible, togglePasswo
                             required
                         />
                     </div>
+
+                    {/* State Dropdown */}
+                    <div className="mb-3">
+                        <label htmlFor="state" className="form-label">
+                            State {isGoogleUser && <span className="text-danger">*</span>}
+                        </label>
+                        <div className="dropdown-container" ref={stateDropdownRef}>
+                            <div className="search-input-container">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="state"
+                                    placeholder="Search and select state..."
+                                    value={stateSearchTerm}
+                                    onChange={(e) => {
+                                        setStateSearchTerm(e.target.value);
+                                        setShowStateDropdown(true);
+                                    }}
+                                    onFocus={() => setShowStateDropdown(true)}
+                                />
+                                <Search size={16} className="search-icon" />
+                                {stateSearchTerm && (
+                                    <X
+                                        size={16}
+                                        className="clear-icon"
+                                        onClick={() => {
+                                            setStateSearchTerm('');
+                                            setSignupForm({ ...signupForm, state: '', stateName: '', city: '', cityName: '' });
+                                            setCities([]);
+                                        }}
+                                    />
+                                )}
+                            </div>
+                            {showStateDropdown && (
+                                <div className="dropdown-menu show">
+                                    {isLoadingStates ? (
+                                        <div className="dropdown-item">Loading states...</div>
+                                    ) : filteredStates.length > 0 ? (
+                                        filteredStates.map((state) => (
+                                            <div
+                                                key={state.iso2}
+                                                className="dropdown-item"
+                                                onClick={() => handleStateSelect(state.iso2, state.name)}
+                                            >
+                                                {state.name}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="dropdown-item">No states found</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* City Dropdown */}
                     <div className="mb-3">
                         <label htmlFor="city" className="form-label">
                             City {isGoogleUser && <span className="text-danger">*</span>}
                         </label>
-                        <input
-                            type="text"
+                        <div className="dropdown-container" ref={cityDropdownRef}>
+                            <div className="search-input-container">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="city"
+                                    placeholder={signupForm.state ? "Search and select city..." : "Please select a state first"}
+                                    value={citySearchTerm}
+                                    onChange={(e) => {
+                                        setCitySearchTerm(e.target.value);
+                                        setShowCityDropdown(true);
+                                    }}
+                                    onFocus={() => signupForm.state && setShowCityDropdown(true)}
+                                    disabled={!signupForm.state}
+                                />
+                                <Search size={16} className="search-icon" />
+                                {citySearchTerm && (
+                                    <X
+                                        size={16}
+                                        className="clear-icon"
+                                        onClick={() => {
+                                            setCitySearchTerm('');
+                                            setSignupForm({ ...signupForm, city: '', cityName: '' });
+                                        }}
+                                    />
+                                )}
+                            </div>
+                            {showCityDropdown && signupForm.state && (
+                                <div className="dropdown-menu show">
+                                    {isLoadingCities ? (
+                                        <div className="dropdown-item">Loading cities...</div>
+                                    ) : filteredCities.length > 0 ? (
+                                        filteredCities.map((city) => (
+                                            <div
+                                                key={city.id}
+                                                className="dropdown-item"
+                                                onClick={() => handleCitySelect(city.id, city.name)}
+                                            >
+                                                {city.name}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="dropdown-item">No cities found</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        {!signupForm.state && (
+                            <small className="text-muted">Please select a state first</small>
+                        )}
+                    </div>
+
+                    {/* Address Field */}
+                    <div className="mb-3">
+                        <label htmlFor="address" className="form-label">
+                            <MapPin size={16} className="me-2" />
+                            Address (Optional)
+                        </label>
+                        <textarea
                             className="form-control"
-                            id="city"
-                            placeholder="Enter City..."
-                            value={signupForm.city}
-                            onChange={(e) => setSignupForm({ ...signupForm, city: e.target.value })}
-                            required
+                            id="address"
+                            rows="2"
+                            placeholder="Enter your complete address..."
+                            value={signupForm.address || ''}
+                            onChange={(e) => setSignupForm({ ...signupForm, address: e.target.value })}
                         />
                     </div>
 

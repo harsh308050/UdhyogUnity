@@ -20,6 +20,11 @@ export const addUserToFirestore = async (user, additionalData = {}) => {
             lastName: additionalData.lastName || '',
             phone: additionalData.phone || '',
             city: additionalData.city || '',
+            cityName: additionalData.cityName || '',
+            state: additionalData.state || '',
+            stateName: additionalData.stateName || '',
+            address: additionalData.address || '',
+            userType: additionalData.userType || 'customer',
             photoURL: additionalData.photoURL || user.photoURL || '',
         };
 

@@ -33,8 +33,12 @@ export const signUp = async (email, password, userData = {}) => {
             lastName: userData.lastName || '',
             phone: userData.phone || '',
             city: userData.city || '',
+            cityName: userData.cityName || '',
+            state: userData.state || '',
+            stateName: userData.stateName || '',
+            address: userData.address || '',
+            userType: userData.userType || 'customer',
             photoURL: user.photoURL || '',
-            // Removed userType field
         });
 
         return user;
