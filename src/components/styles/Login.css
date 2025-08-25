@@ -930,26 +930,26 @@ body.login-page {
     font-size: 0.9rem;
 }
 
-/* State and City Dropdown Styles */
-.dropdown-container {
+/* State and City Dropdown Styles - Scoped to login forms */
+.login-page .dropdown-container {
     position: relative;
     width: 100%;
 }
 
-.search-input-container {
+.login-page .search-input-container {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.search-icon {
+.login-page .search-icon {
     position: absolute;
     right: 40px;
     color: #6c757d;
     pointer-events: none;
 }
 
-.clear-icon {
+.login-page .clear-icon {
     position: absolute;
     right: 15px;
     color: #6c757d;
@@ -957,11 +957,11 @@ body.login-page {
     transition: color 0.2s ease;
 }
 
-.clear-icon:hover {
+.login-page .clear-icon:hover {
     color: #495057;
 }
 
-.dropdown-menu {
+.login-page .dropdown-menu {
     position: absolute;
     top: 100%;
     left: 0;
@@ -976,19 +976,19 @@ body.login-page {
     margin-top: 2px;
 }
 
-.dropdown-item {
+.login-page .dropdown-item {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
     border-bottom: 1px solid #f8f9fa;
 }
 
-.dropdown-item:hover {
+.login-page .dropdown-item:hover {
     background-color: #f8f9fa;
     color: var(--primary);
 }
 
-.dropdown-item:last-child {
+.login-page .dropdown-item:last-child {
     border-bottom: none;
 }
 
