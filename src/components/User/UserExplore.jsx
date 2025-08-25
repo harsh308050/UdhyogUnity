@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, MapPin, Star, Heart, ShoppingBag, Package, Calendar, Zap, MessageSquare } from 'react-feather';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Filter, MapPin, Star, Heart, ShoppingBag, Package, Calendar, Zap, MessageSquare, ChevronDown, X } from 'react-feather';
 import './UserExplore.css';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -23,8 +23,144 @@ function UserExplore() {
     const [quickViewProduct, setQuickViewProduct] = useState(null);
     const [serviceToBook, setServiceToBook] = useState(null);
 
-    const { currentUser } = useAuth();
+    // Location filter states
+    const [selectedState, setSelectedState] = useState('all');
+    const [selectedCity, setSelectedCity] = useState('all');
+    const [states, setStates] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [showStateDropdown, setShowStateDropdown] = useState(false);
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+    const [stateSearchTerm, setStateSearchTerm] = useState('All States');
+    const [citySearchTerm, setCitySearchTerm] = useState('All Cities');
+    const [isLoadingStates, setIsLoadingStates] = useState(false);
+    const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+    // Refs for clickaway detection
+    const stateDropdownRef = useRef(null);
+    const cityDropdownRef = useRef(null);
+
+    const { currentUser, userDetails } = useAuth();
     const navigate = useNavigate();
+
+    // Initialize user location and fetch states
+    useEffect(() => {
+        fetchStates();
+        initializeUserLocation();
+
+        // Add click event listener to close dropdowns when clicking outside
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // Initialize user's location from their profile
+    const initializeUserLocation = () => {
+        if (userDetails && userDetails.stateName && userDetails.cityName) {
+            setStateSearchTerm(userDetails.stateName);
+            setCitySearchTerm(userDetails.cityName);
+            setSelectedState(userDetails.state || 'all');
+            setSelectedCity(userDetails.city || 'all');
+        }
+    };
+
+    // Handle clicks outside the dropdowns
+    const handleClickOutside = (event) => {
+        if (stateDropdownRef.current && !stateDropdownRef.current.contains(event.target)) {
+            setShowStateDropdown(false);
+        }
+        if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
+            setShowCityDropdown(false);
+        }
+    };
+
+    // Fetch states from API
+    const fetchStates = async () => {
+        setIsLoadingStates(true);
+        try {
+            const response = await fetch('https://api.countrystatecity.in/v1/countries/IN/states', {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setStates(data);
+            } else {
+                console.error('Failed to fetch states');
+            }
+        } catch (error) {
+            console.error('Error fetching states:', error);
+        } finally {
+            setIsLoadingStates(false);
+        }
+    };
+
+    // Fetch cities from API based on state
+    const fetchCities = async (stateCode) => {
+        setIsLoadingCities(true);
+        try {
+            const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${stateCode}/cities`, {
+                headers: {
+                    'X-CSCAPI-KEY': 'YTBrQWhHWEVWUk9SSEVSYllzbVNVTUJWRm1oaFBpN2FWeTRKbFpqbQ=='
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCities(data);
+            } else {
+                console.error('Failed to fetch cities');
+                setCities([]);
+            }
+        } catch (error) {
+            console.error('Error fetching cities:', error);
+            setCities([]);
+        } finally {
+            setIsLoadingCities(false);
+        }
+    };
+
+    // Handle state selection
+    const handleStateSelect = (stateCode, stateName) => {
+        if (stateCode === 'all') {
+            setSelectedState('all');
+            setStateSearchTerm('All States');
+            setSelectedCity('all');
+            setCitySearchTerm('All Cities');
+            setCities([]);
+        } else {
+            setSelectedState(stateCode);
+            setStateSearchTerm(stateName);
+            setSelectedCity('all');
+            setCitySearchTerm('All Cities');
+            fetchCities(stateCode);
+        }
+        setShowStateDropdown(false);
+    };
+
+    // Handle city selection
+    const handleCitySelect = (cityId, cityName) => {
+        if (cityId === 'all') {
+            setSelectedCity('all');
+            setCitySearchTerm('All Cities');
+        } else {
+            setSelectedCity(cityId);
+            setCitySearchTerm(cityName);
+        }
+        setShowCityDropdown(false);
+    };
+
+    // Filter states based on search term
+    const filteredStatesList = states.filter(state =>
+        state.name.toLowerCase().includes(stateSearchTerm.toLowerCase())
+    );
+
+    // Filter cities based on search term
+    const filteredCitiesList = cities.filter(city =>
+        city.name.toLowerCase().includes(citySearchTerm.toLowerCase())
+    );
 
     useEffect(() => {
         fetchData();
@@ -278,22 +414,96 @@ function UserExplore() {
         return 'https://via.placeholder.com/150x150?text=No+Image';
     };
 
-    const filteredBusinesses = searchTerm ? businesses.filter(business =>
-        business.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        business.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : businesses;
+    // Filter businesses based on location, category, and search
+    const filteredBusinesses = businesses.filter(business => {
+        // Location filter
+        if (selectedState !== 'all') {
+            const businessState = business.businessState || business.state;
+            if (businessState !== selectedState) return false;
+        }
 
-    const filteredProducts = searchTerm ? products.filter(product =>
-        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : products;
+        if (selectedCity !== 'all') {
+            const businessCity = business.businessCity || business.city;
+            if (businessCity !== selectedCity) return false;
+        }
 
-    const filteredServices = searchTerm ? services.filter(service =>
-        service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : services;
+        // Category filter
+        if (selectedCategory && selectedCategory !== 'all') {
+            if (business.businessCategory !== selectedCategory) return false;
+        }
 
-    const renderStars = (rating) => {
+        // Search filter
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            return (
+                business.businessName?.toLowerCase().includes(searchLower) ||
+                business.businessDescription?.toLowerCase().includes(searchLower) ||
+                business.businessCategory?.toLowerCase().includes(searchLower) ||
+                business.businessCityName?.toLowerCase().includes(searchLower) ||
+                business.businessStateName?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        return true;
+    });
+
+    // Filter products based on location and search
+    const filteredProducts = products.filter(product => {
+        // Location filter using business location data
+        if (selectedState !== 'all') {
+            const productState = product.businessState || product.state;
+            if (productState !== selectedState) return false;
+        }
+
+        if (selectedCity !== 'all') {
+            const productCity = product.businessCity || product.city;
+            if (productCity !== selectedCity) return false;
+        }
+
+        // Search filter
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            return (
+                product.name?.toLowerCase().includes(searchLower) ||
+                product.description?.toLowerCase().includes(searchLower) ||
+                product.category?.toLowerCase().includes(searchLower) ||
+                product.businessName?.toLowerCase().includes(searchLower) ||
+                product.businessCityName?.toLowerCase().includes(searchLower) ||
+                product.businessStateName?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        return true;
+    });
+
+    // Filter services based on location and search
+    const filteredServices = services.filter(service => {
+        // Location filter using business location data
+        if (selectedState !== 'all') {
+            const serviceState = service.businessState || service.state;
+            if (serviceState !== selectedState) return false;
+        }
+
+        if (selectedCity !== 'all') {
+            const serviceCity = service.businessCity || service.city;
+            if (serviceCity !== selectedCity) return false;
+        }
+
+        // Search filter
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase();
+            return (
+                service.name?.toLowerCase().includes(searchLower) ||
+                service.description?.toLowerCase().includes(searchLower) ||
+                service.category?.toLowerCase().includes(searchLower) ||
+                service.businessName?.toLowerCase().includes(searchLower) ||
+                service.businessCityName?.toLowerCase().includes(searchLower) ||
+                service.businessStateName?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        return true;
+    }); const renderStars = (rating) => {
         return Array.from({ length: 5 }, (_, index) => (
             <Star
                 key={index}
@@ -503,6 +713,137 @@ function UserExplore() {
                         />
                     </div>
 
+                    {/* Location Filters */}
+                    <div className="location-filters">
+                        {/* State Filter */}
+                        <div className="filter-dropdown" ref={stateDropdownRef}>
+                            <div
+                                className="filter-select"
+                                onClick={() => {
+                                    setShowStateDropdown(!showStateDropdown);
+                                    setShowCityDropdown(false);
+                                }}
+                            >
+                                <MapPin size={16} />
+                                <span>{stateSearchTerm || 'All States'}</span>
+                                <ChevronDown size={16} className={showStateDropdown ? 'rotated' : ''} />
+                            </div>
+
+                            {showStateDropdown && (
+                                <div className="dropdown-menu">
+                                    <div className="dropdown-search">
+                                        <Search size={16} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search states..."
+                                            value={stateSearchTerm}
+                                            onChange={(e) => setStateSearchTerm(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
+
+                                    <div className="dropdown-options">
+                                        <div
+                                            className={`dropdown-option ${selectedState === 'all' ? 'selected' : ''}`}
+                                            onClick={() => handleStateSelect('all', 'All States')}
+                                        >
+                                            All States
+                                        </div>
+
+                                        {isLoadingStates ? (
+                                            <div className="loading-option">Loading states...</div>
+                                        ) : (
+                                            filteredStatesList.map(state => (
+                                                <div
+                                                    key={state.iso2}
+                                                    className={`dropdown-option ${selectedState === state.iso2 ? 'selected' : ''}`}
+                                                    onClick={() => handleStateSelect(state.iso2, state.name)}
+                                                >
+                                                    {state.name}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* City Filter */}
+                        <div className="filter-dropdown" ref={cityDropdownRef}>
+                            <div
+                                className="filter-select"
+                                onClick={() => {
+                                    if (selectedState === 'all') return;
+                                    setShowCityDropdown(!showCityDropdown);
+                                    setShowStateDropdown(false);
+                                }}
+                                style={{
+                                    opacity: selectedState === 'all' ? 0.5 : 1,
+                                    cursor: selectedState === 'all' ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                <MapPin size={16} />
+                                <span>{citySearchTerm || 'All Cities'}</span>
+                                <ChevronDown size={16} className={showCityDropdown ? 'rotated' : ''} />
+                            </div>
+
+                            {showCityDropdown && selectedState !== 'all' && (
+                                <div className="dropdown-menu">
+                                    <div className="dropdown-search">
+                                        <Search size={16} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search cities..."
+                                            value={citySearchTerm}
+                                            onChange={(e) => setCitySearchTerm(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
+
+                                    <div className="dropdown-options">
+                                        <div
+                                            className={`dropdown-option ${selectedCity === 'all' ? 'selected' : ''}`}
+                                            onClick={() => handleCitySelect('all', 'All Cities')}
+                                        >
+                                            All Cities
+                                        </div>
+
+                                        {isLoadingCities ? (
+                                            <div className="loading-option">Loading cities...</div>
+                                        ) : (
+                                            filteredCitiesList.map(city => (
+                                                <div
+                                                    key={city.id}
+                                                    className={`dropdown-option ${selectedCity === city.id ? 'selected' : ''}`}
+                                                    onClick={() => handleCitySelect(city.id, city.name)}
+                                                >
+                                                    {city.name}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Clear Filters Button */}
+                        {(selectedState !== 'all' || selectedCity !== 'all') && (
+                            <button
+                                className="clear-filters-btn"
+                                onClick={() => {
+                                    setSelectedState('all');
+                                    setSelectedCity('all');
+                                    setStateSearchTerm('All States');
+                                    setCitySearchTerm('All Cities');
+                                    setCities([]);
+                                }}
+                                title="Clear location filters"
+                            >
+                                <X size={16} />
+                                Clear
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Content Type Tabs */}

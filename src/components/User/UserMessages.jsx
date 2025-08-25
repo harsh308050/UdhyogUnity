@@ -311,7 +311,7 @@ function UserMessages() {
         if (isSending) {
             return (
                 <div className="message-status sending">
-                    <Clock size={12} color='red' />
+                    <Clock size={12} color='white' />
                 </div>
             );
         }
@@ -319,15 +319,15 @@ function UserMessages() {
         if (message.isRead) {
             return (
                 <div className="message-status read" title="Read">
-                    <Check size={14} color='red' />
-                    <Check size={14} className="second-tick" color='red' />
+                    <Check size={14} color='white' />
+                    <Check size={14} className="second-tick" color='white' />
                 </div>
             );
         } else {
             return (
                 <div className="message-status delivered" title="Delivered">
-                    <Check size={14} color='red' />
-                    <Check size={14} className="second-tick" color='red' />
+                    <Check size={14} color='white' />
+                    <Check size={14} className="second-tick" color='white' />
                 </div>
             );
         }

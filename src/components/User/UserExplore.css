@@ -32,7 +32,8 @@
     display: flex;
     gap: 1rem;
     margin-bottom: 1.5rem;
-    align-items: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 .search-bar {
@@ -515,6 +516,10 @@
         align-items: stretch;
     }
 
+    .location-filters {
+        justify-content: flex-start;
+    }
+
     .results-grid {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
@@ -548,5 +553,185 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0.75rem;
+    }
+}
+
+/* Location Filters */
+.location-filters {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-dropdown {
+    position: relative;
+    min-width: 150px;
+}
+
+.filter-select {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    user-select: none;
+}
+
+.filter-select:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary-color);
+}
+
+.filter-select svg:last-child {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.filter-select svg:last-child.rotated {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    margin-top: 0.25rem;
+    max-height: 300px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-search {
+    padding: 0.75rem !important;
+    border: 1px solid var(--border-color) !important;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    width: 90%;
+    margin: 0 auto;
+    gap: 0.5rem;
+    color: white;
+
+    /* background-color: rgb(255, 255, 255); */
+}
+
+.dropdown-search input {
+    flex: 1;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    width: 90%;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.dropdown-search input::placeholder {
+    color: var(--text-muted);
+}
+
+.dropdown-options {
+    overflow-y: auto;
+    max-height: 200px;
+}
+
+.dropdown-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.dropdown-option:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-option.selected {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.loading-option {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.clear-filters-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 8px;
+    color: #dc3545;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.clear-filters-btn:hover {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: #dc3545;
+}
+
+/* Responsive adjustments for location filters */
+@media (max-width: 768px) {
+    .location-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .filter-dropdown {
+        min-width: auto;
+    }
+
+    .dropdown-menu {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90vw;
+        max-width: 300px;
+        max-height: 60vh;
+    }
+}
+
+@media (max-width: 576px) {
+    .search-section {
+        gap: 0.75rem;
+    }
+
+    .filter-select {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .dropdown-option {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
     }
 }
