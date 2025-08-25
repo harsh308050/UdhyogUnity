@@ -947,6 +947,7 @@ body.login-page {
     right: 40px;
     color: #6c757d;
     pointer-events: none;
+    background: none;
 }
 
 .login-page .clear-icon {
