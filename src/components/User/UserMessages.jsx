@@ -291,7 +291,7 @@ function UserMessages() {
     const handleCallEnd = (reason) => {
         console.log('📞 Call ended:', reason);
         setActiveCall(null);
-        
+
         // Clear any remaining incoming call state
         setIncomingCall(null);
 

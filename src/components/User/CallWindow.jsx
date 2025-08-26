@@ -35,7 +35,7 @@ export default function CallWindow({ currentUser, otherUserId, type = 'video', o
         let durationInterval = null;
         let isInitializing = false; // Prevent duplicate initialization
         let isSetupComplete = false; // Track if setup completed successfully
-        
+
         // Reset component mounted state on every effect run (for StrictMode)
         componentMountedRef.current = true;
 
@@ -195,7 +195,7 @@ export default function CallWindow({ currentUser, otherUserId, type = 'video', o
                 }
 
                 console.log('🔄 Setting up caller');
-                
+
                 // Setup peer connection first
                 pcRef.current = setupPeerConnection();
                 if (!pcRef.current) {
@@ -245,7 +245,7 @@ export default function CallWindow({ currentUser, otherUserId, type = 'video', o
                     receiverName: otherUserName
                 });
                 callIdRef.current = id;
-                
+
                 if (existed) {
                     console.log('📄 Using existing call doc with id:', id);
                 } else {
@@ -316,13 +316,13 @@ export default function CallWindow({ currentUser, otherUserId, type = 'video', o
                 }
 
                 console.log('🔄 Setting up receiver for call:', callId);
-                
+
                 // Setup peer connection first
                 pcRef.current = setupPeerConnection();
                 if (!pcRef.current) {
                     throw new Error('Failed to create peer connection');
                 }
-                
+
                 callIdRef.current = callId;
                 console.log('🔍 Initial signaling state:', pcRef.current.signalingState);
 
@@ -468,28 +468,28 @@ export default function CallWindow({ currentUser, otherUserId, type = 'video', o
                     isSetupComplete = true;
                     return;
                 }
-                
+
                 // Prevent duplicate initialization within the same effect run
                 if (isInitializing) {
                     console.log('⚠️ Call initialization already in progress, skipping');
                     return;
                 }
-                
+
                 isInitializing = true;
                 console.log('🚀 Starting call initialization');
-                
+
                 if (incomingCallId) {
                     callIdRef.current = incomingCallId;
                     await setupReceiver(incomingCallId);
                 } else {
                     await setupCaller();
                 }
-                
+
                 isSetupComplete = true;
                 console.log('✅ Call setup completed successfully');
             } catch (err) {
                 console.error('Call setup failed:', err);
-                
+
                 // Only set failed status if component is still mounted
                 if (componentMountedRef.current) {
                     setCallStatus('failed');
@@ -503,7 +503,7 @@ export default function CallWindow({ currentUser, otherUserId, type = 'video', o
         return () => {
             console.log('🧹 CallWindow cleanup triggered, setup complete:', isSetupComplete, 'initializing:', isInitializing);
             componentMountedRef.current = false; // Mark component as unmounted
-            
+
             // In StrictMode, React calls cleanup immediately after mount, then re-mounts
             // Only do full cleanup if we're actually unmounting or setup completed
             if (isSetupComplete && !isInitializing) {

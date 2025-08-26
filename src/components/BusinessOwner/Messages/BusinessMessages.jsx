@@ -54,13 +54,13 @@ function BusinessMessages() {
             // listen for incoming calls and keep ref for cleanup
             unsubCalls.current = listenToIncomingCalls(email, (callDoc) => {
                 console.log('Incoming call:', callDoc);
-                
+
                 // Don't show incoming call popup if there's already an active call or incoming call
                 if (activeCall || incomingCall) {
                     console.log('⚠️ Ignoring incoming call - already in call or handling incoming call');
                     return;
                 }
-                
+
                 setIncomingCall(callDoc);
 
                 // Play ringtone
@@ -356,7 +356,7 @@ function BusinessMessages() {
     const handleCallEnd = (reason) => {
         console.log('📞 Business call ended:', reason);
         setActiveCall(null);
-        
+
         // Clear any remaining incoming call state
         setIncomingCall(null);
 
