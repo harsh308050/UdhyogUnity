@@ -1,0 +1,192 @@
+.call-history {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.call-history-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.call-history-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.call-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.call-history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.call-history-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.call-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.call-icon {
+    color: var(--text-muted);
+}
+
+.call-icon.incoming {
+    color: #4caf50;
+}
+
+.call-icon.outgoing {
+    color: #2196f3;
+}
+
+.call-icon.missed {
+    color: #f44336;
+}
+
+.call-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.call-party {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.call-info {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.call-type,
+.call-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.call-status {
+    position: relative;
+}
+
+.call-status::before {
+    content: '•';
+    margin-right: 4px;
+    color: var(--text-muted);
+}
+
+.call-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.call-history-loading,
+.call-history-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.call-history-empty {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.call-history-empty p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Status-specific styling */
+.call-history-item.rejected {
+    opacity: 0.7;
+}
+
+.call-history-item.rejected .call-icon {
+    color: #f44336;
+}
+
+.call-history-item.ended {
+    opacity: 0.9;
+}
+
+.call-history-item.active .call-icon {
+    color: #4caf50;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .call-history {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .call-history-item {
+        padding: 6px;
+        gap: 10px;
+    }
+
+    .call-icon-container {
+        width: 28px;
+        height: 28px;
+    }
+
+    .call-party {
+        font-size: 0.85rem;
+    }
+
+    .call-info {
+        gap: 6px;
+    }
+
+    .call-type,
+    .call-status,
+    .call-time {
+        font-size: 0.7rem;
+    }
+}

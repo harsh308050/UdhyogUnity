@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Search, Phone, Video, MoreVertical, Paperclip, Smile } from 'react-feather';
 import './BusinessMessages.css';
+import './BusinessMessagesCalls.css';
 import { getCurrentBusinessEmail } from '../../../Firebase/getBusinessData';
 import {
     getUserConversations,
@@ -11,6 +12,9 @@ import {
     searchConversations,
     getUnreadMessageCount
 } from '../../../Firebase/messageDb';
+import { listenToIncomingCalls, updateCallStatus } from '../../../Firebase/callsDb';
+import { playRingtone, stopRingtone, showCallNotification, requestNotificationPermission } from '../../../utils/callUtils';
+import CallWindow from '../../User/CallWindow';
 
 function BusinessMessages() {
     const [conversations, setConversations] = useState([]);
@@ -22,23 +26,44 @@ function BusinessMessages() {
     const [sendingMessage, setSendingMessage] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [businessEmail, setBusinessEmail] = useState(null);
+    const [incomingCall, setIncomingCall] = useState(null);
+    const [activeCall, setActiveCall] = useState(null);
+    const [callNotification, setCallNotification] = useState(null);
     const messagesEndRef = useRef(null);
+    const unsubCalls = useRef(null);
     const unsubscribeConversations = useRef(null);
     const unsubscribeMessages = useRef(null);
+    const ringtoneRef = useRef(null);
 
     useEffect(() => {
         console.log('🚀 BusinessMessages useEffect triggered');
 
-        // Get business email from session storage (same as BusinessDashboard)
-        const businessEmail = getCurrentBusinessEmail();
-        console.log('🔐 Business Email from session:', businessEmail);
+        // Request notification permission
+        requestNotificationPermission();
 
-        if (businessEmail) {
-            console.log('✅ Business Email found:', businessEmail);
-            setBusinessEmail(businessEmail);
-            loadConversations(businessEmail);
-            setupConversationsListener(businessEmail);
-            loadUnreadCount(businessEmail);
+        // Get business email from session storage (same as BusinessDashboard)
+        const email = getCurrentBusinessEmail();
+        console.log('🔐 Business Email from session:', email);
+
+        if (email) {
+            console.log('✅ Business Email found:', email);
+            setBusinessEmail(email);
+            loadConversations(email);
+            setupConversationsListener(email);
+            loadUnreadCount(email);
+            // listen for incoming calls and keep ref for cleanup
+            unsubCalls.current = listenToIncomingCalls(email, (callDoc) => {
+                console.log('Incoming call:', callDoc);
+                setIncomingCall(callDoc);
+
+                // Play ringtone
+                ringtoneRef.current = playRingtone();
+
+                // Show browser notification
+                const callerName = conversations.find(conv => conv.customerId === callDoc.callerId)?.customerName || 'Unknown Caller';
+                const notification = showCallNotification(callerName, callDoc.type);
+                setCallNotification(notification);
+            });
         } else {
             console.log('❌ No business email found in session');
             setBusinessEmail(null);
@@ -46,12 +71,20 @@ function BusinessMessages() {
         }
 
         return () => {
-            // Cleanup listeners
+            // Cleanup all listeners
+            unsubCalls.current && unsubCalls.current();
             if (unsubscribeConversations.current) {
                 unsubscribeConversations.current();
             }
             if (unsubscribeMessages.current) {
                 unsubscribeMessages.current();
+            }
+            // Stop ringtone and close notification
+            if (ringtoneRef.current) {
+                stopRingtone(ringtoneRef.current);
+            }
+            if (callNotification) {
+                callNotification.close();
             }
         };
     }, []);
@@ -247,6 +280,89 @@ function BusinessMessages() {
         }
     };
 
+    const handleStartCall = async (type) => {
+        if (!selectedConversation || !businessEmail) return;
+
+        console.log(`📞 Business starting ${type} call to:`, selectedConversation.customerId);
+
+        setActiveCall({
+            otherUserId: selectedConversation.customerId,
+            otherUserName: selectedConversation.customerName || selectedConversation.customerId,
+            type,
+            isIncoming: false
+        });
+    };
+
+    const handleAcceptCall = async () => {
+        if (!incomingCall) return;
+
+        console.log('✅ Business accepting incoming call:', incomingCall.id);
+
+        // Stop ringtone and clear notification
+        if (ringtoneRef.current) {
+            stopRingtone(ringtoneRef.current);
+            ringtoneRef.current = null;
+        }
+        if (callNotification) {
+            callNotification.close();
+            setCallNotification(null);
+        }
+
+        // Start call window
+        setActiveCall({
+            callId: incomingCall.id,
+            otherUserId: incomingCall.callerId,
+            otherUserName: conversations.find(conv => conv.customerId === incomingCall.callerId)?.customerName ||
+                incomingCall.callerName || incomingCall.callerId || 'Customer',
+            type: incomingCall.type,
+            isIncoming: true
+        });
+
+        setIncomingCall(null);
+    };
+
+    const handleRejectCall = async () => {
+        if (!incomingCall) return;
+
+        console.log('❌ Business rejecting incoming call:', incomingCall.id);
+
+        // Stop ringtone and clear notification
+        if (ringtoneRef.current) {
+            stopRingtone(ringtoneRef.current);
+            ringtoneRef.current = null;
+        }
+        if (callNotification) {
+            callNotification.close();
+            setCallNotification(null);
+        }
+
+        // Update call status to rejected
+        try {
+            await updateCallStatus(incomingCall.id, 'rejected');
+        } catch (error) {
+            console.error('Failed to update call status:', error);
+        }
+
+        setIncomingCall(null);
+    };
+
+    const handleCallEnd = (reason) => {
+        console.log('📞 Business call ended:', reason);
+        setActiveCall(null);
+
+        // Stop ringtone if still playing
+        if (ringtoneRef.current) {
+            stopRingtone(ringtoneRef.current);
+            ringtoneRef.current = null;
+        }
+
+        // Clear any remaining notifications
+        if (callNotification) {
+            callNotification.close();
+            setCallNotification(null);
+        }
+    };
+
     if (loading) {
         return (
             <div className="business-dashboard-theme business-user-messages">
@@ -265,7 +381,7 @@ function BusinessMessages() {
                 <div className="business-conversations-sidebar">
                     <div className="business-sidebar-header">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <h2>Messages {unreadCount > 0 && <span className="business-unread-badge">{unreadCount}</span>}</h2>
+                            <h2>Messages</h2>
                         </div>
                         <div className="business-search-conversations">
                             <Search size={18} />
@@ -297,11 +413,6 @@ function BusinessMessages() {
                                         <div className="business-conversation-preview">
                                             <p>{conversation.lastMessage || 'No messages yet'}</p>
                                             <span className="business-time">{formatTime(conversation.lastTimestamp)}</span>
-                                            {conversation.businessUnreadCount > 0 && (
-                                                <div className="business-unread-badge">
-                                                    {conversation.businessUnreadCount}
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -332,10 +443,18 @@ function BusinessMessages() {
                                 </div>
 
                                 <div className="business-chat-actions">
-                                    <button className="business-action-btn">
+                                    <button
+                                        className="business-action-btn"
+                                        onClick={() => handleStartCall('voice')}
+                                        title="Voice Call"
+                                    >
                                         <Phone size={18} />
                                     </button>
-                                    <button className="business-action-btn">
+                                    <button
+                                        className="business-action-btn"
+                                        onClick={() => handleStartCall('video')}
+                                        title="Video Call"
+                                    >
                                         <Video size={18} />
                                     </button>
                                     <button className="business-action-btn">
@@ -346,6 +465,63 @@ function BusinessMessages() {
 
                             {/* Messages */}
                             <div className="business-messages-area">
+                                {/* Incoming call popup (rendered outside messages list so it's always visible) */}
+                                {incomingCall && !activeCall && (
+                                    <div className="incoming-call-overlay">
+                                        <div className="incoming-call-popup">
+                                            <div className="incoming-call-header">
+                                                <h3>
+                                                    {conversations.find(conv => conv.customerId === incomingCall.callerId)?.customerName ||
+                                                        incomingCall.callerName || incomingCall.callerId || 'Unknown Customer'}
+                                                </h3>
+                                                <p className="call-type">Incoming {incomingCall.type} call</p>
+                                            </div>
+
+                                            <div className="incoming-call-avatar">
+                                                <div className="avatar-placeholder">
+                                                    {incomingCall.type === 'video' ? <Video size={40} /> : <Phone size={40} />}
+                                                </div>
+                                                <div className="incoming-call-animation">
+                                                    <div className="call-pulse"></div>
+                                                    <div className="call-pulse"></div>
+                                                    <div className="call-pulse"></div>
+                                                </div>
+                                            </div>
+
+                                            <div className="incoming-call-actions">
+                                                <button
+                                                    className="call-action-btn accept-btn"
+                                                    onClick={handleAcceptCall}
+                                                    title="Accept Call"
+                                                >
+                                                    <Phone size={20} />
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    className="call-action-btn reject-btn"
+                                                    onClick={handleRejectCall}
+                                                    title="Reject Call"
+                                                >
+                                                    <Phone size={20} />
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeCall && (
+                                    <CallWindow
+                                        currentUser={{ email: businessEmail }}
+                                        otherUserId={activeCall.otherUserId}
+                                        otherUserName={activeCall.otherUserName || 'Customer'}
+                                        currentUserName={businessEmail}
+                                        type={activeCall.type}
+                                        callId={activeCall.callId}
+                                        onClose={() => setActiveCall(null)}
+                                    />
+                                )}
+
                                 {messages.length > 0 ? (
                                     messages.map(message => (
                                         <div
@@ -367,6 +543,7 @@ function BusinessMessages() {
                                         <p>Send a message to {selectedConversation.customerName || 'this customer'}</p>
                                     </div>
                                 )}
+
                                 <div ref={messagesEndRef} />
                             </div>
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, MapPin, Star, Heart, ShoppingBag, Package, Calendar, Zap, MessageSquare, ChevronDown, X } from 'react-feather';
-import './UserExplore.css';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import ProductQuickView from './ProductQuickView';
@@ -9,6 +8,7 @@ import { getAllBusinesses, getAllProducts, getAllServices, searchAll } from '../
 import { addToFavorites, removeFromFavorites, checkIfFavorite, getUserFavorites } from '../../Firebase/favoriteDb';
 import { startConversationWithBusiness } from '../../Firebase/messageDb';
 import ContactBusinessButton from '../miniComponents/ContactBusinessButton';
+import './UserExplore.css';
 
 function UserExplore() {
     const [searchTerm, setSearchTerm] = useState('');

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Search, Phone, Video, MoreVertical, Paperclip, Smile, Plus, Check, Clock } from 'react-feather';
 import './UserMessages.css';
 import { useAuth } from '../../context/AuthContext';
+import CallWindow from './CallWindow';
 import {
     getUserConversations,
     listenToConversations,
@@ -14,6 +15,8 @@ import {
     searchBusinessesForMessaging,
     startConversationWithBusiness
 } from '../../Firebase/messageDb';
+import { listenToIncomingCalls, updateCallStatus, createCall } from '../../Firebase/callsDb';
+import { playRingtone, stopRingtone, showCallNotification, requestNotificationPermission } from '../../utils/callUtils';
 
 function UserMessages() {
     const [conversations, setConversations] = useState([]);
@@ -28,17 +31,29 @@ function UserMessages() {
     const [businessSearchResults, setBusinessSearchResults] = useState([]);
     const [showBusinessSearch, setShowBusinessSearch] = useState(false);
     const [searchingBusinesses, setSearchingBusinesses] = useState(false);
+    const [incomingCall, setIncomingCall] = useState(null);
+    const [callNotification, setCallNotification] = useState(null);
     const messagesEndRef = useRef(null);
     const unsubscribeConversations = useRef(null);
     const unsubscribeMessages = useRef(null);
+    const unsubCalls = useRef(null);
+    const ringtoneRef = useRef(null);
 
     const { currentUser } = useAuth();
+    const [activeCall, setActiveCall] = useState(null);
 
     useEffect(() => {
+        console.log('🚀 UserMessages useEffect triggered');
+
+        // Request notification permission
+        requestNotificationPermission();
+
         if (currentUser?.email) {
+            console.log('✅ User Email found:', currentUser.email);
             loadConversations();
             setupConversationsListener();
             loadUnreadCount();
+            setupIncomingCallListener();
         }
 
         return () => {
@@ -48,6 +63,17 @@ function UserMessages() {
             }
             if (unsubscribeMessages.current) {
                 unsubscribeMessages.current();
+            }
+            if (unsubCalls.current) {
+                unsubCalls.current();
+            }
+            // Stop ringtone
+            if (ringtoneRef.current) {
+                stopRingtone(ringtoneRef.current);
+            }
+            // Clear notifications
+            if (callNotification) {
+                callNotification.close();
             }
         };
     }, [currentUser]);
@@ -152,6 +178,117 @@ function UserMessages() {
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Call-related functions
+    const setupIncomingCallListener = () => {
+        if (!currentUser?.email) {
+            console.log('❌ Cannot setup call listener: No current user email');
+            return;
+        }
+
+        console.log('📞 Setting up incoming call listener for user:', currentUser.email);
+        unsubCalls.current = listenToIncomingCalls(currentUser.email, (callData) => {
+            console.log('📞 Incoming call received:', callData);
+
+            if (callData && callData.status === 'ringing') {
+                // Get caller name (business name or email)
+                const callerName = callData.callerName || callData.callerId || 'Unknown Business';
+
+                setIncomingCall(callData);
+
+                // Play ringtone
+                ringtoneRef.current = playRingtone();
+
+                // Show browser notification
+                const notification = showCallNotification(callerName, callData.type);
+                setCallNotification(notification);
+
+                console.log(`📞 Incoming ${callData.type} call from ${callerName}`);
+            }
+        });
+    };
+
+    const handleAcceptCall = async () => {
+        if (!incomingCall) return;
+
+        console.log('✅ Accepting incoming call:', incomingCall.id);
+
+        // Stop ringtone and clear notification
+        if (ringtoneRef.current) {
+            stopRingtone(ringtoneRef.current);
+            ringtoneRef.current = null;
+        }
+        if (callNotification) {
+            callNotification.close();
+            setCallNotification(null);
+        }
+
+        // Start call window
+        setActiveCall({
+            callId: incomingCall.id,
+            otherUserId: incomingCall.callerId,
+            otherUserName: incomingCall.callerName || incomingCall.callerId,
+            type: incomingCall.type,
+            isIncoming: true
+        });
+
+        setIncomingCall(null);
+    };
+
+    const handleRejectCall = async () => {
+        if (!incomingCall) return;
+
+        console.log('❌ Rejecting incoming call:', incomingCall.id);
+
+        // Stop ringtone and clear notification
+        if (ringtoneRef.current) {
+            stopRingtone(ringtoneRef.current);
+            ringtoneRef.current = null;
+        }
+        if (callNotification) {
+            callNotification.close();
+            setCallNotification(null);
+        }
+
+        // Update call status to rejected
+        try {
+            await updateCallStatus(incomingCall.id, 'rejected');
+        } catch (error) {
+            console.error('Failed to update call status:', error);
+        }
+
+        setIncomingCall(null);
+    };
+
+    const handleStartCall = async (type) => {
+        if (!selectedConversation || !currentUser?.email) return;
+
+        console.log(`📞 Starting ${type} call to:`, selectedConversation.businessId);
+
+        setActiveCall({
+            otherUserId: selectedConversation.businessId,
+            otherUserName: selectedConversation.businessName || selectedConversation.businessId,
+            type,
+            isIncoming: false
+        });
+    };
+
+    const handleCallEnd = (reason) => {
+        console.log('📞 Call ended:', reason);
+        setActiveCall(null);
+
+        // Stop ringtone if still playing
+        if (ringtoneRef.current) {
+            stopRingtone(ringtoneRef.current);
+            ringtoneRef.current = null;
+        }
+
+        // Clear any remaining notifications
+        if (callNotification) {
+            callNotification.close();
+            setCallNotification(null);
+        }
     };
 
     const handleSendMessage = async () => {
@@ -561,10 +698,18 @@ function UserMessages() {
                                 </div>
 
                                 <div className="chat-actions">
-                                    <button className="action-btn">
+                                    <button
+                                        className="action-btn"
+                                        onClick={() => handleStartCall('voice')}
+                                        title="Voice Call"
+                                    >
                                         <Phone size={18} />
                                     </button>
-                                    <button className="action-btn">
+                                    <button
+                                        className="action-btn"
+                                        onClick={() => handleStartCall('video')}
+                                        title="Video Call"
+                                    >
                                         <Video size={18} />
                                     </button>
                                     <button className="action-btn">
@@ -638,6 +783,59 @@ function UserMessages() {
                         </div>
                     )}
                 </div>
+                {activeCall && (
+                    <CallWindow
+                        currentUser={currentUser}
+                        otherUserId={activeCall.otherUserId}
+                        otherUserName={activeCall.otherUserName || 'Business'}
+                        currentUserName={currentUser?.displayName || currentUser?.email}
+                        type={activeCall.type}
+                        callId={activeCall.callId}
+                        onClose={handleCallEnd}
+                    />
+                )}
+
+                {/* Incoming Call Popup */}
+                {incomingCall && (
+                    <div className="incoming-call-overlay">
+                        <div className="incoming-call-popup">
+                            <div className="incoming-call-header">
+                                <h3>{incomingCall.callerName || incomingCall.callerId}</h3>
+                                <p className="call-type">Incoming {incomingCall.type} call</p>
+                            </div>
+
+                            <div className="incoming-call-avatar">
+                                <div className="avatar-placeholder">
+                                    {incomingCall.type === 'video' ? <Video size={40} /> : <Phone size={40} />}
+                                </div>
+                                <div className="incoming-call-animation">
+                                    <div className="call-pulse"></div>
+                                    <div className="call-pulse"></div>
+                                    <div className="call-pulse"></div>
+                                </div>
+                            </div>
+
+                            <div className="incoming-call-actions">
+                                <button
+                                    className="call-action-btn accept-btn"
+                                    onClick={handleAcceptCall}
+                                    title="Accept Call"
+                                >
+                                    <Phone size={20} />
+                                    Accept
+                                </button>
+                                <button
+                                    className="call-action-btn reject-btn"
+                                    onClick={handleRejectCall}
+                                    title="Reject Call"
+                                >
+                                    <Phone size={20} />
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
