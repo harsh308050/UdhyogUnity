@@ -15,7 +15,7 @@ import {
     searchBusinessesForMessaging,
     startConversationWithBusiness
 } from '../../Firebase/messageDb';
-import { listenToIncomingCalls, updateCallStatus, createCall } from '../../Firebase/callsDb';
+import { listenToIncomingCalls, updateCallStatus } from '../../Firebase/callsDb';
 import { playRingtone, stopRingtone, showCallNotification, requestNotificationPermission } from '../../utils/callUtils';
 
 function UserMessages() {
@@ -192,6 +192,12 @@ function UserMessages() {
             console.log('📞 Incoming call received:', callData);
 
             if (callData && callData.status === 'ringing') {
+                // Don't show incoming call popup if there's already an active call or incoming call
+                if (activeCall || incomingCall) {
+                    console.log('⚠️ Ignoring incoming call - already in call or handling incoming call');
+                    return;
+                }
+
                 // Get caller name (business name or email)
                 const callerName = callData.callerName || callData.callerId || 'Unknown Business';
 
@@ -233,7 +239,15 @@ function UserMessages() {
             isIncoming: true
         });
 
+        // Clear incoming call state since we're now in active call
         setIncomingCall(null);
+
+        // Update call status to active
+        try {
+            await updateCallStatus(incomingCall.id, 'active');
+        } catch (error) {
+            console.error('Failed to update call status:', error);
+        }
     };
 
     const handleRejectCall = async () => {
@@ -277,6 +291,9 @@ function UserMessages() {
     const handleCallEnd = (reason) => {
         console.log('📞 Call ended:', reason);
         setActiveCall(null);
+        
+        // Clear any remaining incoming call state
+        setIncomingCall(null);
 
         // Stop ringtone if still playing
         if (ringtoneRef.current) {

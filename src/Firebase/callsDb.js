@@ -3,8 +3,10 @@ import {
     doc,
     addDoc,
     getDoc,
+    deleteDoc,
     setDoc,
     updateDoc,
+    runTransaction,
     onSnapshot,
     query,
     where,
@@ -16,85 +18,117 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 
+// Helper to build a symmetric pair key for a call lock
+const getPairKey = (a, b) => {
+    try {
+        return [a, b].filter(Boolean).map(String).sort().join('|');
+    } catch {
+        return `${a}||${b}`;
+    }
+};
+
+// TTL in ms for considering a lock "active" if a cleanup didn't run
+const CALL_LOCK_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
 // Find or create a call - ensures only one call document exists between two users
 export const findOrCreateCall = async ({ callerId, receiverId, type = 'voice', callerName = null, receiverName = null }) => {
-    const callsRef = collection(db, 'calls');
-    
-    // First, check for any existing ringing or active calls between these users
-    const existingCallQuery = query(
-        callsRef,
-        where('callerId', '==', callerId),
-        where('receiverId', '==', receiverId),
-        where('status', 'in', ['ringing', 'connecting', 'active'])
-    );
-    
+    const callsCol = collection(db, 'calls');
+    const locksCol = collection(db, 'callLocks');
+    const pairKey = getPairKey(callerId, receiverId);
+    const lockRef = doc(locksCol, pairKey);
+
+    // Quick pre-check for an existing active call (non-transactional). This reduces churn if a call already exists.
     try {
-        const snapshot = await getDocs(existingCallQuery);
-        
+        const snapshot = await getDocs(query(
+            callsCol,
+            where('callerId', '==', callerId),
+            where('receiverId', '==', receiverId),
+            where('status', 'in', ['ringing', 'connecting', 'active'])
+        ));
         if (!snapshot.empty) {
-            // Return the first existing active call
-            const existingCall = snapshot.docs[0];
-            console.log('📞 Found existing call document:', existingCall.id);
-            return { id: existingCall.id, ref: existingCall.ref, existed: true };
+            const existing = snapshot.docs[0];
+            // Try to claim/create the lock for this existing call
+            const res = await runTransaction(db, async (tx) => {
+                const now = Date.now();
+                const lockSnap = await tx.get(lockRef);
+                tx.set(lockRef, {
+                    callId: existing.id,
+                    status: existing.data().status || 'ringing',
+                    createdAt: lockSnap.exists() ? lockSnap.data().createdAt || serverTimestamp() : serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    updatedAtMs: now,
+                    callerId,
+                    receiverId,
+                    type: existing.data().type || type,
+                }, { merge: true });
+                return { id: existing.id, ref: existing.ref, existed: true };
+            });
+            console.log('📞 Using existing call via lock', res.id);
+            return res;
         }
-    } catch (error) {
-        console.warn('Error checking for existing calls:', error);
+    } catch (e) {
+        console.warn('Existing-call precheck failed, will create via lock:', e);
     }
-    
-    // No existing call found, create a new one
-    return await createCall({ callerId, receiverId, type, callerName, receiverName });
+
+    // Use a transaction over a per-pair lock doc to avoid duplicate call docs
+    const result = await runTransaction(db, async (tx) => {
+        const now = Date.now();
+        const lockSnap = await tx.get(lockRef);
+
+        if (lockSnap.exists()) {
+            const lock = lockSnap.data();
+            const lastUpdate = typeof lock.updatedAtMs === 'number' ? lock.updatedAtMs : 0;
+            const isFresh = now - lastUpdate < CALL_LOCK_TTL_MS;
+
+            // If there's a fresh lock, return the existing callId
+            if (isFresh && lock.callId && lock.status && ['ringing', 'connecting', 'active'].includes(lock.status)) {
+                const callRef = doc(db, 'calls', lock.callId);
+                const callSnap = await tx.get(callRef);
+                if (callSnap.exists()) {
+                    return { id: callSnap.id, ref: callRef, existed: true };
+                }
+                // If lock exists but call doc not found, fall through to create new and replace lock
+            }
+        }
+
+        // Create a brand new call doc and lock atomically
+        const newCallRef = doc(callsCol);
+        const callData = {
+            callerId,
+            receiverId,
+            type,
+            status: 'ringing',
+            createdAt: serverTimestamp(),
+            startTime: now,
+            callerName: callerName || callerId,
+            receiverName: receiverName || receiverId,
+            offer: null,
+            answer: null,
+            iceCandidates: { caller: [], receiver: [] },
+            pairKey,
+        };
+        tx.set(newCallRef, callData);
+        tx.set(lockRef, {
+            callId: newCallRef.id,
+            status: 'ringing',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            updatedAtMs: now,
+            callerId,
+            receiverId,
+            type,
+        });
+        return { id: newCallRef.id, ref: newCallRef, existed: false };
+    });
+
+    console.log(result.existed ? '📞 Using existing call via lock' : '📞 Created new call via lock', result.id);
+    return result;
 };
 
 // Create a new call document - prevents duplicates by checking for existing active calls
 export const createCall = async ({ callerId, receiverId, type = 'voice', startTime = null, callerName = null, receiverName = null }) => {
-    const callsRef = collection(db, 'calls');
-    
-    // Check if there's already an active call between these users (in last 30 seconds)
-    const recentTime = Date.now() - 30000; // 30 seconds ago
-    const existingCallQuery = query(
-        callsRef,
-        where('callerId', '==', callerId),
-        where('receiverId', '==', receiverId),
-        where('status', 'in', ['ringing', 'connecting', 'active'])
-    );
-    
-    try {
-        const existingCallsSnapshot = await getDocs(existingCallQuery);
-        
-        // If there's an existing active call, return it instead of creating a new one
-        if (!existingCallsSnapshot.empty) {
-            const existingCall = existingCallsSnapshot.docs[0];
-            const existingCallData = existingCall.data();
-            
-            // Check if the existing call is very recent (within 30 seconds)
-            if (existingCallData.startTime && (existingCallData.startTime > recentTime)) {
-                console.log('📞 Using existing call document:', existingCall.id);
-                return { id: existingCall.id, ref: existingCall.ref };
-            }
-        }
-    } catch (error) {
-        console.warn('Error checking for existing calls:', error);
-        // Continue to create new call if check fails
-    }
-    
-    // Create new call document if no recent active call exists
-    const callData = {
-        callerId,
-        receiverId,
-        type,
-        status: 'ringing',
-        createdAt: serverTimestamp(),
-        startTime: startTime || Date.now(),
-        callerName: callerName || callerId,
-        receiverName: receiverName || receiverId,
-        offer: null,
-        answer: null,
-        iceCandidates: { caller: [], receiver: [] }
-    };
-
-    const callDocRef = await addDoc(callsRef, callData);
-    console.log('📞 Created new call document:', callDocRef.id);
-    return { id: callDocRef.id, ref: callDocRef };
+    // Use the transactional path to avoid duplicates
+    return await findOrCreateCall({ callerId, receiverId, type, callerName, receiverName });
 };
 
 export const updateCallOffer = async (callId, offer) => {
@@ -116,6 +150,33 @@ export const addIceCandidate = async (callId, role, candidate) => {
 export const updateCallStatus = async (callId, status) => {
     const callRef = doc(db, 'calls', callId);
     await updateDoc(callRef, { status });
+
+    // Release the per-pair lock when the call ends or is rejected
+    try {
+        const snap = await getDoc(callRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            const pairKey = data.pairKey || getPairKey(data.callerId, data.receiverId);
+            const lockRef = doc(db, 'callLocks', pairKey);
+            if (status === 'ended' || status === 'rejected') {
+                // Delete the lock to allow new calls immediately
+                await deleteDoc(lockRef);
+            } else {
+                // Heartbeat the lock with the new status
+                await setDoc(lockRef, {
+                    callId,
+                    status,
+                    updatedAt: serverTimestamp(),
+                    updatedAtMs: Date.now(),
+                    callerId: data.callerId,
+                    receiverId: data.receiverId,
+                    type: data.type,
+                }, { merge: true });
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to update call lock status:', e);
+    }
 };
 
 export const getCall = async (callId) => {

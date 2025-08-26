@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, User, AlertCircle } from 'react-feather';
 import './CallWindow.css';
-import { createCall, updateCallOffer, updateCallAnswer, addIceCandidate, updateCallStatus, listenToCall, getCall, findOrCreateCall } from '../../Firebase/callsDb';
+import { updateCallOffer, updateCallAnswer, addIceCandidate, updateCallStatus, listenToCall, getCall, findOrCreateCall } from '../../Firebase/callsDb';
 import { getUserMedia } from '../../utils/callUtils';
 
 const STUN_CONFIG = {

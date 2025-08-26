@@ -433,6 +433,12 @@ function BusinessDashboard() {
                                                 <img
                                                     src={logoUrl}
                                                     alt={`${businessData.businessName} logo`}
+                                                    style={{
+                                                        width: '48px !important',
+                                                        height: '48px',
+                                                        borderRadius: '50%',
+                                                        objectFit: 'cover',
+                                                    }}
                                                     className="business-logo"
                                                     onError={(e) => {
                                                         console.log("Logo image failed to load:", e);

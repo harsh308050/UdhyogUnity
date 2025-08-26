@@ -188,6 +188,14 @@
     cursor: pointer;
 }
 
+.business-avatar img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+
 .business-dashboard-theme .business-logo:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
