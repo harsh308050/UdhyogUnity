@@ -6,33 +6,42 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
   { ignores: ['dist'] },
+  // App source (browser)
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      // Allow browser globals and a readonly 'process' for code that still references it
+      globals: { ...globals.browser, process: 'readonly' },
+      parserOptions: { ecmaVersion: 'latest', ecmaFeatures: { jsx: true } },
     },
     settings: { react: { version: '18.3' } },
-    plugins: {
-      react,
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
+    plugins: { react, 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
     rules: {
       ...js.configs.recommended.rules,
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
-      'react/jsx-no-target-blank': 'off',
-      'react-refresh/only-export-components': [
+      // Pragmatic relaxations for this project
+      'react/prop-types': 'off',
+      'react/no-unescaped-entities': 'off',
+      'react/no-unknown-property': ['warn', { ignore: ['playsInline'] }],
+      'no-unused-vars': [
         'warn',
-        { allowConstantExport: true },
+        { args: 'none', ignoreRestSiblings: true, varsIgnorePattern: '^React$' },
       ],
+      'react/jsx-no-target-blank': 'off',
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  // Node environment files (Vite config, etc.)
+  {
+    files: ['vite.config.js', '**/*.config.{js,cjs,mjs}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.node,
     },
   },
 ]

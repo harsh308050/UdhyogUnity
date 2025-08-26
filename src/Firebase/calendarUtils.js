@@ -1,6 +1,5 @@
 // src/Firebase/calendarUtils.js
-import { Timestamp } from 'firebase/firestore';
-import { getBusinessBookings, getBookingsByDateRange } from './bookingDb';
+import { getBookingsByDateRange } from './bookingDb';
 import { getBusinessSchedule } from './scheduleDb';
 import { getServiceById } from './serviceDb';
 
@@ -24,8 +23,7 @@ export const generateMonthlyCalendar = async (businessId, month) => {
         const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
 
         // Get all bookings for the month
-        const startTimestamp = Timestamp.fromDate(firstDay);
-        const endTimestamp = Timestamp.fromDate(lastDay);
+    // Note: keep calculations local without unused variables
 
         const bookings = await getBookingsByDateRange(businessId, firstDay, lastDay);
 
@@ -227,7 +225,7 @@ export const getBookingStatistics = async (businessId, period = 'week') => {
 
         // Count bookings by status
         bookings.forEach(booking => {
-            if (statistics.hasOwnProperty(booking.status)) {
+            if (Object.prototype.hasOwnProperty.call(statistics, booking.status)) {
                 statistics[booking.status]++;
             }
         });

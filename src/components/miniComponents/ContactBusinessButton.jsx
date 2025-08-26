@@ -2,20 +2,8 @@ import React from 'react';
 import { MessageSquare } from 'react-feather';
 import { useAuth } from '../../context/AuthContext';
 import { startConversationWithBusiness } from '../../Firebase/messageDb';
-import { WindowDash } from 'react-bootstrap-icons';
 
-/**
- * ContactBusinessButton - A reusable component to start conversations with businesses
- * 
- * Usage:
- * <ContactBusinessButton 
- *   businessEmail="business@example.com"
- *   businessName="Business Name"
- *   initialMessage="Hello! I'm interested in your services"
- *   onSuccess={() => console.log('Conversation started!')}
- *   onError={(error) => console.error('Error:', error)}
- * />
- */
+
 function ContactBusinessButton({
     businessEmail,
     businessName = 'Business',

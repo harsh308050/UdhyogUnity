@@ -10,7 +10,6 @@ import {
 } from "firebase/auth";
 import { app } from "./config";
 import { addUserToFirestore } from "./db";
-import { uploadProfilePhoto } from "./storage";
 
 const auth = getAuth(app);
 // Set auth to use session persistence - will be cleared when browser is closed
@@ -49,14 +48,10 @@ export const signUp = async (email, password, userData = {}) => {
 };
 
 export const signIn = async (email, password) => {
-    try {
-        // Use session persistence - user will need to sign in again after closing browser
-        await setPersistence(auth, browserSessionPersistence);
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
-    } catch (error) {
-        throw error;
-    }
+    // Use session persistence - user will need to sign in again after closing browser
+    await setPersistence(auth, browserSessionPersistence);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
 };
 
 export const signInWithGoogle = async () => {

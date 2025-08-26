@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Clock, Calendar, User, Phone, MapPin, Mail, Tag, Scissors } from 'lucide-react';
+import { Check, X, Clock, Calendar, User, Phone, Mail, Scissors } from 'lucide-react';
 
 const BookingsList = ({ bookings, services, onViewBooking, onUpdateStatus }) => {
     const [expandedBooking, setExpandedBooking] = useState(null);

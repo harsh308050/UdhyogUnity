@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, AlertCircle } from 'lucide-react';
-import { addBooking } from '../../../../Firebase/bookingDb';
-import { generateAvailableTimeSlots } from '../../../../Firebase/scheduleDb';
+// import { addBooking } from '../../../../Firebase/bookingDb';
+// import { generateAvailableTimeSlots } from '../../../../Firebase/scheduleDb';
 import { db } from '../../../../Firebase/config';
 import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../../../context/AuthContext';
 import './BookingForm.css';
 
 const BookingForm = ({ service, businessData, onSuccess }) => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const { currentUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [availableSlots, setAvailableSlots] = useState([]);
@@ -228,7 +228,7 @@ const BookingForm = ({ service, businessData, onSuccess }) => {
 
             // Create booking record
             const bookingData = {
-                businessId: businessData.businessId || businessData.email || businessId,
+                businessId: businessData.businessId || businessData.email,
                 businessName: businessData.businessName || businessData.name || "Business",
                 serviceId: service.id,
                 serviceName: service.name,

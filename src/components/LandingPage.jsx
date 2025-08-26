@@ -22,6 +22,12 @@ function LandingPage() {
     cta: false,
   });
 
+  // Contact form state
+  const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
   const [hasAnimated, setHasAnimated] = useState(false);
 
   const errorSectionRef = useRef(null);
@@ -107,6 +113,42 @@ function LandingPage() {
 
   const handleBusinessLogin = () => {
     navigate("/business-login");
+  };
+
+  const handleContactChange = (e) => {
+    const { id, value } = e.target;
+    setContactForm((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSent(false);
+
+    const { name, email, message } = contactForm;
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setErrorMsg("Please fill out name, email, and message.");
+      return;
+    }
+
+    try {
+      setSending(true);
+      const res = await fetch("/.netlify/functions/send-contact-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed (${res.status})`);
+      }
+      setSent(true);
+      setContactForm({ name: "", email: "", message: "" });
+    } catch (err) {
+      setErrorMsg(err?.message || "Failed to send. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -291,7 +333,7 @@ function LandingPage() {
             <img src={contactUsImage} alt="Contactus" className="contact-img" />
           </div>
           <div className="col-md-6">
-            <div className="contact-form">
+            <form className="contact-form" onSubmit={handleContactSubmit} noValidate>
               <div className="form-group">
                 <label htmlFor="name" className="form-label">
                   Name
@@ -301,6 +343,9 @@ function LandingPage() {
                   className="form-control form-input"
                   id="name"
                   placeholder="Your name"
+                  value={contactForm.name}
+                  onChange={handleContactChange}
+                  required
                 />
               </div>
               <div className="form-group">
@@ -312,6 +357,9 @@ function LandingPage() {
                   className="form-control form-input"
                   id="email"
                   placeholder="your@email.com"
+                  value={contactForm.email}
+                  onChange={handleContactChange}
+                  required
                 />
               </div>
               <div className="form-group">
@@ -323,12 +371,25 @@ function LandingPage() {
                   id="message"
                   rows="4"
                   placeholder="Your message"
+                  value={contactForm.message}
+                  onChange={handleContactChange}
+                  required
                 ></textarea>
               </div>
-              <button className="btn-send-message neon-button">
-                Send Message <Send className="send-icon" />
+              {errorMsg && (
+                <div className="alert alert-danger py-2" role="alert">
+                  {errorMsg}
+                </div>
+              )}
+              {sent && (
+                <div className="alert alert-success py-2" role="alert">
+                  Thanks! Your message has been sent.
+                </div>
+              )}
+              <button type="submit" className="btn-send-message neon-button" disabled={sending}>
+                {sending ? "Sending..." : "Send Message"} <Send className="send-icon" />
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </section>

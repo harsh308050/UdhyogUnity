@@ -10,6 +10,7 @@ import { startConversationWithBusiness } from '../../Firebase/messageDb';
 import { addReview, hasUserReviewed } from '../../Firebase/reviewDb_new';
 import ReviewForm from '../miniComponents/ReviewForm';
 import './EnhancedUserBookings.css';
+import { color } from 'framer-motion';
 
 function EnhancedUserBookings() {
     const [bookings, setBookings] = useState([]);
@@ -561,7 +562,7 @@ function EnhancedUserBookings() {
                 <div className="modal-overlay">
                     <div className="modal-container">
                         <div className="modal-header">
-                            <h3>Request Reschedule</h3>
+                            <h3 style={{ color: "white" }}>Request Reschedule</h3>
                             <button
                                 className="close-btn"
                                 onClick={() => setShowRescheduleForm(false)}

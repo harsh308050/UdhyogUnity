@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Calendar, Clock, User, Phone, Mail, MapPin, Tag, Scissors, IndianRupee, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Phone, Mail, MapPin, Scissors, IndianRupee, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const BookingDetails = ({ booking, serviceName, onBack, onUpdateStatus }) => {
     if (!booking) return null;

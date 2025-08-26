@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     MapPin,
@@ -9,11 +9,9 @@ import {
     Star,
     ChevronLeft,
     Globe,
-    CheckCircle,
     Calendar,
     Package,
     Heart,
-    MessageSquare,
     Home,
     Bookmark,
     X,
@@ -413,10 +411,10 @@ const BusinessDetails = () => {
 
                             <div className="business-rating-info">
                                 <div className="business-stars">
-                                    {renderStars(business.rating || 4)}
+                                    {renderStars(business.rating || 0)}
                                 </div>
                                 <span className="business-review-count">
-                                    {business.rating || 4}/5 ({business.reviewCount || 0} reviews)
+                                    {business.rating || 0}/5 ({business.reviewCount || 0} reviews)
                                 </span>
                             </div>
                         </div>

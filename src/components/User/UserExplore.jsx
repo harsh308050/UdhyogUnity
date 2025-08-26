@@ -563,8 +563,6 @@ function UserExplore() {
                             // Give Firebase time to process the write, then navigate to messages
                             setTimeout(() => {
                                 alert(`Started conversation with ${business.businessName}! Check your messages.`);
-                                // Optional: Auto-navigate to messages page
-                                // window.location.href = '/messages';
                             }, 1500);
                         }}
                     />

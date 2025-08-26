@@ -399,14 +399,13 @@
 }
 
 .user-explore .btn-view {
-    flex: 1;
     padding: 0.75rem 1rem;
     background-color: var(--accent);
     color: #fff;
     text-decoration: none;
     border-radius: 6px;
     text-align: center;
-    font-weight: 500;
+    /* font-weight: 500; */
     transition: background-color 0.3s ease;
     margin-right: 0.75rem;
 }

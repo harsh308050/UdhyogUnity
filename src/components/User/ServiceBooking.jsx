@@ -157,8 +157,8 @@ const ServiceBooking = () => {
 
                     // Try path 1: Services/businessId/Active/serviceId
                     try {
-                        console.log(`Trying path 1: Services/${businessEmail}/Active/${serviceId}`);
-                        const serviceRef1 = doc(db, "Services", businessEmail, "Active", serviceId);
+                        console.log(`Trying path 1: Services/${businessId}/Active/${serviceId}`);
+                        const serviceRef1 = doc(db, "Services", businessId, "Active", serviceId);
                         const serviceDoc = await getDoc(serviceRef1);
                         if (serviceDoc.exists()) {
                             serviceData = {
@@ -172,11 +172,11 @@ const ServiceBooking = () => {
                     }
                 }
 
-                // Try path 2: Services/businessId/Inactive/serviceId (some services might be inactive)
+        // Try path 2: Services/businessId/Inactive/serviceId (some services might be inactive)
                 if (!serviceData) {
                     try {
-                        console.log(`Trying path 2: Services/${businessEmail}/Inactive/${serviceId}`);
-                        const serviceRef2 = doc(db, "Services", businessEmail, "Inactive", serviceId);
+            console.log(`Trying path 2: Services/${businessId}/Inactive/${serviceId}`);
+            const serviceRef2 = doc(db, "Services", businessId, "Inactive", serviceId);
                         const serviceDoc = await getDoc(serviceRef2);
                         if (serviceDoc.exists()) {
                             serviceData = {
