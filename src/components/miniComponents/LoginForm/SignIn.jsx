@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import UserProfileCompletionModal from "../UserProfileCompletionModal";
 
 function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisibility, handleFormSubmit, handleTabChange, handleGoogleSignIn, loading, currentUser, isSuccessfullyLoggedIn }) {
+    const navigate = useNavigate();
+
     // State for profile completion modal
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [profileData, setProfileData] = useState({
@@ -10,7 +12,10 @@ function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisi
         firstName: "",
         lastName: "",
         phone: "",
+        state: "",
+        stateName: "",
         city: "",
+        cityName: "",
         photoURL: ""
     });
     const [profileError, setProfileError] = useState("");
@@ -28,7 +33,10 @@ function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisi
                         firstName: userData.firstName || "",
                         lastName: userData.lastName || "",
                         phone: "",
+                        state: "",
+                        stateName: "",
                         city: "",
+                        cityName: "",
                         photoURL: userData.photoURL || ""
                     });
                     setShowProfileModal(true);
@@ -43,12 +51,17 @@ function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisi
     };
 
     // Handle profile completion submission
-    const handleProfileSubmit = (e) => {
+    const handleProfileSubmit = async (e) => {
         e.preventDefault();
 
         // Validate fields
-        if (!profileData.city.trim()) {
-            setProfileError("Please enter your city");
+        if (!profileData.state) {
+            setProfileError("Please select your state");
+            return;
+        }
+
+        if (!profileData.city) {
+            setProfileError("Please select your city");
             return;
         }
 
@@ -57,16 +70,25 @@ function SignIn({ signinForm, setSigninForm, passwordVisible, togglePasswordVisi
             return;
         }
 
-        // Call the profile completion handler
-        if (typeof handleGoogleSignIn === 'function') {
-            handleGoogleSignIn({
-                completeProfile: true,
-                profileData
-            });
-        }
+        try {
+            // Call the profile completion handler
+            if (typeof handleGoogleSignIn === 'function') {
+                const result = await handleGoogleSignIn({
+                    completeProfile: true,
+                    profileData
+                });
 
-        // Close the modal
-        setShowProfileModal(false);
+                // If successful, navigate to dashboard
+                if (result) {
+                    setShowProfileModal(false);
+                    navigate("/dashboard");
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error("Profile completion failed:", error);
+            setProfileError("Failed to complete profile. Please try again.");
+        }
     };
 
     return (

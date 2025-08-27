@@ -23,7 +23,7 @@ export const generateMonthlyCalendar = async (businessId, month) => {
         const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
 
         // Get all bookings for the month
-    // Note: keep calculations local without unused variables
+        // Note: keep calculations local without unused variables
 
         const bookings = await getBookingsByDateRange(businessId, firstDay, lastDay);
 

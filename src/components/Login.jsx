@@ -763,9 +763,10 @@ function Login() {
                                 }}>Complete Your Profile</h5>
                             </div>
                             <div className="modal-body" style={{ padding: '20px' }}>
-                                {/* State Dropdown */}
+
+                                {/* State Dropdown (required) */}
                                 <div className="mb-3">
-                                    <label className="form-label">State (optional)</label>
+                                    <label className="form-label">State <span className="text-danger">*</span></label>
                                     <div className="dropdown-container" ref={modalStateDropdownRef}>
                                         <div className="search-input-container">
                                             <input
@@ -778,6 +779,7 @@ function Login() {
                                                     setShowModalStateDropdown(true);
                                                 }}
                                                 onFocus={() => setShowModalStateDropdown(true)}
+                                                required
                                             />
                                             {modalStateSearchTerm && (
                                                 <span
@@ -819,9 +821,9 @@ function Login() {
                                     </div>
                                 </div>
 
-                                {/* City Dropdown */}
+                                {/* City Dropdown (required) */}
                                 <div className="mb-3">
-                                    <label className="form-label">City (optional)</label>
+                                    <label className="form-label">City <span className="text-danger">*</span></label>
                                     <div className="dropdown-container" ref={modalCityDropdownRef}>
                                         <div className="search-input-container">
                                             <input
@@ -835,6 +837,7 @@ function Login() {
                                                 }}
                                                 onFocus={() => signupForm.state && setShowModalCityDropdown(true)}
                                                 disabled={!signupForm.state}
+                                                required
                                             />
                                             {modalCitySearchTerm && (
                                                 <span
