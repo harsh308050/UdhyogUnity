@@ -5,6 +5,8 @@ import {
   Search,
   Grid3x3,
   Send,
+  List,
+  X,
 } from "react-bootstrap-icons";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -27,6 +29,9 @@ function LandingPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [hasAnimated, setHasAnimated] = useState(false);
 
@@ -120,6 +125,14 @@ function LandingPage() {
     setContactForm((prev) => ({ ...prev, [id]: value }));
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -157,11 +170,15 @@ function LandingPage() {
       <header className={`navbar-container container py-3 glass-panel `}>
         <nav className="d-flex justify-content-between align-items-center w-100">
           <div className="logo">UdhyogUnity</div>
+
+          {/* Desktop Navigation */}
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#about">About</a>
             <a href="#contact">Contact</a>
           </div>
+
+          {/* Desktop Auth Buttons */}
           <div className="auth-buttons d-flex gap-2">
             <button className="btn-get-started neon-button" onClick={handleFindServicesClick}>
               Find Services
@@ -182,7 +199,38 @@ function LandingPage() {
               </ul>
             </div>
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="mobile-menu-toggle d-md-none"
+            onClick={toggleMobileMenu}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <List size={24} />}
+          </button>
         </nav>
+
+        {/* Mobile Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+          <div className="mobile-menu-content">
+            <div className="mobile-nav-links">
+              <a href="#features" onClick={closeMobileMenu}>Features</a>
+              <a href="#about" onClick={closeMobileMenu}>About</a>
+              <a href="#contact" onClick={closeMobileMenu}>Contact</a>
+            </div>
+            <div className="mobile-auth-buttons">
+              <button className="btn-get-started neon-button w-100 mb-2" onClick={() => { handleFindServicesClick(); closeMobileMenu(); }}>
+                Find Services
+              </button>
+              <button className="btn-get-started neon-button2 w-100 mb-2" onClick={() => { handleBusinessLogin(); closeMobileMenu(); }}>
+                Business Login
+              </button>
+              <button className="btn-get-started neon-button w-100" onClick={() => { handleJoinAsBusiness(); closeMobileMenu(); }}>
+                Register Business
+              </button>
+            </div>
+          </div>
+        </div>
       </header>
 
       <section className="hero-section container text-center">
@@ -218,7 +266,7 @@ function LandingPage() {
         </p>
 
         <div className="row feature-cards">
-          <motion.div className="col-md-4" whileHover={{ scale: 1.05 }}>
+          <motion.div className="col-md-4 mb-4" whileHover={{ scale: 1.05 }}>
             <div className="feature-card">
               <div className="feature-icon business-icon">
                 <Building />
@@ -230,7 +278,7 @@ function LandingPage() {
               </p>
             </div>
           </motion.div>
-          <motion.div className="col-md-4" whileHover={{ scale: 1.05 }}>
+          <motion.div className="col-md-4 mb-4" whileHover={{ scale: 1.05 }}>
             <div className="feature-card">
               <div className="feature-icon search-icon">
                 <Search />
@@ -242,7 +290,7 @@ function LandingPage() {
               </p>
             </div>
           </motion.div>
-          <motion.div className="col-md-4" whileHover={{ scale: 1.05 }}>
+          <motion.div className="col-md-4 mb-4" whileHover={{ scale: 1.05 }}>
             <div className="feature-card">
               <div className="feature-icon categories-icon">
                 <Grid3x3 />
@@ -265,12 +313,12 @@ function LandingPage() {
         <p className="about-subtitle">
           UdhyogUnity is dedicated to connecting cities through local businesses. Our mission is to empower local businesses and build stronger communities through digital transformation.
         </p>
-        <div className="row about-content">
-          <div className="col-md-6">
+        <div className="row about-content align-items-center">
+          <div className="col-md-6 mb-4 mb-md-0">
             <img
               src={aboutUsImage}
               alt="About Us"
-              className="about-image"
+              className="about-image img-fluid"
             />
           </div>
           <div className="col-md-6">
@@ -288,25 +336,25 @@ function LandingPage() {
       >
         <div className="stats-container">
           <div className="row">
-            <div className="col-md-3 text-center">
+            <div className="col-6 col-md-3 text-center mb-3 mb-md-0">
               <div className="stat-number" ref={businessCountRef}>
                 0+
               </div>
               <div className="stat-label">Active Businesses</div>
             </div>
-            <div className="col-md-3 text-center">
+            <div className="col-6 col-md-3 text-center mb-3 mb-md-0">
               <div className="stat-number" ref={usersCountRef}>
                 0+
               </div>
               <div className="stat-label">Monthly Users</div>
             </div>
-            <div className="col-md-3 text-center">
+            <div className="col-6 col-md-3 text-center">
               <div className="stat-number" ref={citiesCountRef}>
                 0+
               </div>
               <div className="stat-label">Cities Covered</div>
             </div>
-            <div className="col-md-3 text-center">
+            <div className="col-6 col-md-3 text-center">
               <div className="stat-number" ref={satisfactionCountRef}>
                 0+
               </div>
@@ -328,9 +376,9 @@ function LandingPage() {
           you.
         </p>
 
-        <div className="row contact-container">
-          <div className="col-md-6">
-            <img src={contactUsImage} alt="Contactus" className="contact-img" />
+        <div className="row contact-container align-items-center">
+          <div className="col-md-6 mb-4 mb-md-0">
+            <img src={contactUsImage} alt="Contactus" className="contact-img img-fluid" />
           </div>
           <div className="col-md-6">
             <form className="contact-form" onSubmit={handleContactSubmit} noValidate>
