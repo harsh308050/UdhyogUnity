@@ -181,6 +181,21 @@ body.register-business-page {
     transition: width 0.5s ease;
 }
 
+
+#detailsConfirmed,
+#termsAgreed {
+    background: var(--success-color) !important;
+    color: #2A4FA8 !important;
+    border: 2px solid var(--success-color) !important;
+}
+
+
+#detailsConfirmed:checked,
+#termsAgreed:checked {
+    background: white !important;
+    color: #2A4FA8 !important;
+}
+
 .step-item {
     width: 40px;
     height: 40px;
