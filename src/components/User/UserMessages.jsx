@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Search, Phone, Video, MoreVertical, Paperclip, Smile, Plus, Check, Clock } from 'react-feather';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MessageSquare, Send, Search, Phone, Video, MoreVertical, Smile, Plus, Check, Clock, ArrowLeft } from 'react-feather';
 import './UserMessages.css';
 import { useAuth } from '../../context/AuthContext';
 import CallWindow from './CallWindow';
@@ -9,7 +9,6 @@ import {
     listenToMessages,
     sendMessage,
     markMessagesAsRead,
-    initializeConversation,
     searchConversations,
     getUnreadMessageCount,
     searchBusinessesForMessaging,
@@ -33,7 +32,10 @@ function UserMessages() {
     const [searchingBusinesses, setSearchingBusinesses] = useState(false);
     const [incomingCall, setIncomingCall] = useState(null);
     const [callNotification, setCallNotification] = useState(null);
+    const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const messagesEndRef = useRef(null);
+    const mobileMessagesEndRef = useRef(null);
     const unsubscribeConversations = useRef(null);
     const unsubscribeMessages = useRef(null);
     const unsubCalls = useRef(null);
@@ -44,6 +46,14 @@ function UserMessages() {
 
     useEffect(() => {
         console.log('🚀 UserMessages useEffect triggered');
+
+        // Check if device is mobile
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
 
         // Request notification permission
         requestNotificationPermission();
@@ -57,6 +67,7 @@ function UserMessages() {
         }
 
         return () => {
+            window.removeEventListener('resize', checkMobile);
             // Cleanup listeners
             if (unsubscribeConversations.current) {
                 unsubscribeConversations.current();
@@ -76,11 +87,16 @@ function UserMessages() {
                 callNotification.close();
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+        // Also scroll mobile messages if dialog is open
+        if (isMobileDialogOpen && mobileMessagesEndRef.current) {
+            mobileMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, isMobileDialogOpen]);
 
     useEffect(() => {
         if (selectedConversation && currentUser?.email) {
@@ -98,9 +114,10 @@ function UserMessages() {
                 unsubscribeMessages.current();
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedConversation, currentUser]);
 
-    const loadConversations = async () => {
+    const loadConversations = useCallback(async () => {
         if (!currentUser?.email) {
             console.log('❌ No current user email available');
             return;
@@ -124,7 +141,7 @@ function UserMessages() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser, selectedConversation]);
 
     const setupConversationsListener = () => {
         if (!currentUser?.email) {
@@ -353,6 +370,11 @@ function UserMessages() {
         console.log('🎯 Selecting conversation:', conversation.chatId);
         setSelectedConversation(conversation);
 
+        // On mobile, open the dialog
+        if (isMobile) {
+            setIsMobileDialogOpen(true);
+        }
+
         // Mark messages as read for this conversation
         if (currentUser?.email) {
             await markMessagesAsRead(
@@ -361,6 +383,12 @@ function UserMessages() {
                 currentUser.email
             );
         }
+    };
+
+    const handleCloseMobileDialog = () => {
+        setIsMobileDialogOpen(false);
+        // Optionally clear selection on mobile
+        // setSelectedConversation(null);
     };
 
     const handleSearch = async (searchValue) => {
@@ -487,77 +515,7 @@ function UserMessages() {
         }
     };
 
-    // Debug function to check what's in Firestore
-    const debugFirestore = async () => {
-        if (!currentUser?.email) return;
 
-        console.log('🔍 Starting Firestore debug for user:', currentUser.email);
-
-        try {
-            // Import necessary Firestore functions for debugging
-            const { collection, getDocs, query, where, orderBy } = await import('firebase/firestore');
-            const { db } = await import('../../Firebase/config');
-
-            // Try to get ALL conversations first
-            console.log('📋 Getting ALL conversations from Messages collection...');
-            const allConversationsRef = collection(db, "Messages");
-            const allSnapshot = await getDocs(allConversationsRef);
-
-            console.log(`📊 Total conversations in database: ${allSnapshot.size}`);
-            allSnapshot.docs.forEach(doc => {
-                const data = doc.data();
-                console.log(`📄 Conversation ${doc.id}:`, {
-                    customerId: data.customerId,
-                    businessId: data.businessId,
-                    customerName: data.customerName,
-                    businessName: data.businessName,
-                    lastMessage: data.lastMessage,
-                    lastTimestamp: data.lastTimestamp
-                });
-            });
-
-            // Now try the specific query for this user
-            console.log('🎯 Trying user-specific query...');
-
-            // First try simple query without orderBy
-            const simpleQuery = query(
-                allConversationsRef,
-                where("customerId", "==", currentUser.email)
-            );
-
-            const simpleSnapshot = await getDocs(simpleQuery);
-            console.log(`👤 Simple query results: ${simpleSnapshot.size} conversations`);
-
-            if (simpleSnapshot.size > 0) {
-                console.log('✅ Simple query works! Index might be missing for orderBy.');
-                console.log('🚨 CREATE FIRESTORE INDEX:');
-                console.log('Collection: Messages');
-                console.log('Fields: customerId (Ascending), lastTimestamp (Descending)');
-            }
-
-            // Now try with orderBy to check for index
-            try {
-                const userQuery = query(
-                    allConversationsRef,
-                    where("customerId", "==", currentUser.email),
-                    orderBy("lastTimestamp", "desc")
-                );
-
-                const userSnapshot = await getDocs(userQuery);
-                console.log(`👤 OrderBy query results: ${userSnapshot.size} conversations`);
-                console.log('✅ OrderBy query works! Index exists.');
-            } catch (indexError) {
-                console.error('❌ OrderBy query failed (index missing):', indexError);
-                console.log('🚨 FIRESTORE INDEX REQUIRED:');
-                console.log('Collection: Messages');
-                console.log('Fields: customerId (Ascending), lastTimestamp (Descending)');
-                console.log('👆 Create this index in Firebase Console > Firestore > Indexes');
-            }
-
-        } catch (error) {
-            console.error('❌ Debug error:', error);
-        }
-    };
 
     if (loading) {
         return (
@@ -572,7 +530,7 @@ function UserMessages() {
 
     return (
         <div className="user-messages">
-            <div className="messages-container">
+            <div className={`messages-container ${isMobile && isMobileDialogOpen ? 'mobile-dialog-active' : ''}`}>
                 {/* Conversations Sidebar */}
                 <div className="conversations-sidebar">
                     <div className="sidebar-header">
@@ -810,6 +768,102 @@ function UserMessages() {
                         callId={activeCall.callId}
                         onClose={handleCallEnd}
                     />
+                )}
+
+                {/* Mobile Chat Dialog */}
+                {isMobile && (
+                    <div className={`mobile-chat-dialog ${isMobileDialogOpen ? 'active' : ''}`}>
+                        {selectedConversation && (
+                            <>
+                                <div className="mobile-chat-header">
+                                    <button
+                                        className="mobile-back-btn"
+                                        onClick={handleCloseMobileDialog}
+                                    >
+                                        <ArrowLeft size={20} />
+                                    </button>
+                                    <div className="mobile-chat-info">
+                                        <div className="mobile-business-avatar">
+                                            {selectedConversation.businessName.charAt(0)}
+                                        </div>
+                                        <div className="mobile-business-details">
+                                            <h3>{selectedConversation.businessName}</h3>
+                                            <p>Business</p>
+                                        </div>
+                                    </div>
+                                    <div className="mobile-chat-actions">
+                                        <button
+                                            className="mobile-action-btn"
+                                            onClick={() => handleStartCall('voice')}
+                                            title="Voice Call"
+                                        >
+                                            <Phone size={18} />
+                                        </button>
+                                        <button
+                                            className="mobile-action-btn"
+                                            onClick={() => handleStartCall('video')}
+                                            title="Video Call"
+                                        >
+                                            <Video size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mobile-messages-area">
+                                    {messages.length > 0 ? (
+                                        messages.map(message => (
+                                            <div
+                                                key={message.id}
+                                                className={`mobile-message ${message.senderId === currentUser?.email ? 'sent' : 'received'}`}
+                                            >
+                                                <div className="mobile-message-content">
+                                                    <p>{message.text}</p>
+                                                    <div className="mobile-message-meta">
+                                                        <span className="message-time">
+                                                            {formatTime(message.timestamp)}
+                                                        </span>
+                                                        {message.senderId === currentUser?.email && renderMessageStatus(message)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="mobile-no-messages">
+                                            <MessageSquare size={48} />
+                                            <h3>Start the conversation</h3>
+                                            <p>Send a message to {selectedConversation.businessName}</p>
+                                        </div>
+                                    )}
+                                    <div ref={mobileMessagesEndRef} />
+                                </div>
+
+                                <div className="mobile-input-area">
+                                    <div className="mobile-input-container">
+                                        <div className="mobile-input-wrapper">
+                                            <textarea
+                                                value={newMessage}
+                                                onChange={(e) => setNewMessage(e.target.value)}
+                                                onKeyPress={handleKeyPress}
+                                                placeholder="Type a message..."
+                                                rows="1"
+                                                disabled={sendingMessage}
+                                            />
+                                            <button className="mobile-emoji-btn">
+                                                <Smile size={18} />
+                                            </button>
+                                        </div>
+                                        <button
+                                            className="mobile-send-btn"
+                                            onClick={handleSendMessage}
+                                            disabled={!newMessage.trim() || sendingMessage}
+                                        >
+                                            <Send size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 )}
 
                 {/* Incoming Call Popup */}

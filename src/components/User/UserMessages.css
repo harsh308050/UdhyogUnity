@@ -672,9 +672,14 @@
         width: 36px;
         height: 36px;
     }
+
+    .user-messages {
+        padding: 1rem 0;
+        height: calc(100vh - 100px);
+    }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 576px) and (max-width: 0px) {
     .messages-container {
         flex-direction: column;
         height: calc(100vh - 120px);
@@ -701,6 +706,15 @@
 
     .business-status {
         font-size: 0.8rem;
+    }
+
+    .conversations-list {
+        height: 100vh;
+    }
+
+    .user-messages {
+        padding: 1rem 0;
+        height: calc(100vh - 80px);
     }
 }
 
@@ -886,5 +900,333 @@
 
     .call-action-btn {
         width: 100%;
+    }
+}
+
+/* Mobile Chat Dialog Styles */
+.mobile-chat-dialog {
+    width: 86%;
+    position: fixed;
+    top: 0;
+    /* left: 0; */
+    right: 0;
+    bottom: 0;
+    background-color: #16213e;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+.mobile-chat-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1rem 1rem 0.3rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.mobile-back-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: none;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    /* margin-right: 0.75rem; */
+    transition: background-color 0.2s ease;
+}
+
+.mobile-back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-chat-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.mobile-business-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.mobile-business-details h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-business-details p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.mobile-chat-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.mobile-action-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: all 0.2s ease;
+}
+
+.mobile-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mobile-message {
+    display: flex;
+    margin-bottom: 0.25rem;
+}
+
+.mobile-message.sent {
+    justify-content: flex-end;
+}
+
+.mobile-message.received {
+    justify-content: flex-start;
+}
+
+.mobile-message-content {
+    max-width: 85%;
+    padding: 0.75rem 1rem;
+    border-radius: 18px;
+    position: relative;
+}
+
+.mobile-message.sent .mobile-message-content {
+    background-color: var(--accent);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.mobile-message.received .mobile-message-content {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    border-bottom-left-radius: 6px;
+}
+
+.mobile-message-content p {
+    margin: 0;
+    line-height: 1.4;
+    word-wrap: break-word;
+    font-size: 0.95rem;
+}
+
+.mobile-message-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.mobile-message.sent .mobile-message-meta {
+    justify-content: flex-end;
+}
+
+.mobile-message.received .mobile-message-meta {
+    justify-content: flex-start;
+}
+
+.mobile-input-area {
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--border-color);
+    position: sticky;
+    bottom: 0;
+}
+
+.mobile-input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.mobile-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+}
+
+.mobile-input-wrapper textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.4;
+    padding: 0.5rem 0;
+}
+
+.mobile-input-wrapper textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.mobile-emoji-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+    margin-left: 0.5rem;
+}
+
+.mobile-emoji-btn:hover {
+    color: var(--text-light);
+}
+
+.mobile-send-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background-color: var(--accent);
+    border-radius: 50%;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mobile-send-btn:hover:not(:disabled) {
+    background-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.mobile-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.mobile-no-messages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.mobile-no-messages svg {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+    font-size: 3rem;
+}
+
+.mobile-no-messages h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-light);
+    font-size: 1.2rem;
+}
+
+.mobile-no-messages p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* Show mobile dialog on mobile devices */
+@media (max-width: 768px) {
+    .mobile-chat-dialog.active {
+        display: flex;
+    }
+
+    /* Hide the regular chat area when mobile dialog is active */
+    .messages-container.mobile-dialog-active .chat-area {
+        display: none;
+    }
+
+    /* Make conversations sidebar full width on mobile when no dialog */
+    .messages-container:not(.mobile-dialog-active) .conversations-sidebar {
+        width: 100%;
+    }
+
+    /* Hide chat area completely on mobile when not in dialog */
+    .messages-container:not(.mobile-dialog-active) .chat-area {
+        display: none;
     }
 }
