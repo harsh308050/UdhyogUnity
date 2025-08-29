@@ -35,6 +35,13 @@ function UserExplore() {
     const [isLoadingStates, setIsLoadingStates] = useState(false);
     const [isLoadingCities, setIsLoadingCities] = useState(false);
 
+    // Mobile modal states
+    const [isMobile, setIsMobile] = useState(false);
+    const [showStateModal, setShowStateModal] = useState(false);
+    const [showCityModal, setShowCityModal] = useState(false);
+    const [modalStateSearchTerm, setModalStateSearchTerm] = useState('');
+    const [modalCitySearchTerm, setModalCitySearchTerm] = useState('');
+
     // Refs for clickaway detection
     const stateDropdownRef = useRef(null);
     const cityDropdownRef = useRef(null);
@@ -47,11 +54,21 @@ function UserExplore() {
         fetchStates();
         initializeUserLocation();
 
+        // Mobile detection
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 767);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
         // Add click event listener to close dropdowns when clicking outside
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
+            window.removeEventListener('resize', checkMobile);
             document.removeEventListener('mousedown', handleClickOutside);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Initialize user's location from their profile
@@ -138,6 +155,8 @@ function UserExplore() {
             fetchCities(stateCode);
         }
         setShowStateDropdown(false);
+        setShowStateModal(false);
+        setModalStateSearchTerm('');
     };
 
     // Handle city selection
@@ -150,23 +169,70 @@ function UserExplore() {
             setCitySearchTerm(cityName);
         }
         setShowCityDropdown(false);
+        setShowCityModal(false);
+        setModalCitySearchTerm(''); // Reset modal search term
+    };
+
+    // Close city modal
+    const closeCityModal = () => {
+        setShowCityModal(false);
+        setModalCitySearchTerm(''); // Reset search term when modal closes
+    };
+
+    // Close state modal  
+    const closeStateModal = () => {
+        setShowStateModal(false);
+        setModalStateSearchTerm(''); // Reset search term when modal closes
+    };
+
+    // Handle state dropdown/modal opening
+    const handleStateClick = () => {
+        if (isMobile) {
+            setShowStateModal(true);
+            setModalStateSearchTerm(''); // Reset search term to show all states
+        } else {
+            setShowStateDropdown(!showStateDropdown);
+            setShowCityDropdown(false);
+        }
+    };
+
+    // Handle city dropdown/modal opening
+    const handleCityClick = () => {
+        if (selectedState === 'all') return;
+
+        if (isMobile) {
+            // Ensure cities are loaded for the selected state
+            if (cities.length === 0 && selectedState !== 'all') {
+                console.log('No cities loaded, fetching cities for state:', selectedState);
+                fetchCities(selectedState);
+            }
+            setShowCityModal(true);
+            setModalCitySearchTerm(''); // Reset search term to show all cities
+            console.log('Opening city modal, cities count:', cities.length);
+        } else {
+            setShowCityDropdown(!showCityDropdown);
+            setShowStateDropdown(false);
+        }
     };
 
     // Filter states based on search term
     const filteredStatesList = states.filter(state =>
-        state.name.toLowerCase().includes(stateSearchTerm.toLowerCase())
+        state.name.toLowerCase().includes((isMobile && showStateModal ? modalStateSearchTerm : stateSearchTerm).toLowerCase())
     );
 
     // Filter cities based on search term
-    const filteredCitiesList = cities.filter(city =>
-        city.name.toLowerCase().includes(citySearchTerm.toLowerCase())
-    );
+    const filteredCitiesList = cities.filter(city => {
+        const searchTerm = (isMobile && showCityModal ? modalCitySearchTerm : citySearchTerm).toLowerCase();
+        const result = city.name.toLowerCase().includes(searchTerm);
+        return result;
+    });
 
     useEffect(() => {
         fetchData();
         if (currentUser) {
             loadUserFavorites();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCategory, activeTab, currentUser]);
 
     useEffect(() => {
@@ -180,6 +246,7 @@ function UserExplore() {
         }, 500);
 
         return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchTerm]);
 
     const loadUserFavorites = async () => {
@@ -712,17 +779,14 @@ function UserExplore() {
                         <div className="filter-dropdown" ref={stateDropdownRef}>
                             <div
                                 className="filter-select"
-                                onClick={() => {
-                                    setShowStateDropdown(!showStateDropdown);
-                                    setShowCityDropdown(false);
-                                }}
+                                onClick={handleStateClick}
                             >
                                 <MapPin size={16} />
                                 <span>{stateSearchTerm || 'All States'}</span>
                                 <ChevronDown size={16} className={showStateDropdown ? 'rotated' : ''} />
                             </div>
 
-                            {showStateDropdown && (
+                            {!isMobile && showStateDropdown && (
                                 <div className="dropdown-menu">
                                     <div className="dropdown-search">
                                         <Search size={16} />
@@ -765,11 +829,7 @@ function UserExplore() {
                         <div className="filter-dropdown" ref={cityDropdownRef}>
                             <div
                                 className="filter-select"
-                                onClick={() => {
-                                    if (selectedState === 'all') return;
-                                    setShowCityDropdown(!showCityDropdown);
-                                    setShowStateDropdown(false);
-                                }}
+                                onClick={handleCityClick}
                                 style={{
                                     opacity: selectedState === 'all' ? 0.5 : 1,
                                     cursor: selectedState === 'all' ? 'not-allowed' : 'pointer'
@@ -780,7 +840,7 @@ function UserExplore() {
                                 <ChevronDown size={16} className={showCityDropdown ? 'rotated' : ''} />
                             </div>
 
-                            {showCityDropdown && selectedState !== 'all' && (
+                            {!isMobile && showCityDropdown && selectedState !== 'all' && (
                                 <div className="dropdown-menu">
                                     <div className="dropdown-search">
                                         <Search size={16} />
@@ -879,13 +939,14 @@ function UserExplore() {
                                 {activeTab === 'businesses' && 'Businesses'}
                                 {activeTab === 'products' && 'Products'}
                                 {activeTab === 'services' && 'Services'}
-                                <span className="count">
-                                    ({
-                                        activeTab === 'businesses' ? filteredBusinesses.length :
-                                            activeTab === 'products' ? filteredProducts.length :
-                                                filteredServices.length
-                                    })
-                                </span>
+
+                            </h2>
+                            <h2 className="count">
+                                ({
+                                    activeTab === 'businesses' ? filteredBusinesses.length :
+                                        activeTab === 'products' ? filteredProducts.length :
+                                            filteredServices.length
+                                })
                             </h2>
 
                         </div>
@@ -959,6 +1020,110 @@ function UserExplore() {
                                     // You could navigate to the bookings tab or show a success message
                                 }}
                             />
+                        )}
+
+                        {/* Mobile State Modal */}
+                        {isMobile && showStateModal && (
+                            <div className="mobile-modal-overlay" onClick={closeStateModal}>
+                                <div className="mobile-modal" onClick={(e) => e.stopPropagation()}>
+                                    <div className="mobile-modal-header">
+                                        <h3>Select State</h3>
+                                        <button
+                                            className="mobile-modal-close"
+                                            onClick={closeStateModal}
+                                        >
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="mobile-modal-search">
+                                        <Search size={16} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search states..."
+                                            value={modalStateSearchTerm}
+                                            onChange={(e) => setModalStateSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="mobile-modal-options">
+                                        <div
+                                            className={`mobile-modal-option ${selectedState === 'all' ? 'selected' : ''}`}
+                                            onClick={() => handleStateSelect('all', 'All States')}
+                                        >
+                                            All States
+                                        </div>
+
+                                        {isLoadingStates ? (
+                                            <div className="mobile-modal-loading">Loading states...</div>
+                                        ) : (
+                                            filteredStatesList.map(state => (
+                                                <div
+                                                    key={state.iso2}
+                                                    className={`mobile-modal-option ${selectedState === state.iso2 ? 'selected' : ''}`}
+                                                    onClick={() => handleStateSelect(state.iso2, state.name)}
+                                                >
+                                                    {state.name}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Mobile City Modal */}
+                        {isMobile && showCityModal && selectedState !== 'all' && (
+                            <div className="mobile-modal-overlay" onClick={closeCityModal}>
+                                <div className="mobile-modal" onClick={(e) => e.stopPropagation()}>
+                                    <div className="mobile-modal-header">
+                                        <h3>Select City</h3>
+                                        <button
+                                            className="mobile-modal-close"
+                                            onClick={closeCityModal}
+                                        >
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="mobile-modal-search">
+                                        <Search size={16} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search cities..."
+                                            value={modalCitySearchTerm}
+                                            onChange={(e) => setModalCitySearchTerm(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="mobile-modal-options">
+                                        <div
+                                            className={`mobile-modal-option ${selectedCity === 'all' ? 'selected' : ''}`}
+                                            onClick={() => handleCitySelect('all', 'All Cities')}
+                                        >
+                                            All Cities
+                                        </div>
+
+                                        {isLoadingCities ? (
+                                            <div className="mobile-modal-loading">Loading cities...</div>
+                                        ) : filteredCitiesList.length === 0 ? (
+                                            <div className="mobile-modal-loading">
+                                                {cities.length === 0 ? 'No cities available' : 'No cities match your search'}
+                                            </div>
+                                        ) : (
+                                            filteredCitiesList.map(city => (
+                                                <div
+                                                    key={city.id}
+                                                    className={`mobile-modal-option ${selectedCity === city.id ? 'selected' : ''}`}
+                                                    onClick={() => handleCitySelect(city.id, city.name)}
+                                                >
+                                                    {city.name}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </>
                 )}
