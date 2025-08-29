@@ -1,6 +1,6 @@
 /* Business Messages - Exact User Module Style with Business Theme Scoping */
 .business-dashboard-theme .business-user-messages {
-    padding: 1rem 0;
+    padding: 1rem;
     height: calc(100vh - 140px);
 }
 
@@ -718,16 +718,21 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .business-dashboard-theme .business-messages-container {
-        flex-direction: column;
-        height: calc(100vh - 120px);
-    }
 
     .business-dashboard-theme .business-conversations-sidebar {
         width: 100%;
-        height: 40%;
+        height: 100%;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .business-dashboard-theme .business-conversations-list {
+        flex: 1;
+        overflow-y: auto;
+        height: auto;
+        min-height: 0;
     }
 
     .business-dashboard-theme .business-chat-area {
@@ -746,9 +751,20 @@
         width: 36px;
         height: 36px;
     }
+
+    /* Hide chat area completely on mobile when not in dialog */
+    .business-dashboard-theme .business-messages-container:not(.mobile-dialog-active) .business-chat-area {
+        display: none;
+    }
+
+    /* Make conversations sidebar full width on mobile when no dialog */
+    .business-dashboard-theme .business-messages-container:not(.mobile-dialog-active) .business-conversations-sidebar {
+        width: 100%;
+        height: 100%;
+    }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 576px) and (max-width: 0px) {
     .business-dashboard-theme .business-conversations-sidebar {
         height: 35%;
     }
@@ -759,5 +775,354 @@
 
     .business-dashboard-theme .business-customer-details h3 {
         font-size: 1rem;
+    }
+
+    .business-dashboard-theme .business-customer-details p {
+        font-size: 0.8rem;
+    }
+
+    .business-dashboard-theme .business-conversations-list {
+        height: 100vh;
+    }
+
+    .user-messages {
+        padding: 1rem 0;
+        height: calc(100vh - 80px);
+    }
+}
+
+/* Mobile Chat Dialog Styles */
+.business-dashboard-theme .business-mobile-chat-dialog {
+    width: 86%;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #16213e;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+.business-dashboard-theme .business-mobile-chat-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1rem 1rem 0.3rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--business-border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.business-dashboard-theme .business-mobile-back-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: none;
+    color: var(--business-text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.business-dashboard-theme .business-mobile-back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.business-dashboard-theme .business-mobile-chat-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.business-dashboard-theme .business-mobile-customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--business-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.business-dashboard-theme .business-mobile-customer-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.business-dashboard-theme .business-mobile-customer-details h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--business-text-light);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.business-dashboard-theme .business-mobile-customer-details p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--business-text-muted);
+}
+
+.business-dashboard-theme .business-mobile-chat-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+}
+
+.business-dashboard-theme .business-mobile-action-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--business-border-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--business-text-light);
+    transition: all 0.2s ease;
+}
+
+.business-dashboard-theme .business-mobile-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.business-dashboard-theme .business-mobile-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.business-dashboard-theme .business-mobile-message {
+    display: flex;
+    margin-bottom: 0.25rem;
+}
+
+.business-dashboard-theme .business-mobile-message.sent {
+    justify-content: flex-end;
+}
+
+.business-dashboard-theme .business-mobile-message.received {
+    justify-content: flex-start;
+}
+
+.business-dashboard-theme .business-mobile-message-content {
+    max-width: 85%;
+    padding: 0.75rem 1rem;
+    border-radius: 18px;
+    position: relative;
+}
+
+.business-dashboard-theme .business-mobile-message.sent .business-mobile-message-content {
+    background-color: var(--business-accent);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.business-dashboard-theme .business-mobile-message.received .business-mobile-message-content {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--business-text-light);
+    border-bottom-left-radius: 6px;
+}
+
+.business-dashboard-theme .business-mobile-message-content p {
+    margin: 0;
+    line-height: 1.4;
+    word-wrap: break-word;
+    font-size: 0.95rem;
+}
+
+.business-dashboard-theme .business-mobile-message-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.business-dashboard-theme .business-mobile-message.sent .business-mobile-message-meta {
+    justify-content: flex-end;
+}
+
+.business-dashboard-theme .business-mobile-message.received .business-mobile-message-meta {
+    justify-content: flex-start;
+}
+
+.business-dashboard-theme .business-mobile-input-area {
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--business-border-color);
+    position: sticky;
+    bottom: 0;
+}
+
+.business-dashboard-theme .business-mobile-input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.business-dashboard-theme .business-mobile-input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--business-border-color);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+}
+
+.business-dashboard-theme .business-mobile-input-wrapper textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--business-text-light);
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.4;
+    padding: 0.5rem 0;
+}
+
+.business-dashboard-theme .business-mobile-input-wrapper textarea::placeholder {
+    color: var(--business-text-muted);
+}
+
+.business-dashboard-theme .business-mobile-emoji-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--business-text-muted);
+    transition: color 0.2s ease;
+    margin-left: 0.5rem;
+}
+
+.business-dashboard-theme .business-mobile-emoji-btn:hover {
+    color: var(--business-text-light);
+}
+
+.business-dashboard-theme .business-mobile-send-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background-color: var(--business-accent);
+    border-radius: 50%;
+    color: var(--business-text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.business-dashboard-theme .business-mobile-send-btn:hover:not(:disabled) {
+    background-color: var(--business-primary);
+    transform: scale(1.05);
+}
+
+.business-dashboard-theme .business-mobile-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.business-dashboard-theme .business-mobile-no-messages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--business-text-muted);
+    flex: 1;
+}
+
+.business-dashboard-theme .business-mobile-no-messages svg {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+    font-size: 3rem;
+}
+
+.business-dashboard-theme .business-mobile-no-messages h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--business-text-light);
+    font-size: 1.2rem;
+}
+
+.business-dashboard-theme .business-mobile-no-messages p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* Show mobile dialog on mobile devices */
+@media (max-width: 768px) {
+    .business-dashboard-theme .business-mobile-chat-dialog.active {
+        display: flex;
+    }
+
+    /* Hide the regular chat area when mobile dialog is active */
+    .business-dashboard-theme .business-messages-container.mobile-dialog-active .business-chat-area {
+        display: none;
+    }
+
+    /* Ensure conversations list takes full available space */
+    .business-dashboard-theme .business-conversations-list {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
+
+    /* Remove conflicting height constraints */
+    .business-dashboard-theme .business-conversations-sidebar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 }

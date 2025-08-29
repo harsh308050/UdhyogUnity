@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Search, Phone, Video, MoreVertical, Paperclip, Smile } from 'react-feather';
+import { MessageSquare, Send, Search, Phone, Video, MoreVertical, Paperclip, Smile, ArrowLeft } from 'react-feather';
 import './BusinessMessages.css';
 import './BusinessMessagesCalls.css';
 import { getCurrentBusinessEmail } from '../../../Firebase/getBusinessData';
@@ -29,7 +29,10 @@ function BusinessMessages() {
     const [incomingCall, setIncomingCall] = useState(null);
     const [activeCall, setActiveCall] = useState(null);
     const [callNotification, setCallNotification] = useState(null);
+    const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const messagesEndRef = useRef(null);
+    const mobileMessagesEndRef = useRef(null);
     const unsubCalls = useRef(null);
     const unsubscribeConversations = useRef(null);
     const unsubscribeMessages = useRef(null);
@@ -37,6 +40,14 @@ function BusinessMessages() {
 
     useEffect(() => {
         console.log('🚀 BusinessMessages useEffect triggered');
+
+        // Check if device is mobile
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
 
         // Request notification permission
         requestNotificationPermission();
@@ -78,6 +89,7 @@ function BusinessMessages() {
         }
 
         return () => {
+            window.removeEventListener('resize', checkMobile);
             // Cleanup all listeners
             unsubCalls.current && unsubCalls.current();
             if (unsubscribeConversations.current) {
@@ -98,7 +110,11 @@ function BusinessMessages() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+        // Also scroll mobile messages if dialog is open
+        if (isMobileDialogOpen && mobileMessagesEndRef.current) {
+            mobileMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, isMobileDialogOpen]);
 
     useEffect(() => {
         if (selectedConversation && businessEmail) {
@@ -245,6 +261,11 @@ function BusinessMessages() {
         console.log('🎯 Selecting conversation:', conversation.chatId);
         setSelectedConversation(conversation);
 
+        // On mobile, open the dialog
+        if (isMobile) {
+            setIsMobileDialogOpen(true);
+        }
+
         // Mark messages as read for this conversation
         if (businessEmail) {
             await markMessagesAsRead(
@@ -253,6 +274,12 @@ function BusinessMessages() {
                 businessEmail
             );
         }
+    };
+
+    const handleCloseMobileDialog = () => {
+        setIsMobileDialogOpen(false);
+        // Optionally clear selection on mobile
+        // setSelectedConversation(null);
     };
 
     const handleSearch = async (searchValue) => {
@@ -386,7 +413,7 @@ function BusinessMessages() {
 
     return (
         <div className="business-dashboard-theme business-user-messages">
-            <div className="business-messages-container">
+            <div className={`business-messages-container ${isMobile && isMobileDialogOpen ? 'mobile-dialog-active' : ''}`}>
                 {/* Conversations Sidebar */}
                 <div className="business-conversations-sidebar">
                     <div className="business-sidebar-header">
@@ -592,6 +619,101 @@ function BusinessMessages() {
                         </div>
                     )}
                 </div>
+
+                {/* Mobile Chat Dialog */}
+                {isMobile && (
+                    <div className={`business-mobile-chat-dialog ${isMobileDialogOpen ? 'active' : ''}`}>
+                        {selectedConversation && (
+                            <>
+                                <div className="business-mobile-chat-header">
+                                    <button
+                                        className="business-mobile-back-btn"
+                                        onClick={handleCloseMobileDialog}
+                                    >
+                                        <ArrowLeft size={20} />
+                                    </button>
+                                    <div className="business-mobile-chat-info">
+                                        <div className="business-mobile-customer-avatar">
+                                            {(selectedConversation.customerName || 'C').charAt(0)}
+                                        </div>
+                                        <div className="business-mobile-customer-details">
+                                            <h3>{selectedConversation.customerName || 'Unknown Customer'}</h3>
+                                            <p>Customer</p>
+                                        </div>
+                                    </div>
+                                    <div className="business-mobile-chat-actions">
+                                        <button
+                                            className="business-mobile-action-btn"
+                                            onClick={() => handleStartCall('voice')}
+                                            title="Voice Call"
+                                        >
+                                            <Phone size={18} />
+                                        </button>
+                                        <button
+                                            className="business-mobile-action-btn"
+                                            onClick={() => handleStartCall('video')}
+                                            title="Video Call"
+                                        >
+                                            <Video size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="business-mobile-messages-area">
+                                    {messages.length > 0 ? (
+                                        messages.map(message => (
+                                            <div
+                                                key={message.id}
+                                                className={`business-mobile-message ${message.senderId === businessEmail ? 'sent' : 'received'}`}
+                                            >
+                                                <div className="business-mobile-message-content">
+                                                    <p>{message.text}</p>
+                                                    <div className="business-mobile-message-meta">
+                                                        <span className="business-message-time">
+                                                            {formatTime(message.timestamp)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="business-mobile-no-messages">
+                                            <MessageSquare size={48} />
+                                            <h3>Start the conversation</h3>
+                                            <p>Send a message to {selectedConversation.customerName || 'this customer'}</p>
+                                        </div>
+                                    )}
+                                    <div ref={mobileMessagesEndRef} />
+                                </div>
+
+                                <div className="business-mobile-input-area">
+                                    <div className="business-mobile-input-container">
+                                        <div className="business-mobile-input-wrapper">
+                                            <textarea
+                                                value={newMessage}
+                                                onChange={(e) => setNewMessage(e.target.value)}
+                                                onKeyPress={handleKeyPress}
+                                                placeholder="Type a message..."
+                                                rows="1"
+                                                disabled={sendingMessage}
+                                            />
+                                            <button className="business-mobile-emoji-btn">
+                                                <Smile size={18} />
+                                            </button>
+                                        </div>
+                                        <button
+                                            className="business-mobile-send-btn"
+                                            onClick={handleSendMessage}
+                                            disabled={!newMessage.trim() || sendingMessage}
+                                        >
+                                            <Send size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

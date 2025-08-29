@@ -129,7 +129,7 @@ function OTPVerification({
                         ) : (
                             <>
                                 <i className="fas fa-check me-1"></i>
-                                Verify OTP
+                                Verify
                             </>
                         )}
                     </button>

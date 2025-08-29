@@ -191,17 +191,17 @@ function BusinessDashboard() {
                     </div>
                 );
             case 'products':
-                return <ProductManagement />;
+                return <ProductManagement businessData={businessData} />;
             case 'services':
-                return <ServiceManagement />;
+                return <ServiceManagement businessData={businessData} />;
             case 'bookings':
-                return <EnhancedBookingManagement />;
+                return <EnhancedBookingManagement businessData={businessData} />;
             case 'orders':
-                return <OrdersManagement />;
+                return <OrdersManagement businessData={businessData} />;
             case 'messages':
                 return <BusinessMessages />;
             case 'settings':
-                return <SettingsManagement />;
+                return <SettingsManagement businessData={businessData} />;
             default:
                 return (
                     <div className="dashboard-content">

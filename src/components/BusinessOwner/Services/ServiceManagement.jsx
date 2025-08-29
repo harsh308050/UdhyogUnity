@@ -20,6 +20,7 @@ const ServiceManagement = ({ businessData }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     const navigate = useNavigate();
 
@@ -27,6 +28,25 @@ const ServiceManagement = ({ businessData }) => {
     useEffect(() => {
         fetchServices();
     }, [businessData]);
+
+    // Mobile detection effect
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth <= 768;
+            setIsMobile(mobile);
+            // Force list view on mobile for better UX
+            if (mobile && viewMode === 'grid') {
+                setViewMode('list');
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Set initial state
+        handleResize();
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, [viewMode]);
 
     // Fetch services from Firestore
     const fetchServices = async () => {
@@ -185,22 +205,24 @@ const ServiceManagement = ({ businessData }) => {
                             ))}
                         </select>
                     </div>
-                    <div className="view-toggle">
-                        <button
-                            className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                            onClick={() => setViewMode('grid')}
-                            title="Grid View"
-                        >
-                            <Grid size={18} />
-                        </button>
-                        <button
-                            className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-                            onClick={() => setViewMode('list')}
-                            title="List View"
-                        >
-                            <List size={18} />
-                        </button>
-                    </div>
+                    {!isMobile && (
+                        <div className="view-toggle">
+                            <button
+                                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                                onClick={() => setViewMode('grid')}
+                                title="Grid View"
+                            >
+                                <Grid size={18} />
+                            </button>
+                            <button
+                                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                                onClick={() => setViewMode('list')}
+                                title="List View"
+                            >
+                                <List size={18} />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {loading ? (
@@ -231,6 +253,36 @@ const ServiceManagement = ({ businessData }) => {
                             </button>
                         </div>
                     </div>
+                ) : (isMobile || viewMode === 'list') ? (
+                    <div className="products-list">
+                        {!isMobile && (
+                            <div className="list-header">
+                                <div className="list-cell">Image</div>
+                                <div className="list-cell">Service Name</div>
+                                <div className="list-cell">Category</div>
+                                <div className="list-cell">Duration</div>
+                                <div className="list-cell">Price</div>
+                                <div className="list-cell">Status</div>
+                                <div className="list-cell">Actions</div>
+                            </div>
+                        )}
+                        {filteredServices.map(service => (
+                            <ServiceListItem
+                                key={service.id}
+                                service={service}
+                                isMobile={isMobile}
+                                onEdit={() => {
+                                    setSelectedService(service);
+                                    setView('edit');
+                                }}
+                                onDelete={() => setConfirmDelete(service)}
+                                onView={() => {
+                                    setSelectedService(service);
+                                    setView('view');
+                                }}
+                            />
+                        ))}
+                    </div>
                 ) : viewMode === 'grid' ? (
                     <div className="products-grid">
                         {filteredServices.map(service => (
@@ -251,19 +303,22 @@ const ServiceManagement = ({ businessData }) => {
                     </div>
                 ) : (
                     <div className="products-list">
-                        <div className="list-header">
-                            <div className="list-cell">Image</div>
-                            <div className="list-cell">Service Name</div>
-                            <div className="list-cell">Category</div>
-                            <div className="list-cell">Duration</div>
-                            <div className="list-cell">Price</div>
-                            <div className="list-cell">Status</div>
-                            <div className="list-cell">Actions</div>
-                        </div>
+                        {!isMobile && (
+                            <div className="list-header">
+                                <div className="list-cell">Image</div>
+                                <div className="list-cell">Service Name</div>
+                                <div className="list-cell">Category</div>
+                                <div className="list-cell">Duration</div>
+                                <div className="list-cell">Price</div>
+                                <div className="list-cell">Status</div>
+                                <div className="list-cell">Actions</div>
+                            </div>
+                        )}
                         {filteredServices.map(service => (
                             <ServiceListItem
                                 key={service.id}
                                 service={service}
+                                isMobile={isMobile}
                                 onEdit={() => {
                                     setSelectedService(service);
                                     setView('edit');
@@ -458,7 +513,7 @@ const ServiceCard = ({ service, onEdit, onDelete, onView }) => {
 };
 
 // Service List Item Component
-const ServiceListItem = ({ service, onEdit, onDelete, onView }) => {
+const ServiceListItem = ({ service, onEdit, onDelete, onView, isMobile = false }) => {
     // Get the first image as main display image
     const displayImage = service.images && service.images.length > 0
         ? service.images[0].preview || service.images[0].url
@@ -477,6 +532,52 @@ const ServiceListItem = ({ service, onEdit, onDelete, onView }) => {
         const minutes = duration % 60;
         return minutes > 0 ? `${hours} hr ${minutes} min` : `${hours} hr`;
     };
+
+    if (isMobile) {
+        return (
+            <div className="mobile-service-card">
+                <div className="mobile-service-main">
+                    <img src={displayImage} alt={service.name} className="mobile-service-image" />
+                    <div className="mobile-service-info">
+                        <h3 className="mobile-service-name">{service.name}</h3>
+                        <p className="mobile-service-category">{service.category || 'Uncategorized'}</p>
+                        <div className="mobile-service-duration">
+                            <Clock size={14} />
+                            <span>{formatDuration(service.duration)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="mobile-service-details">
+                    <div className="mobile-service-price">
+                        {service.discountedPrice ? (
+                            <>
+                                <span className="mobile-original-price">{formatPrice(service.price)}</span>
+                                <span className="mobile-discounted-price">{formatPrice(service.discountedPrice)}</span>
+                            </>
+                        ) : (
+                            <span className="mobile-regular-price">{formatPrice(service.price)}</span>
+                        )}
+                    </div>
+                    <div className="mobile-service-status">
+                        <span className={`status-badge ${service.isActive ? 'active' : 'inactive'}`}>
+                            {service.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                </div>
+                <div className="mobile-service-actions">
+                    <button className="mobile-action-button view-button" onClick={onView} title="View Service">
+                        <Eye size={16} />
+                    </button>
+                    <button className="mobile-action-button edit-button" onClick={onEdit} title="Edit Service">
+                        <Edit size={16} />
+                    </button>
+                    <button className="mobile-action-button delete-button" onClick={onDelete} title="Delete Service">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="product-list-item">

@@ -729,24 +729,377 @@
 
 @media (max-width: 768px) {
 
-    .list-header,
-    .product-list-item {
-        grid-template-columns: 80px 2fr 1fr 120px;
+    /* Container adjustments */
+    .products-container {
+        padding: 0.5rem;
     }
 
-    .list-cell.product-stock-cell,
-    .list-cell.product-status-cell {
-        display: none;
+    .product-form-container {
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
 
+    /* Header adjustments */
+    .products-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .products-title {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .header-actions {
+        justify-content: center;
+    }
+
+    /* Filters on mobile */
     .product-filters {
         flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
     }
 
     .search-filter,
     .category-filter {
         width: 100%;
         flex: none;
+    }
+
+    .search-filter .input-group {
+        width: 100%;
+    }
+
+    .search-filter .form-control {
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+
+    .category-filter .form-select {
+        font-size: 1rem;
+        padding: 0.75rem;
+        width: 100%;
+    }
+
+    .view-controls {
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .view-toggle {
+        display: none;
+        /* Hide view toggle on mobile since we force list view */
+    }
+
+    /* Service Management Mobile Specific */
+    .product-list-container {
+        padding: 0.5rem;
+    }
+
+    .product-list-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+        margin-bottom: 1.5rem;
+    }
+
+    .product-list-header h2 {
+        font-size: 1.5rem;
+        text-align: center;
+        margin: 0;
+    }
+
+    .add-product-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    /* Mobile service container */
+    .products-list {
+        gap: 0;
+    }
+
+    .list-header {
+        display: none;
+        /* Hide list header on mobile */
+    }
+
+    /* Grid view on mobile */
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0.5rem;
+    }
+
+    .product-card,
+    .service-card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    .product-card-header,
+    .service-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .product-image,
+    .service-image {
+        width: 100%;
+        height: 200px;
+        margin-bottom: 1rem;
+    }
+
+    .product-actions,
+    .service-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .btn-icon {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem;
+    }
+
+    /* List view on mobile */
+    .list-header,
+    .product-list-item {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .list-header {
+        display: none;
+        /* Hide header on mobile */
+    }
+
+    .product-list-item,
+    .service-list-item {
+        display: block;
+        background: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .list-cell {
+        display: block;
+        border: none;
+        padding: 0.25rem 0;
+        grid-column: 1;
+        width: 100%;
+    }
+
+    .list-cell:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--dark-text-secondary);
+        margin-right: 0.5rem;
+    }
+
+    .list-cell.product-image-cell,
+    .list-cell.service-image-cell {
+        margin-bottom: 0.75rem;
+    }
+
+    .list-cell.product-image-cell:before,
+    .list-cell.service-image-cell:before {
+        display: none;
+    }
+
+    .list-cell.product-actions-cell,
+    .list-cell.service-actions-cell {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--dark-border);
+    }
+
+    .list-cell.product-actions-cell:before,
+    .list-cell.service-actions-cell:before {
+        display: none;
+    }
+
+    /* Hide certain columns on mobile */
+    .list-cell.product-stock-cell,
+    .list-cell.product-status-cell,
+    .list-cell.product-category-cell,
+    .list-cell.service-category-cell,
+    .list-cell.service-duration-cell {
+        display: none;
+    }
+
+    /* Mobile-specific service/product info layout */
+    .product-info-mobile,
+    .service-info-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .mobile-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+    }
+
+    .mobile-info-label {
+        font-weight: 600;
+        color: var(--dark-text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .mobile-info-value {
+        color: var(--dark-text);
+        font-size: 0.875rem;
+    }
+
+    /* Form adjustments on mobile */
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-group {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-secondary {
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+    /* Image upload on mobile */
+    .image-upload-area {
+        min-height: 120px;
+    }
+
+    .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        margin: 1rem;
+        max-height: calc(100vh - 2rem);
+        overflow-y: auto;
+    }
+
+    /* Service specific mobile styles */
+    .service-card .service-price {
+        font-size: 1.25rem;
+        margin: 0.5rem 0;
+    }
+
+    .service-card .service-duration {
+        font-size: 0.875rem;
+        color: var(--dark-text-secondary);
+    }
+
+    .service-card .service-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin: 0.75rem 0;
+    }
+
+    /* Stats/info cards on mobile */
+    .info-card,
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .info-icon,
+    .stat-icon {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .products-container {
+        padding: 0.25rem;
+    }
+
+    .product-form-container {
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .products-title {
+        font-size: 1.25rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .product-card,
+    .service-card {
+        padding: 0.75rem;
+    }
+
+    .product-image,
+    .service-image {
+        height: 180px;
+    }
+
+    .image-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+
+    .modal-content {
+        margin: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .mobile-info-label,
+    .mobile-info-value {
+        font-size: 0.8rem;
+    }
+
+    .service-card .service-price {
+        font-size: 1.1rem;
+    }
+
+    .btn-icon {
+        padding: 0.6rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -970,4 +1323,142 @@ label {
 
 .product-reviewcount-small {
     color: var(--dark-text-secondary);
+}
+
+/* Mobile Service Cards */
+.mobile-service-card {
+    background: var(--dark-card-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--dark-shadow);
+    border: 1px solid var(--dark-border);
+}
+
+.mobile-service-main {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.mobile-service-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.mobile-service-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-service-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+}
+
+.mobile-service-category {
+    font-size: 0.9rem;
+    color: var(--dark-text-secondary);
+    margin: 0 0 0.5rem 0;
+}
+
+.mobile-service-duration {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--dark-text-secondary);
+}
+
+.mobile-service-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--dark-border);
+}
+
+.mobile-service-price {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mobile-regular-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-accent);
+}
+
+.mobile-original-price {
+    font-size: 0.9rem;
+    color: var(--dark-text-secondary);
+    text-decoration: line-through;
+}
+
+.mobile-discounted-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-danger);
+}
+
+.mobile-service-status .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.mobile-service-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.mobile-action-button {
+    padding: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-action-button.view-button {
+    background: var(--dark-accent-light);
+    color: var(--dark-accent);
+}
+
+.mobile-action-button.view-button:hover {
+    background: var(--dark-accent);
+    color: #fff;
+}
+
+.mobile-action-button.edit-button {
+    background: rgba(255, 193, 7, 0.15);
+    color: var(--dark-warning);
+}
+
+.mobile-action-button.edit-button:hover {
+    background: var(--dark-warning);
+    color: #000;
+}
+
+.mobile-action-button.delete-button {
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--dark-danger);
+}
+
+.mobile-action-button.delete-button:hover {
+    background: var(--dark-danger);
+    color: #fff;
 }
