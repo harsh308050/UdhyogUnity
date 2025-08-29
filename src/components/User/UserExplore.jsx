@@ -521,11 +521,6 @@ function UserExplore() {
                     src={getImageUrl(business)}
                     alt={business.businessName}
                 />
-                {business.isVerified && (
-                    <div className="verified-badge">
-                        ✓ Verified
-                    </div>
-                )}
             </div>
 
             <div className="card-content">

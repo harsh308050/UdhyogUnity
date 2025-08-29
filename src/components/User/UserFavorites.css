@@ -1,74 +1,100 @@
-/* UserFavorites.css */
+/* UserFavorites.css - Mobile-First Responsive Design */
+
+/* CSS Custom Properties for Responsive Design */
+:root {
+    --favorites-card-radius: 8px;
+    --favorites-transition: all 0.2s ease;
+    --favorites-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --favorites-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --favorites-tap-target: 44px;
+}
+
+/* Mobile-First Base Styles */
 .user-favorites {
-    padding: 1rem 0;
+    padding: 0.75rem 0;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .favorites-tabs {
     display: flex;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    background-color: var(--card-bg);
+    border-radius: var(--favorites-card-radius);
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
 }
 
 .favorites-tab {
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 1rem;
     background: none;
     border: none;
     color: var(--text-muted);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: var(--favorites-transition);
     position: relative;
+    border-radius: var(--favorites-card-radius);
+    text-align: center;
+    font-size: 0.9rem;
+    min-height: var(--favorites-tap-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .favorites-tab:hover {
     color: var(--text-light);
+    background-color: rgba(91, 127, 217, 0.05);
 }
 
 .favorites-tab.active {
     color: var(--accent);
+    background-color: rgba(91, 127, 217, 0.1);
+    font-weight: 600;
 }
 
 .favorites-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: var(--accent);
+    display: none;
 }
 
 .favorites-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
 }
 
 .favorite-card {
     position: relative;
     background-color: var(--card-bg);
-    border-radius: 10px;
+    border-radius: var(--favorites-card-radius);
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: var(--favorites-transition);
     border: 1px solid var(--border-color);
-    height: 100%;
+    height: auto;
     display: flex;
     flex-direction: column;
+    box-shadow: var(--favorites-shadow);
 }
 
 .favorite-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: var(--favorites-hover-shadow);
+}
+
+.favorite-card:active {
+    transform: translateY(0);
 }
 
 .remove-favorite {
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    width: 32px;
-    height: 32px;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     border: none;
     display: flex;
     align-items: center;
@@ -76,93 +102,117 @@
     cursor: pointer;
     z-index: 2;
     color: white;
-    opacity: 0.7;
-    transition: all 0.3s ease;
+    opacity: 0.8;
+    transition: var(--favorites-transition);
+    font-size: 1rem;
+    min-height: var(--favorites-tap-target);
+    min-width: var(--favorites-tap-target);
 }
 
-.remove-favorite:hover {
+.remove-favorite:hover,
+.remove-favorite:focus {
     opacity: 1;
     background-color: var(--danger);
+    transform: scale(1.1);
 }
 
 .favorite-image {
-    height: 180px;
+    height: 160px;
     overflow: hidden;
     position: relative;
+    background-color: var(--border-color);
+}
+
+.favorite-details .description {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .favorite-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: var(--favorites-transition);
 }
 
 .favorite-card:hover .favorite-image img {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
-/* Discount badge */
 .discount-badge {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    background: linear-gradient(to right, #F44336, #FF5722);
+    top: 0.5rem;
+    left: 0.5rem;
+    background: linear-gradient(135deg, #F44336, #FF5722);
     color: white;
     font-weight: 600;
-    padding: 0.25rem 0.75rem;
-    border-radius: 50px;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
     z-index: 1;
-    box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);
+    box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
 }
 
 .favorite-details {
-    /* padding: 1.25rem; */
+    padding: 1rem;
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
 }
 
 .favorite-details h3 {
-    margin: 0 0 0.75rem;
-    font-size: 1.1rem;
+    margin: 0;
+    font-size: 1rem;
     color: var(--text-light);
+    line-height: 1.3;
+    font-weight: 600;
 }
 
 .business-type,
 .business-address,
 .business-name {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
+    margin: 0;
+    line-height: 1.3;
 }
 
 .business-name {
     font-weight: 500;
+    color: var(--text-light);
 }
 
 .product-category {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
 }
 
 .product-description {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    margin-bottom: 0.75rem;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .product-rating {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.75rem;
 }
 
 .stars {
@@ -171,12 +221,12 @@
 }
 
 .rating-text {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
 .stock-status {
-    margin-bottom: 0.75rem;
+    margin: 0.25rem 0;
 }
 
 .in-stock,
@@ -184,7 +234,7 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
@@ -200,15 +250,15 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-    margin-bottom: 0.75rem;
+    margin: 0.25rem 0;
 }
 
 .product-tag {
     background-color: rgba(91, 127, 217, 0.1);
     color: var(--accent);
     padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: 500;
 }
 
@@ -216,22 +266,28 @@
     background-color: rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
     padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: 500;
+}
+
+.price-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
 }
 
 .current-price {
     font-weight: 600;
     color: var(--accent);
-    font-size: 1.1rem;
-    margin-right: 0.5rem;
+    font-size: 1rem;
 }
 
 .original-price {
     text-decoration: line-through;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .view-link {
@@ -241,16 +297,25 @@
     text-decoration: none;
     font-weight: 500;
     margin-top: auto;
-    font-size: 0.9rem;
-    transition: color 0.3s ease;
+    font-size: 0.85rem;
+    transition: var(--favorites-transition);
+    padding: 0.5rem 0;
+    min-height: var(--favorites-tap-target);
 }
 
-.view-link:hover {
+.view-link:hover,
+.view-link:focus {
     color: var(--primary);
+    text-decoration: underline;
 }
 
 .view-link svg {
     margin-left: 0.25rem;
+    transition: var(--favorites-transition);
+}
+
+.view-link:hover svg {
+    transform: translateX(2px);
 }
 
 .empty-favorites {
@@ -258,40 +323,42 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1rem;
+    padding: 2rem 1rem;
     background-color: var(--card-bg);
-    border-radius: 10px;
+    border-radius: var(--favorites-card-radius);
     border: 1px solid var(--border-color);
     text-align: center;
+    min-height: 200px;
 }
 
 .empty-favorites svg {
     color: var(--text-muted);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
 }
 
 .empty-favorites p {
     color: var(--text-muted);
-    margin-bottom: 1.5rem;
-    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    line-height: 1.4;
 }
-
-
 
 .loading-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 300px;
+    min-height: 200px;
+    padding: 2rem 1rem;
 }
 
 .loading-spinner {
     border: 3px solid rgba(91, 127, 217, 0.1);
     border-top: 3px solid var(--accent);
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
 }
@@ -306,20 +373,362 @@
     }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .favorites-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
 
-    .favorites-tab {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-@media (max-width: 576px) {
+/* Progressive Enhancement - Responsive Breakpoints */
+
+/* Large Mobile (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+    .user-favorites {
+        padding: 1rem 0;
+    }
+
+    .favorites-tabs {
+        flex-direction: row;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+
+    .favorites-tab {
+        flex: 1;
+        font-size: 0.9rem;
+        padding: 0.75rem 0.75rem;
+    }
+
     .favorites-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .favorite-image {
+        height: 140px;
+    }
+
+    .favorite-details {
+        padding: 1rem;
+    }
+
+    .favorite-details h3 {
+        font-size: 1rem;
+    }
+
+    .current-price {
+        font-size: 1rem;
+    }
+
+    .empty-favorites {
+        padding: 2.5rem 1.5rem;
+        min-height: 250px;
+    }
+
+    .empty-favorites svg {
+        font-size: 2.75rem;
+    }
+
+    .empty-favorites p {
+        font-size: 1rem;
+    }
+}
+
+/* Tablets (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .user-favorites {
+        padding: 1.25rem 0;
+    }
+
+    .favorites-tabs {
+        flex-direction: row;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 0.75rem;
+    }
+
+    .favorites-tab {
+        flex: 1;
+        font-size: 1rem;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+    }
+
+    .favorites-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 3px;
+        background-color: var(--accent);
+        border-radius: 2px;
+        display: block;
+    }
+
+    .favorites-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .favorite-image {
+        height: 160px;
+    }
+
+    .favorite-details {
+        padding: 1.25rem;
+        gap: 0.6rem;
+    }
+
+    .favorite-details h3 {
+        font-size: 1.1rem;
+    }
+
+    .business-type,
+    .business-address,
+    .business-name {
+        font-size: 0.85rem;
+    }
+
+    .product-description {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    .current-price {
+        font-size: 1.1rem;
+    }
+
+    .view-link {
+        font-size: 0.9rem;
+    }
+
+    .empty-favorites {
+        padding: 3rem 2rem;
+        min-height: 300px;
+    }
+
+    .empty-favorites svg {
+        font-size: 3rem;
+    }
+
+    .empty-favorites p {
+        font-size: 1.1rem;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Laptops/Small Desktops (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .user-favorites {
+        padding: 1.5rem 0;
+    }
+
+    .favorites-tabs {
+        flex-direction: row;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: none;
+        background: none;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 0;
+    }
+
+    .favorites-tab {
+        flex: 0 1 auto;
+        min-width: 150px;
+        font-size: 1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0;
+        background: none;
+    }
+
+    .favorites-tab.active {
+        background: none;
+    }
+
+    .favorites-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--accent);
+        border-radius: 0;
+        display: block;
+        transform: none;
+    }
+
+    .favorites-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.75rem;
+    }
+
+    .favorite-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .favorite-image {
+        height: 180px;
+    }
+
+    .favorite-details {
+        padding: 1.5rem;
+        gap: 0.75rem;
+    }
+
+    .favorite-details h3 {
+        font-size: 1.15rem;
+    }
+
+    .business-type,
+    .business-address,
+    .business-name {
+        font-size: 0.9rem;
+    }
+
+    .product-description {
+        font-size: 0.9rem;
+    }
+
+    .current-price {
+        font-size: 1.2rem;
+    }
+
+    .original-price {
+        font-size: 0.95rem;
+    }
+
+    .view-link {
+        font-size: 0.95rem;
+    }
+
+    .empty-favorites {
+        padding: 3.5rem 2rem;
+        min-height: 350px;
+    }
+
+    .empty-favorites svg {
+        font-size: 3.5rem;
+    }
+
+    .empty-favorites p {
+        font-size: 1.1rem;
+    }
+}
+
+/* Large Desktops (1200px+) */
+@media (min-width: 1200px) {
+    .user-favorites {
+        padding: 1.5rem 0;
+    }
+
+    .favorites-tabs {
+        flex-direction: row;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: none;
+        background: none;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 0;
+    }
+
+    .favorites-tab {
+        flex: 0 1 auto;
+        min-width: auto;
+        font-size: 1rem;
+        padding: 1rem 2rem;
+        border-radius: 0;
+        background: none;
+    }
+
+    .favorites-tab.active {
+        background: none;
+    }
+
+    .favorites-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--accent);
+        border-radius: 0;
+        display: block;
+        transform: none;
+    }
+
+    .favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .favorite-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .favorite-image {
+        height: 180px;
+    }
+
+    .favorite-details {
+        padding: 1.5rem;
+        gap: 0.75rem;
+    }
+
+    .favorite-details h3 {
+        font-size: 1.2rem;
+    }
+
+    .business-type,
+    .business-address,
+    .business-name {
+        font-size: 0.9rem;
+    }
+
+    .product-description {
+        font-size: 0.9rem;
+    }
+
+    .current-price {
+        font-size: 1.2rem;
+    }
+
+    .original-price {
+        font-size: 0.95rem;
+    }
+
+    .view-link {
+        font-size: 0.95rem;
+    }
+
+    .empty-favorites {
+        padding: 4rem 2rem;
+        min-height: 400px;
+    }
+
+    .empty-favorites svg {
+        font-size: 4rem;
+    }
+
+    .empty-favorites p {
+        font-size: 1.2rem;
     }
 }

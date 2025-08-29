@@ -1,7 +1,5 @@
 /* Enhanced User Bookings CSS */
 .enhanced-user-bookings {
-    padding: 20px;
-    /* max-width: 1000px; */
     margin: 0 auto;
 }
 
@@ -37,7 +35,6 @@
 
 .booking-tabs .tab {
     padding: 10px 16px;
-    /* border: none; */
     width: 30%;
     background: none;
     font-size: 15px;
@@ -489,5 +486,9 @@ textarea.form-control {
     .modal-container {
         width: 95%;
         max-width: none;
+    }
+
+    .booking-tabs .tab {
+        width: 100%;
     }
 }

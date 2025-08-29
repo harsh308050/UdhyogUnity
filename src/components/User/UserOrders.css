@@ -54,6 +54,15 @@
     gap: 16px;
 }
 
+.user-orders-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+}
+
 .order-card {
     background: #1e2e47;
     border-radius: 8px;

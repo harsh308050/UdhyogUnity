@@ -85,9 +85,8 @@ function Login() {
         setActiveTab(tab);
         setIsSignupActive(tab === "signup");
         setError("");
-        setIsSuccessfullyLoggedIn(false); // Reset login status when switching tabs
+        setIsSuccessfullyLoggedIn(false);
 
-        // Reset Google user flag and clear form when switching tabs
         if (tab === "signin") {
             setSignupForm({
                 email: "",
