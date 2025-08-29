@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Package, Calendar, MessageSquare, Settings, LogOut, Star, Clock, ShoppingBag, List } from 'react-feather';
+import { Home, Package, Calendar, MessageSquare, Settings, LogOut, Star, Clock, ShoppingBag, Shield, List } from 'react-feather';
 import './BusinessDashboard.css';
 import ProductManagement from './Products/ProductManagement';
 import ServiceManagement from './Services/ServiceManagement';
@@ -120,8 +120,6 @@ function BusinessDashboard() {
                             <div className="welcome-header">
                                 <h1>Welcome back, {businessData.businessName}!</h1>
                                 <p>Here's what's happening with your business today.</p>
-                                {/* Debug info */}
-                                {console.log("Dashboard stats in render:", dashboardStats)}
                             </div>
 
                             <div className="stats-grid">
@@ -131,46 +129,29 @@ function BusinessDashboard() {
                                     </div>
                                     <div className="stat-info">
                                         <h3>Reviews</h3>
-                                        <div className="stat-value">{dashboardStats?.averageRating
-                                            || 0} / 5</div>
+                                        <div className="stat-value">{dashboardStats?.reviews || 0}</div>
                                     </div>
                                 </div>
 
-                                {businessData.businessType === 'Service' ? (
-                                    (
-                                        <div className="stat-card">
-                                            <div className="stat-icon">
-                                                <Clock size={24} />
-                                            </div>
-                                            <div className="stat-info">
-                                                <h3>Pending Bookings</h3>
-                                                <div className="stat-value">{dashboardStats?.pendingReservations || 0}</div>
-                                            </div>
-                                        </div>
-                                    )
-                                ) : null}
+                                <div className="stat-card">
+                                    <div className="stat-icon">
+                                        <Clock size={24} />
+                                    </div>
+                                    <div className="stat-info">
+                                        <h3>Pending Bookings</h3>
+                                        <div className="stat-value">{dashboardStats?.pendingBookings || 0}</div>
+                                    </div>
+                                </div>
 
-                                {businessData.businessType === 'Product' ? (
-                                    <div className="stat-card">
-                                        <div className="stat-icon">
-                                            <Package size={24} />
-                                        </div>
-                                        <div className="stat-info">
-                                            <h3>Total Products</h3>
-                                            <div className="stat-value">{dashboardStats?.productCount || 0}</div>
-                                        </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon">
+                                        <ShoppingBag size={24} />
                                     </div>
-                                ) : (
-                                    <div className="stat-card">
-                                        <div className="stat-icon">
-                                            <Calendar size={24} />
-                                        </div>
-                                        <div className="stat-info">
-                                            <h3>Total Services</h3>
-                                            <div className="stat-value">{dashboardStats?.serviceCount || 0}</div>
-                                        </div>
+                                    <div className="stat-info">
+                                        <h3>Total Orders</h3>
+                                        <div className="stat-value">{dashboardStats?.totalOrders || 0}</div>
                                     </div>
-                                )}
+                                </div>
 
                                 <div className="stat-card">
                                     <div className="stat-icon">
@@ -179,10 +160,43 @@ function BusinessDashboard() {
                                     <div className="stat-info">
                                         <h3>Revenue (₹)</h3>
                                         <div className="stat-value">
-                                            {dashboardStats?.paymentsReceived ?
-                                                `${dashboardStats.paymentsReceived.toLocaleString()}` :
+                                            {dashboardStats?.totalRevenue ?
+                                                `${dashboardStats.totalRevenue.toLocaleString()}` :
                                                 '0'
                                             }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="recent-activity">
+                                <h3>Recent Activity</h3>
+                                <div className="activity-list">
+                                    <div className="activity-item">
+                                        <div className="activity-icon">
+                                            <ShoppingBag size={16} />
+                                        </div>
+                                        <div className="activity-content">
+                                            <p>New order received</p>
+                                            <span className="activity-time">2 hours ago</span>
+                                        </div>
+                                    </div>
+                                    <div className="activity-item">
+                                        <div className="activity-icon">
+                                            <Star size={16} />
+                                        </div>
+                                        <div className="activity-content">
+                                            <p>New review from customer</p>
+                                            <span className="activity-time">4 hours ago</span>
+                                        </div>
+                                    </div>
+                                    <div className="activity-item">
+                                        <div className="activity-icon">
+                                            <Clock size={16} />
+                                        </div>
+                                        <div className="activity-content">
+                                            <p>Booking confirmed</p>
+                                            <span className="activity-time">1 day ago</span>
                                         </div>
                                     </div>
                                 </div>
@@ -289,10 +303,10 @@ function BusinessDashboard() {
                         </ul>
                     </nav>
 
-                    <div className="user-sidebar-footer">
-                        <button className="logout-button" onClick={handleLogout}>
+                    <div className="sidebar-footer">
+                        <button className="user-logout-button" onClick={handleLogout}>
                             <LogOut size={20} />
-                            <span>Logout</span>
+                            <span>Log</span>
                         </button>
                     </div>
                 </aside>
