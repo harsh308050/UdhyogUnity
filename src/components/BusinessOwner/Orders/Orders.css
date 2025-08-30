@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 0;
+    padding: 0.5rem;
     max-width: 100%;
 }
 
@@ -13,7 +13,6 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .orders-header h2 {
@@ -154,7 +153,7 @@
 .order-summary {
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 16px !important;
     cursor: pointer;
     position: relative;
     background-color: #253654;
@@ -165,7 +164,7 @@
     .order-summary {
         flex-direction: row;
         justify-content: space-between;
-        align-items: center;
+        /* align-items: center; */
     }
 }
 
@@ -503,14 +502,26 @@
 
 /* Responsive adjustments */
 @media (max-width: 767px) {
+
+    /* Header stacked */
     .orders-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+        padding: 0.5rem 1rem;
+    }
+
+    .orders-controls {
+        padding: 0.5rem 1rem;
+
     }
 
     .header-actions {
         width: 100%;
+    }
+
+    .sort-container {
+        min-width: 100%;
     }
 
     .btn.btn-refresh {
@@ -518,8 +529,44 @@
         justify-content: center;
     }
 
+    /* Make the list paddings tighter on phones and ensure cards take full width */
+    .orders-list {
+        gap: 12px;
+        padding: 0 12px;
+    }
+
+    .order-card {
+        width: 100%;
+        border-radius: 10px;
+        overflow: visible;
+    }
+
+    /* Summary becomes stacked and clearer spacing */
     .order-summary {
-        padding: 12px;
+        padding: 14px;
+        gap: 10px;
+        background-color: #253654;
+        /* keep visual separation */
+        border-radius: 8px;
+    }
+
+    .order-primary-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .order-id {
+        min-width: unset;
+        font-size: 13px;
+        word-break: break-all;
+    }
+
+    .order-product {
+        gap: 6px;
+    }
+
+    .quantity {
+        font-size: 13px;
     }
 
     .order-secondary-info {
@@ -528,13 +575,64 @@
         gap: 8px;
     }
 
+    /* Status badge should sit neatly under details */
     .status-container {
+        margin-top: 6px;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+        margin-top: 4px;
+        padding: 6px 10px;
+        border-radius: 14px;
+        font-size: 12px;
+    }
+
+    /* Expand button pinned but smaller hit area */
+    .expand-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 6px;
+    }
+
+    /* Order details: tighter on mobile */
+    .order-details {
+        padding: 12px;
+    }
+
+    .details-grid {
+        gap: 12px;
+    }
+
+    /* Actions: stacked full-width controls for easy tapping */
+    .order-actions {
+        flex-direction: column;
+        gap: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        padding-top: 12px;
         margin-top: 8px;
     }
 
-    .expand-btn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
+    .status-update-buttons {
+        gap: 8px;
+    }
+
+    .action-btn {
+        width: 100% !important;
+        justify-content: center;
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+
+    /* Reduce heavy shadows and ensure cards align flush with screen edges */
+    .order-card:hover {
+        box-shadow: none;
+    }
+
+    /* Improve empty/loading spacing */
+    .no-orders,
+    .loading-container {
+        padding: 24px 12px;
     }
 }

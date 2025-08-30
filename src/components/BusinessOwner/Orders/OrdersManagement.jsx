@@ -293,7 +293,7 @@ const OrdersManagement = ({ businessData }) => {
                 <div className="order-primary-info">
                   <div className="order-id">
                     <ShoppingBag size={16} />
-                    <span className="id-text">{order.id.substring(0, 8)}...</span>
+                    <span className="id-text">{order.id}</span>
                   </div>
                   <div className="order-product">
                     <strong>{order.productName}</strong>
