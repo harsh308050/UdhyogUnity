@@ -43,45 +43,24 @@ UdhyogUnity is a platform dedicated to connecting cities through local businesse
     cd UdhyogUnity
     ```
 
-2. Install dependencies:    ```bash
-    npm install
-    ```
+2. Install dependencies:
+  ``` bash
+  npm install
+  ```
 
-3. Set up environment variables:
-   Create a `.env` file in the root directory with the following variables:
-   ```
-   VITE_FIREBASE_API_KEY=your_firebase_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-   VITE_FIREBASE_APP_ID=your_firebase_app_id
-   VITE_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-   VITE_CLOUDINARY_UPLOAD_PRESET=your_cloudinary_upload_preset
-   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-   ```
-
-4. Start the development server:
+3. Start the development server:
 
     ```bash
     npm run dev
     ```
 
-5. Build for production:
+4. Build for production:
    ```bash
    npm run build
    ```
 
-## 📸 Screenshots
-<h1>Landing Page </h1>
-
-![screencapture-localhost-5173-2025-02-28-18_28_27](https://github.com/user-attachments/assets/16fb5b66-6917-4da6-8d53-bc227438cbf3)
-
-<h1>Signin / Signup Page </h1>
-
-![screencapture-localhost-5173-login-2025-02-28-18_28_41](https://github.com/user-attachments/assets/2b6ade44-2888-450b-8bff-e785cb7e6bc7)
-
-![screencapture-localhost-5173-login-2025-02-28-18_29_09](https://github.com/user-attachments/assets/1ecdc221-f469-4d4a-9e18-f435fa29e054)
+## 📸 Preview:
+<h1> <a href="https://udhyogunity.netlify.app/"> https://udhyogunity.netlify.app/ <a></h1>
 
 
 ## 📂 Project Structure
@@ -122,8 +101,9 @@ src/
 ## 🚀 Usage
 
 - Visit `http://localhost:5173/` to view the landing page.
-- Navigate to `/login` to access the login page.
+- Navigate to `/login` to access the login/signup page.
 - Navigate to `/register-business` to register a new business.
+- Navigate to `/business-login` to login business.
 
 ## 🤝 Contributing
 
@@ -140,9 +120,9 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## 📞 Contact
 
 Harsh Parmar - [harshparmar.dev.com](mailto:harshparmar.dev.com)
-
+Linkedin - [https://www.linkedin.com/in/harsh308050/](https://www.linkedin.com/in/harsh308050/)
 Project Link: [https://github.com/harsh308050/UdhyogUnity](https://github.com/harsh308050/UdhyogUnity)
 
 ---
 
-Made with ❤️ for local businesses
+Made with ❤️ by Harsh Parmar
