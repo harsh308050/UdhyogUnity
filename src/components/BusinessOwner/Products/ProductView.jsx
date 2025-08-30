@@ -38,10 +38,12 @@ const ProductView = ({ product, onBack, onEdit, onDelete }) => {
             className="flipkart-product-view"
         >
             <div className="product-view-header">
-                <button className="btn btn-primary" onClick={onBack}>
-                    <ArrowLeft size={16} className="me-2" />
-                    Back to Products
-                </button>
+                <div className="product-actions">
+                    <button className="btn" onClick={onBack}>
+                        <ArrowLeft size={16} className="me-1" />
+                        Back
+                    </button>
+                </div>
 
                 <div className="product-actions">
                     <button className="btn btn-outline-primary me-2" onClick={onEdit}>
@@ -55,25 +57,23 @@ const ProductView = ({ product, onBack, onEdit, onDelete }) => {
                 <div className="product-view-main">
                     {/* Left Column - Image Gallery */}
                     <div className="product-gallery">
-                        <div className="main-image-container">
-                            {product.images && product.images.length > 0 ? (
-                                <img
-                                    src={product.images[selectedImageIndex].url || product.images[selectedImageIndex].preview}
-                                    alt={product.name}
-                                    className="main-product-image"
-                                    onClick={() => setFullscreenImage(product.images[selectedImageIndex].url || product.images[selectedImageIndex].preview)}
-                                />
-                            ) : (
-                                <div className="no-image-placeholder">
-                                    <Package size={64} />
-                                    <span>No Image Available</span>
-                                </div>
-                            )}
+                        {product.images && product.images.length > 0 ? (
+                            <img
+                                src={product.images[selectedImageIndex].url || product.images[selectedImageIndex].preview}
+                                alt={product.name}
+                                className="main-product-image"
+                                onClick={() => setFullscreenImage(product.images[selectedImageIndex].url || product.images[selectedImageIndex].preview)}
+                            />
+                        ) : (
+                            <div className="no-image-placeholder">
+                                <Package size={64} />
+                                <span>No Image Available</span>
+                            </div>
+                        )}
 
-                            {discountPercentage && (
-                                <div className="discount-badge">-{discountPercentage}%</div>
-                            )}
-                        </div>
+                        {discountPercentage && (
+                            <div className="discount-badge">-{discountPercentage}%</div>
+                        )}
 
                         {product.images && product.images.length > 1 && (
                             <div className="product-thumbnails">

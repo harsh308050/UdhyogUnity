@@ -6,221 +6,168 @@
     --dark-card-bg: #1e2636;
     --dark-border: #333844;
     --dark-text: #e0e0e0;
-    --dark-text-secondary: #b0b0b0;
-    --dark-input-bg: #2a3042;
-    --dark-hover: #2c3142;
-    --dark-accent: #3563bf;
-    --dark-accent-hover: #4273cf;
-    --dark-accent-light: rgba(53, 99, 191, 0.15);
-    --dark-danger: #F44336;
-    --dark-success: #4CAF50;
-    --dark-warning: #FFC107;
-    --dark-info: #2196F3;
-    --dark-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
 }
 
-/* Main Container */
-.products-container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-    color: var(--dark-text);
+/* Consolidated extra-small mobile rules */
+@media (max-width: 480px) {
+    .products-container {
+        padding: 0.25rem;
+    }
+
+    .product-form-container {
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+
+    .products-title {
+        font-size: 1.25rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .product-list-header {
+        padding: 0.5rem 0;
+        gap: 0.75rem;
+    }
+
+    .add-product-btn {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .product-filters {
+        gap: 0.5rem;
+    }
+
+    .search-filter .form-control,
+    .category-filter .form-select {
+        padding: 0.6rem;
+        font-size: 0.95rem;
+    }
+
+    /* Cards become full-width stacked */
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 0.25rem;
+    }
+
+    .product-card,
+    .service-card,
+    .product-list-item,
+    .service-list-item {
+        padding: 0.85rem;
+        margin: 0.5rem 0;
+        border-radius: 10px;
+    }
+
+    .product-image,
+    .service-image {
+        height: 180px;
+    }
+
+    .product-name,
+    .service-name {
+        font-size: 1rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .product-category,
+    .service-category {
+        font-size: 0.85rem;
+    }
+
+    .product-price,
+    .mobile-service-price {
+        font-size: 1rem;
+    }
+
+    /* Action buttons and touch targets */
+    .product-actions,
+    .service-actions,
+    .product-actions-cell {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .action-button,
+    .list-action-button,
+    .mobile-action-button {
+        padding: 0.6rem;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 8px;
+    }
+
+    .product-details {
+        padding: 0.85rem;
+    }
+
+    .product-tags {
+        gap: 0.4rem;
+    }
+
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.6rem;
+    }
+
+    /* Ensure product view / service view CTA area is visible without overflow */
+    .product-view-content,
+    .service-view .product-view-content {
+        padding: 0.5rem;
+    }
+
+    /* Modal small adjustments */
+    .modal-content {
+        padding: 0.5rem;
+        margin: 0.5rem;
+        border-radius: 8px;
+        max-height: calc(100vh - 1rem);
+        overflow-y: auto;
+    }
+
+    /* Service specific */
+    .service-card .service-price {
+        font-size: 1.1rem;
+        margin: 0.5rem 0;
+    }
+
+    .service-card .service-duration {
+        font-size: 0.875rem;
+        color: var(--dark-text-secondary);
+    }
+
+    .service-card .service-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin: 0.75rem 0;
+    }
+
+    /* Small utilities */
+    .mobile-info-label,
+    .mobile-info-value {
+        font-size: 0.8rem;
+    }
+
+    .btn-icon {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
 }
 
-.product-form-container {
-    background: linear-gradient(to left, var(--dark-bg-secondary), var(--dark-bg-secondary));
-    border-radius: 12px;
-    box-shadow: var(--dark-shadow);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    color: var(--dark-text);
-    border: 1px solid var(--dark-border);
-}
-
-/* Section Styling */
-.form-section {
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--dark-border);
-}
-
-.form-section:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.section-title {
-    font-size: 1.25rem;
-    margin-bottom: 1.5rem;
-    color: var(--dark-text);
-    font-weight: 600;
-}
-
-/* Form Styling */
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    display: block;
-    color: var(--dark-text);
-}
-
-.form-title {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-weight: 700;
-    background: linear-gradient(240deg, rgba(64, 77, 141, 1) 15%, rgba(89, 109, 181, 1) 50%, rgba(22, 155, 223, 1) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Tag Input Styling */
-.tag-input-container {
-    width: 100%;
-}
-
-.tag-input {
-    background-color: var(--dark-input-bg) !important;
-    border: 1px solid var(--dark-border) !important;
-    color: var(--dark-text) !important;
-    border-radius: 8px !important;
-    padding: 0.75rem 1rem !important;
-    width: 100%;
-}
-
-.tag-input:focus {
-    outline: none !important;
-    border: double 2px transparent !important;
-    border-radius: 8px !important;
-    background-image: linear-gradient(var(--dark-input-bg), var(--dark-input-bg)),
-        linear-gradient(to right, var(--dark-accent), var(--dark-accent-hover)) !important;
-    background-origin: border-box !important;
-    background-clip: padding-box, border-box !important;
-}
-
-.tags-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.tag-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.4rem 0.8rem;
-    background: linear-gradient(to right, rgba(53, 99, 191, 0.2), rgba(53, 99, 191, 0.3));
-    border-radius: 50px;
-    font-size: 0.85rem;
-    color: var(--dark-text);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(53, 99, 191, 0.3);
-}
-
-.tag-remove-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 0.5rem;
-    color: var(--dark-text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.tag-remove-btn:hover {
-    color: var(--dark-danger);
-    transform: scale(1.2);
-}
-
-/* Image Upload Styling */
-.product-images-dropzone {
-    border: 2px dashed var(--dark-border);
-    border-radius: 8px;
-    padding: 2rem;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--dark-text);
-    background-color: var(--dark-input-bg);
-}
-
-.product-images-dropzone:hover {
-    border-color: var(--dark-accent);
-    background-color: rgba(53, 99, 191, 0.15);
-}
-
-.image-preview-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.image-preview-item {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 120px;
-    box-shadow: var(--dark-shadow);
-}
-
-.image-preview-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-remove-btn {
-    position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    background-color: rgba(40, 40, 40, 0.9);
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--dark-danger);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.upload-progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background-color: rgba(0, 0, 0, 0.3);
-}
-
-.upload-progress-bar {
-    height: 100%;
-    background-color: var(--dark-accent);
-}
-
-/* Form Buttons */
-.form-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-/* Product List Styles */
-.product-list-container {
-    width: 100%;
-}
 
 .product-list-header {
     display: flex;
@@ -239,6 +186,25 @@
 .search-filter {
     flex: 2;
     min-width: 200px;
+}
+
+.search-filter .input-group,
+.category-filter .input-group {
+    flex-wrap: nowrap !important;
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    height: 100% !important;
+}
+
+
+.search-filter .input-group input,
+.category-filter .input-group select {
+    border-left: none !important;
+    height: 100% !important;
+    border-radius: 0 8px 8px 0 !important;
+}
+
+.category-filter .input-group select option {
+    background-color: #0d2035;
 }
 
 .category-filter {
@@ -770,6 +736,7 @@
 
     .search-filter .input-group {
         width: 100%;
+        flex-wrap: nowrap !important;
     }
 
     .search-filter .form-control {
@@ -998,45 +965,156 @@
     }
 
     /* Modal adjustments */
-    .modal-content {
-        margin: 1rem;
-        max-height: calc(100vh - 2rem);
-        overflow-y: auto;
+
+}
+
+/* Extra small mobile devices adjustments */
+@media (max-width: 480px) {
+    .products-container {
+        padding: 0.25rem;
     }
 
-    /* Service specific mobile styles */
-    .service-card .service-price {
+    .product-list-header {
+        padding: 0.5rem 0;
+        gap: 0.75rem;
+    }
+
+    .product-list-header h2 {
         font-size: 1.25rem;
+    }
+
+    .add-product-btn {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .product-filters {
+        gap: 0.5rem;
+    }
+
+    .search-filter .form-control,
+    .category-filter .form-select {
+        padding: 0.6rem;
+        font-size: 0.95rem;
+    }
+
+    /* Cards become taller and full width */
+    .product-card,
+    .service-card,
+    .product-list-item,
+    .service-list-item {
+        padding: 0.85rem;
         margin: 0.5rem 0;
+        border-radius: 10px;
     }
 
-    .service-card .service-duration {
-        font-size: 0.875rem;
-        color: var(--dark-text-secondary);
+    .product-image,
+    .service-image {
+        height: 180px;
     }
 
-    .service-card .service-description {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        margin: 0.75rem 0;
+    .product-name,
+    .service-name {
+        font-size: 1rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
     }
 
-    /* Stats/info cards on mobile */
-    .info-card,
-    .stat-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1rem;
+    .product-category,
+    .service-category {
+        font-size: 0.85rem;
     }
 
-    .info-icon,
-    .stat-icon {
-        margin-bottom: 0.5rem;
+    .product-price,
+    .mobile-service-price {
+        font-size: 1rem;
+    }
+
+    /* Actions full width and stacked */
+    .product-actions,
+    .service-actions,
+    .product-actions-cell {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .action-button,
+    .list-action-button,
+    .mobile-action-button {
+        padding: 0.6rem;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 8px;
+    }
+
+    .product-details {
+        padding: 0.85rem;
+    }
+
+    .product-tags {
+        gap: 0.4rem;
+    }
+
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.6rem;
+    }
+
+    /* Ensure product view / service view CTA area is visible without overflow */
+    .product-view-content,
+    .service-view .product-view-content {
+        padding: 0.5rem;
+    }
+
+    /* Hide unnecessary left/right paddings in modals or cards */
+    .modal-content {
+        padding: 0.5rem;
     }
 }
+
+.modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+/* Service specific mobile styles */
+.service-card .service-price {
+    font-size: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.service-card .service-duration {
+    font-size: 0.875rem;
+    color: var(--dark-text-secondary);
+}
+
+.service-card .service-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0.75rem 0;
+}
+
+/* Stats/info cards on mobile */
+.info-card,
+.stat-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+}
+
+.info-icon,
+.stat-icon {
+    margin-bottom: 0.5rem;
+}
+
 
 /* Extra small mobile devices */
 @media (max-width: 480px) {

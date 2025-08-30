@@ -87,7 +87,7 @@ const ProductList = ({ products, onEdit, onDelete, onView, onAdd, onToggleAvaila
     };
 
     return (
-        <div className="product-list-container">
+        <div className="product-management-theme product-list-container">
             <div className="product-list-header">
                 <h2>Your Products</h2>
                 <button className="btn btn-primary add-product-btn" onClick={onAdd}>

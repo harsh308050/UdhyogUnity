@@ -31,8 +31,9 @@
     background-color: var(--dark-hover);
 }
 
-.product-actions {
+.product-view-header .product-actions {
     display: flex;
+    justify-content: center !important;
     gap: 0.5rem;
 }
 
@@ -62,7 +63,7 @@
         padding-bottom: 2rem;
     }
 
-    .main-image-container {
+    .product-gallery .main-product-image {
         height: 350px;
     }
 
@@ -72,7 +73,7 @@
 }
 
 @media (max-width: 576px) {
-    .main-image-container {
+    .product-gallery .main-product-image {
         height: 280px;
     }
 
@@ -99,14 +100,12 @@
 
 /* Left Column - Gallery */
 .product-gallery {
-    padding: 2rem;
+    padding: 0;
+    /* show image full-bleed */
     border-right: 1px solid var(--dark-border);
-    display: flex;
-    flex-direction: column;
+    display: block;
     position: relative;
-    background-color: rgba(0, 0, 0, 0.2);
-    justify-content: center;
-    align-items: center;
+    background-color: transparent;
 }
 
 .image-actions {
@@ -132,30 +131,21 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.main-image-container {
-    position: relative;
-    height: 400px;
+.product-gallery .main-product-image {
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: rgba(255, 255, 255, 0.02);
-}
-
-.main-product-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
+    height: 420px;
+    /* consistent card height */
+    object-fit: cover;
+    /* fill like explore cards */
+    display: block;
     cursor: pointer;
     transition: transform 0.3s ease;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.main-product-image:hover {
-    transform: scale(1.05);
+.product-gallery .main-product-image:hover {
+    transform: scale(1.03);
 }
 
 .no-image-placeholder {
@@ -605,7 +595,8 @@
     }
 
     .product-view-header {
-        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         gap: 1rem;
         align-items: stretch;
         margin-bottom: 1rem;
@@ -638,7 +629,7 @@
         padding: 1rem;
     }
 
-    .main-image-container {
+    .product-gallery .main-product-image {
         height: 250px;
         border-radius: 8px;
         margin-bottom: 1rem;
@@ -780,10 +771,6 @@
         padding: 0.25rem;
     }
 
-    .product-view-header {
-        margin-bottom: 0.75rem;
-    }
-
     .back-button {
         padding: 1rem;
         font-size: 1.1rem;
@@ -794,7 +781,7 @@
         line-height: 1.3;
     }
 
-    .main-image-container {
+    .product-gallery .main-product-image {
         height: 200px;
     }
 
