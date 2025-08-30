@@ -4,110 +4,21 @@ import {
     FileText,
     Eye,
     Calendar,
-    Shield,
     AlertCircle,
     CheckCircle,
     Clock
 } from 'react-feather';
 import './SimpleSettings.css';
+import './DocumentsSettings.css';
 
 const DocumentsSettings = ({ businessData, onUpdate }) => {
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedDocument, setSelectedDocument] = useState(null);
 
-    // Document types configuration
-    const documentTypes = [
-        {
-            id: 'business_license',
-            name: 'Business License',
-            required: true,
-            description: 'Official business registration license'
-        },
-        {
-            id: 'tax_registration',
-            name: 'Tax Registration',
-            required: true,
-            description: 'GST/Tax registration certificate'
-        },
-        {
-            id: 'identity_proof',
-            name: 'Identity Proof',
-            required: true,
-            description: 'Government issued ID (Aadhar/PAN/Passport)'
-        },
-        {
-            id: 'address_proof',
-            name: 'Address Proof',
-            required: true,
-            description: 'Business address verification document'
-        },
-        {
-            id: 'bank_statement',
-            name: 'Bank Statement',
-            required: false,
-            description: 'Recent bank statements for verification'
-        },
-        {
-            id: 'insurance_certificate',
-            name: 'Insurance Certificate',
-            required: false,
-            description: 'Business insurance policy document'
-        }
-    ];
+    // Document types are defined elsewhere or can be added later if needed
 
-    // Mock documents data - replace with actual Firebase data
-    const mockDocuments = [
-        {
-            id: '1',
-            name: 'Business License',
-            type: 'business_license',
-            fileName: 'business_license.pdf',
-            fileSize: '2.3 MB',
-            uploadDate: '2024-01-15',
-            status: 'verified',
-            expiryDate: '2025-01-15',
-            downloadUrl: '#',
-            description: 'Official business registration license'
-        },
-        {
-            id: '2',
-            name: 'GST Registration',
-            type: 'tax_registration',
-            fileName: 'gst_certificate.pdf',
-            fileSize: '1.8 MB',
-            uploadDate: '2024-01-15',
-            status: 'verified',
-            expiryDate: null,
-            downloadUrl: '#',
-            description: 'GST registration certificate'
-        },
-        {
-            id: '3',
-            name: 'Aadhar Card',
-            type: 'identity_proof',
-            fileName: 'aadhar_card.pdf',
-            fileSize: '1.2 MB',
-            uploadDate: '2024-01-15',
-            status: 'pending',
-            expiryDate: null,
-            downloadUrl: '#',
-            description: 'Owner identity verification'
-        },
-        {
-            id: '4',
-            name: 'Bank Statement',
-            type: 'bank_statement',
-            fileName: 'bank_statement_dec2023.pdf',
-            fileSize: '3.1 MB',
-            uploadDate: '2024-01-10',
-            status: 'rejected',
-            expiryDate: null,
-            downloadUrl: '#',
-            description: 'December 2023 bank statement',
-            rejectionReason: 'Document is older than 3 months. Please upload a recent statement.'
-        }
-    ];
+    // (mock data removed) documents are loaded from `businessData`
 
     useEffect(() => {
         // Load documents from business data instead of mock data
@@ -230,19 +141,6 @@ const DocumentsSettings = ({ businessData, onUpdate }) => {
         loadDocumentsFromBusinessData();
     }, [businessData]);
 
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'verified':
-                return <CheckCircle size={16} className="status-icon verified" />;
-            case 'pending':
-                return <Clock size={16} className="status-icon pending" />;
-            case 'rejected':
-                return <AlertCircle size={16} className="status-icon rejected" />;
-            default:
-                return <FileText size={16} className="status-icon" />;
-        }
-    };
-
     const getStatusColor = (status) => {
         switch (status) {
             case 'verified':
@@ -310,16 +208,32 @@ const DocumentsSettings = ({ businessData, onUpdate }) => {
         });
     };
 
-    const getDocumentTypeInfo = (typeId) => {
-        return documentTypes.find(type => type.id === typeId) || {};
+    // document type lookup is available via `documentTypes` if needed
+
+    // Determine file type based on filename or download URL
+    const detectFileType = (doc) => {
+        const url = (doc.downloadUrl || doc.cloudinaryData?.url || doc.cloudinaryData?.secure_url || '').toString().toLowerCase();
+        const name = (doc.fileName || url || '').toString().toLowerCase();
+        const ext = name.split('.').pop();
+        if (!ext && url.includes('data:')) {
+            if (url.includes('image/')) return 'image';
+            if (url.includes('video/')) return 'video';
+        }
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) return 'image';
+        if (['mp4', 'webm', 'mov', 'ogg'].includes(ext)) return 'video';
+        if (ext === 'pdf') return 'pdf';
+        return 'other';
     };
 
-    const getMissingRequiredDocuments = () => {
-        const uploadedTypes = documents.map(doc => doc.type);
-        return documentTypes.filter(type =>
-            type.required && !uploadedTypes.includes(type.id)
-        );
-    };
+    // Close viewer helper
+    const closeViewer = () => setSelectedDocument(null);
+
+    // Close on escape key
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') closeViewer(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
 
     if (loading) {
         return (
@@ -330,7 +244,7 @@ const DocumentsSettings = ({ businessData, onUpdate }) => {
         );
     }
 
-    const missingDocs = getMissingRequiredDocuments();
+    // const missingDocs = getMissingRequiredDocuments(); // not currently used
 
     return (
         <motion.div
@@ -349,46 +263,13 @@ const DocumentsSettings = ({ businessData, onUpdate }) => {
                     <div className="stat-card">
                         <div className="stat-value">{documents.filter(d => d.status === 'verified').length}</div>
                         <div className="stat-label">Verified</div>
-                        <CheckCircle className="stat-icon" style={{ color: '#4CAF50' }} />
+                        <CheckCircle className="stat-icon" style={{ padding: '8px', color: 'white' }} />
                     </div>
                     <div className="stat-card">
                         <div className="stat-value">{documents.filter(d => d.status === 'pending').length}</div>
                         <div className="stat-label">Pending</div>
-                        <Clock className="stat-icon" style={{ color: '#FFC107' }} />
+                        <Clock className="stat-icon" style={{ padding: '8px', color: 'white' }} />
                     </div>
-                </div>
-
-                {/* Business Verification Status */}
-                <div className="verification-status">
-                    <div className="status-header">
-                        <div className="status-title">
-                            <Shield size={20} />
-                            <span>Business Verification Status</span>
-                        </div>
-                        <div className={`verification-badge ${businessData.isVerified ? 'verified' : 'pending'}`}>
-                            {businessData.isVerified ? (
-                                <>
-                                    <CheckCircle size={16} />
-                                    <span>Verified Business</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Clock size={16} />
-                                    <span>Verification Pending</span>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {businessData.verifiedAt && (
-                        <div className="verification-date">
-                            Verified on: {new Date(businessData.verifiedAt).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                            })}
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -448,6 +329,67 @@ const DocumentsSettings = ({ businessData, onUpdate }) => {
                     ))}
                 </div>
             </div>
+            {/* Document Viewer Modal */}
+            <AnimatePresence>
+                {selectedDocument && (
+                    <motion.div
+                        className="docviewer-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={closeViewer}
+                    >
+                        <motion.div
+                            className="docviewer-content"
+                            initial={{ y: 20 }}
+                            animate={{ y: 0 }}
+                            exit={{ y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="docviewer-header">
+                                <h3>{selectedDocument.name}</h3>
+                                <button className="docviewer-close" onClick={closeViewer}>×</button>
+                            </div>
+                            <div className="docviewer-body">
+                                {(() => {
+                                    const type = detectFileType(selectedDocument);
+                                    const url = selectedDocument.downloadUrl || selectedDocument.cloudinaryData?.secure_url || selectedDocument.cloudinaryData?.url || selectedDocument.fileUrl || '';
+
+                                    if (type === 'image' && url) {
+                                        return <img src={url} alt={selectedDocument.name} className="docviewer-image" />;
+                                    }
+
+                                    if (type === 'video' && url) {
+                                        return (
+                                            <video controls className="docviewer-video">
+                                                <source src={url} />
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        );
+                                    }
+
+                                    if (type === 'pdf' && url) {
+                                        return (
+                                            <iframe title={selectedDocument.name} src={url} className="docviewer-iframe" />
+                                        );
+                                    }
+
+                                    // Fallback: show download/open link
+                                    return (
+                                        <div className="docviewer-fallback">
+                                            {url ? (
+                                                <a href={url} target="_blank" rel="noopener noreferrer" className="open-link">Open / Download</a>
+                                            ) : (
+                                                <p>No file URL provided.</p>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };

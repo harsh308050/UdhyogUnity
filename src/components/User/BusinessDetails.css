@@ -764,7 +764,6 @@
     border-radius: 8px;
     font-weight: 500;
     font-size: 0.9rem;
-    width: fit-content;
 }
 
 .business-info {
@@ -835,7 +834,7 @@
         width: 70px;
         height: 70px;
         min-width: 70px;
-        margin-top: -25px;
+        margin-top: 0px;
     }
 
     .business-title-section {
@@ -893,7 +892,6 @@
         width: 60px;
         height: 60px;
         min-width: 60px;
-        margin-top: -20px;
     }
 
     .business-title-info h1 {

@@ -257,7 +257,7 @@ const BusinessDetails = () => {
 
                 <div className="product-rating">
                     <div className="stars">
-                        {renderStars(product.rating || 0)}
+                        {renderStars(product.rating)}
                     </div>
                     <span className="rating-text">
                         ({product.reviewCount || 0})

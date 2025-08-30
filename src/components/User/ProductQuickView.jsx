@@ -271,40 +271,33 @@ const ProductQuickView = ({ product, onClose, onBuy }) => {
         </div>
         <div className="quickview-content">
           <div className="quickview-gallery">
-            <motion.div
-              className="main-image-container"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              {product.images && product.images.length > 0 ? (
-                <motion.img
-                  key={selectedImageIndex}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  src={product.images[selectedImageIndex]?.url || product.images[selectedImageIndex]}
-                  alt={product.name}
-                  className="main-product-image"
-                  onClick={() => setFullscreenImage(product.images[selectedImageIndex]?.url || product.images[selectedImageIndex])}
-                />
-              ) : (
-                <div className="no-image-placeholder">
-                  <Package size={64} />
-                  <span>No Image Available</span>
-                </div>
-              )}
-              {discountPercentage && (
-                <motion.div
-                  className="discount-badge"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                >
-                  -{discountPercentage}%
-                </motion.div>
-              )}
-            </motion.div>
+            {product.images && product.images.length > 0 ? (
+              <motion.img
+                key={selectedImageIndex}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                src={product.images[selectedImageIndex]?.url || product.images[selectedImageIndex]}
+                alt={product.name}
+                className="main-product-image"
+                onClick={() => setFullscreenImage(product.images[selectedImageIndex]?.url || product.images[selectedImageIndex])}
+              />
+            ) : (
+              <div className="no-image-placeholder">
+                <Package size={64} />
+                <span>No Image Available</span>
+              </div>
+            )}
+            {discountPercentage && (
+              <motion.div
+                className="discount-badge"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+              >
+                -{discountPercentage}%
+              </motion.div>
+            )}
             {product.images && product.images.length > 1 && (
               <motion.div
                 className="product-thumbnails"
@@ -350,7 +343,7 @@ const ProductQuickView = ({ product, onClose, onBuy }) => {
             </div>
             <div className="product-rating">
               <div className="rating-badge">
-                <span>{product.rating || 4.5}</span>
+                <span>{product.rating || 0}</span>
                 <Star size={12} fill="#ffffff" />
               </div>
               <span className="rating-count">({product.reviewCount || 0} Reviews)</span>
