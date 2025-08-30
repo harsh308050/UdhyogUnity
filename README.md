@@ -60,33 +60,45 @@ UdhyogUnity is a platform dedicated to connecting cities through local businesse
    ```
 
 ## 📸 Preview:
-<h1> <a href="https://udhyogunity.netlify.app/"> https://udhyogunity.netlify.app/ <a></h1>
+<h3> <a href="https://udhyogunity.netlify.app/"> https://udhyogunity.netlify.app/ <a></h3>
 
 
 ## 📂 Project Structure
 
 ```
-src/
-├── assets/               # Images and static assets
-├── components/           # React components
-│   ├── LandingPage.jsx   # Landing page component
-│   ├── Login.jsx         # Authentication component
-│   ├── RegisterBusiness.jsx  # Business registration flow
-│   ├── miniComponents/   # Smaller reusable components
-│   │   ├── BusinessForm/ # Business registration form steps
-│   │   └── LoginForm/    # Authentication form components
-│   └── styles/           # Component-specific CSS files
-├── context/              # React context providers
-│   └── AuthContext.jsx   # Authentication context
-├── Firebase/             # Firebase configuration and utilities
-│   ├── addBusiness.js    # Business data operations
-│   ├── auth.js           # Authentication functions
-│   ├── cloudinary.js     # Cloudinary integration
-│   ├── config.js         # Firebase configuration
-│   ├── db.js             # Firestore database operations
-│   └── storage.js        # Firebase storage operations
-├── App.jsx               # Main app component with routing
-└── main.jsx              # Entry point
+.
+├── index.html
+├── package.json
+├── netlify.toml
+├── public/
+│   └── _redirects
+├── netlify/
+│   └── functions/
+│       └── send-contact-email.mjs
+├── src/
+│   ├── main.jsx
+│   ├── App.jsx
+│   ├── index.css
+│   ├── App.css
+│   ├── assets/               # Images and static assets (logos, icons, illustrations)
+│   ├── components/           # React components
+│   │   ├── LandingPage.jsx
+│   │   ├── Login.jsx
+│   │   ├── RegisterBusiness.jsx
+│   │   ├── BusinessLogin.jsx
+│   │   ├── BusinessOwner/     # Dashboard, Products, Services, Messages, Orders, Settings
+│   │   └── miniComponents/    # Small reusable components (forms, modals, rating, reviews)
+│   ├── context/
+│   │   └── AuthContext.jsx
+│   ├── Firebase/             # Firebase helpers and integration
+│   │   ├── auth.js
+│   │   ├── config.js
+│   │   ├── db.js
+│   │   ├── cloudinary.js
+│   │   ├── storage.js
+│   │   └── ...other db/util files
+│   └── utils/                # Utilities (razorpay, call utils, audio debug, etc.)
+├── README.md
 ```
 
 ## 🧩 Key Components
