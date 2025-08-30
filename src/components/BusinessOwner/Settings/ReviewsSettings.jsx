@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ThumbsUp, ThumbsDown, MessageCircle, Filter, Search, Calendar, User, MoreHorizontal, Eye, Flag, Trash2, RefreshCw } from 'react-feather';
+import { Star, MessageCircle, Calendar, RefreshCw } from 'react-feather';
 import { useAuth } from '../../../context/AuthContext';
 import {
     getReviews,
     getReviewStats,
-    respondToReview,
-    getRecentBusinessReviews
+    respondToReview
 } from '../../../Firebase/reviewDb_new';
 import { getCurrentBusinessEmail } from '../../../Firebase/getBusinessData';
 import { db } from '../../../Firebase/config';
@@ -14,15 +13,15 @@ import { collection, getDocs } from 'firebase/firestore';
 import './ReviewsSettings.css';
 
 const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
-    const { currentUser, businessData: authBusinessData } = useAuth();
-    // Prioritize business data from props over context
-    const businessData = propBusinessData || authBusinessData || {};
+    const { businessData: authBusinessData } = useAuth();
+    // Prioritize business data from props over context; memoize to avoid changing identity
+    const businessData = React.useMemo(() => (propBusinessData || authBusinessData || {}), [propBusinessData, authBusinessData]);
     const [reviews, setReviews] = useState([]);
     const [filteredReviews, setFilteredReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterRating, setFilterRating] = useState('all');
-    const [filterType, setFilterType] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType] = useState('all');
+    const [searchTerm] = useState('');
     const [sortBy, setSortBy] = useState('newest');
     const [selectedReview, setSelectedReview] = useState(null);
     const [showReplyModal, setShowReplyModal] = useState(false);
@@ -33,11 +32,7 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
     const [loadingMore, setLoadingMore] = useState(false);
 
     // Load reviews from Firebase instead of using mock data
-    useEffect(() => {
-        loadReviews();
-    }, [currentUser, businessData]);
-
-    const loadReviews = async () => {
+    const loadReviews = useCallback(async () => {
         console.log("BusinessData available:", businessData);
 
         // Use the email as the identifier as seen in Firebase
@@ -205,7 +200,11 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [businessData]);
+
+    useEffect(() => {
+        loadReviews();
+    }, [loadReviews]);
 
     // Helper function to calculate stats from reviews
     const calculateStatsFromReviews = (reviewsList) => {
@@ -222,11 +221,13 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
         const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
         reviewsList.forEach(review => {
-            if (review && typeof review.rating === 'number') {
-                totalRating += review.rating;
+            if (review && review.rating != null) {
+                // ensure numeric rating
+                const numericRating = Number(review.rating) || 0;
+                totalRating += numericRating;
 
                 // Count reviews by rating - use Math.round for proper bucket assignment
-                const ratingBucket = Math.round(review.rating);
+                const ratingBucket = Math.min(Math.max(Math.round(numericRating), 1), 5);
                 if (ratingBucket >= 1 && ratingBucket <= 5) {
                     ratingCounts[ratingBucket]++;
                 }
@@ -275,12 +276,7 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
         }
     };
 
-    useEffect(() => {
-        // Removed mock reviews logic - use real data only
-        filterAndSortReviews();
-    }, [reviews, filterRating, filterType, searchTerm, sortBy, loading]);
-
-    const filterAndSortReviews = () => {
+    const filterAndSortReviews = useCallback(() => {
         let filtered = [...reviews];
 
         // Filter by rating
@@ -324,7 +320,13 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
         });
 
         setFilteredReviews(filtered);
-    };
+    }, [reviews, filterRating, filterType, searchTerm, sortBy]);
+
+    useEffect(() => {
+        filterAndSortReviews();
+    }, [filterAndSortReviews, loading]);
+
+    // ...existing code... (filtering handled in useCallback above)
 
     const renderStars = (rating) => {
         return Array.from({ length: 5 }, (_, index) => (
@@ -452,6 +454,39 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
 
     const ratingDistribution = getRatingDistribution();
 
+    // Compute derived stats from current reviews to validate remote stats
+    const derivedStats = calculateStatsFromReviews(reviews);
+
+    // Helper to sum counts object
+    const sumCounts = (counts) => Object.keys(counts || {}).reduce((s, k) => s + (Number(counts[k]) || 0), 0);
+
+    // Decide which stats to use: prefer remote reviewStats only if it looks consistent
+    let statsCounts = ratingDistribution;
+    let statsTotal = reviews.length || 0;
+
+    if (reviewStats && reviewStats.ratingCounts && typeof reviewStats.reviewCount === 'number') {
+        const remoteSum = sumCounts(reviewStats.ratingCounts);
+        // compute average from remote counts
+        const remoteAvg = remoteSum > 0 ? (Object.keys(reviewStats.ratingCounts).reduce((s, k) => s + (Number(k) * (Number(reviewStats.ratingCounts[k]) || 0)), 0) / remoteSum) : 0;
+
+        // if remoteSum matches reviewCount and remoteAvg is close to reported average, accept remote; else fallback
+        const reportedAvg = typeof reviewStats.averageRating === 'number' ? Number(reviewStats.averageRating) : remoteAvg;
+        const avgDiff = Math.abs(remoteAvg - reportedAvg);
+
+        if (remoteSum === reviewStats.reviewCount && reviewStats.reviewCount > 0 && avgDiff <= 0.5) {
+            statsCounts = reviewStats.ratingCounts;
+            statsTotal = reviewStats.reviewCount;
+        } else {
+            // fallback to derived stats when remote stats inconsistent
+            statsCounts = derivedStats.ratingCounts;
+            statsTotal = derivedStats.reviewCount;
+        }
+    } else {
+        // no remote stats - use derived
+        statsCounts = derivedStats.ratingCounts;
+        statsTotal = derivedStats.reviewCount;
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -483,17 +518,11 @@ const ReviewsSettings = ({ onUpdate, businessData: propBusinessData }) => {
                                     <div
                                         className="bar-fill"
                                         style={{
-                                            width: `${reviewStats && reviewStats.ratingCounts
-                                                ? (reviewStats.reviewCount > 0
-                                                    ? (reviewStats.ratingCounts[rating] / reviewStats.reviewCount) * 100
-                                                    : 0)
-                                                : (reviews.length > 0
-                                                    ? (ratingDistribution[rating] / reviews.length) * 100
-                                                    : 0)}%`
+                                            width: `${statsTotal > 0 ? ((statsCounts[rating] || 0) / statsTotal) * 100 : 0}%`
                                         }}
                                     ></div>
                                 </div>
-                                <span className="rating-count">{ratingDistribution[rating]}</span>
+                                <span className="rating-count">{statsCounts[rating] || 0}</span>
                             </div>
                         ))}
                     </div>

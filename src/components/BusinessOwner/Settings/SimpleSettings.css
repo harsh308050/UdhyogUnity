@@ -10,7 +10,7 @@
 
 /* Settings Management CSS - Simple Previous Design */
 .business-dashboard-theme .settings-container {
-    padding: 2rem;
+    padding: 1rem;
     max-width: 1000px;
     margin: 0 auto;
     overflow: hidden;
@@ -88,7 +88,7 @@
 .business-dashboard-theme .settings-content {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    padding: 2rem;
+    padding: 2rem 0 0 0;
     border: 1px solid var(--border-color);
     backdrop-filter: blur(10px);
 }
@@ -136,7 +136,11 @@
     border-radius: 8px;
     border: 1px solid var(--border-color);
     flex: 1;
-    min-width: 200px;
+    min-width: 0;
+    /* allow shrinking on small screens */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .business-dashboard-theme .field-note {
@@ -150,6 +154,10 @@
 .business-dashboard-theme .field-actions {
     display: flex;
     gap: 0.5rem;
+    margin-left: auto;
+    /* push actions to the right */
+    flex-shrink: 0;
+    align-items: center;
 }
 
 .business-dashboard-theme .form-control {
@@ -160,7 +168,8 @@
     color: var(--text-light);
     font-size: 0.95rem;
     flex: 1;
-    min-width: 200px;
+    min-width: 0;
+    /* allow shrinking inside flex containers */
     transition: all 0.3s ease;
 }
 
@@ -697,10 +706,29 @@
         justify-content: center;
     }
 
-    .setting-field {
-        flex-direction: column;
+    .business-dashboard-theme .setting-field {
         align-items: stretch;
         gap: 0.75rem;
+    }
+
+    /* compact controls on mobile */
+    .business-dashboard-theme .setting-item label,
+    .business-dashboard-theme .form-group label {
+        font-size: 0.88rem;
+    }
+
+    .business-dashboard-theme .form-control,
+    .business-dashboard-theme .field-value {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .business-dashboard-theme .btn-edit,
+    .business-dashboard-theme .btn-save,
+    .business-dashboard-theme .btn-cancel {
+        padding: 0.4rem;
+        width: 36px;
+        height: 36px;
     }
 
     .field-actions {
